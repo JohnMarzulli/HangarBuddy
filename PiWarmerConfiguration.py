@@ -22,13 +22,13 @@ def get_config_file_location():
 class PiWarmerConfiguration(object):
     """ Object to handle configuration of the piWarmer. """
 
-    def get_log_filename(self):
+    def get_log_directory(self):
         """ returns the location of the logfile to use. """
 
         if local_debug.is_debug():
-            return self.__config_parser__.get('SETTINGS', 'DEBUGGING_LOGFILE')
+            return self.__config_parser__.get('SETTINGS', 'DEBUGGING_LOGFILE_DIRECTORY')
 
-        return self.__config_parser__.get('SETTINGS', 'LOGFILE')
+        return self.__config_parser__.get('SETTINGS', 'LOGFILE_DIRECTORY')
 
     def __init__(self):
         print "SETTINGS" + get_config_file_location()
@@ -62,7 +62,7 @@ class PiWarmerConfiguration(object):
         self.allowed_phone_numbers = self.allowed_phone_numbers.split(',')
         self.max_minutes_to_run = self.__config_parser__.getint(
             'SETTINGS', 'MAX_HEATER_TIME')
-        self.log_filename = self.get_log_filename()
+        self.log_filename = self.get_log_directory() + "hangar_buddy.log"
 
         try:
             self.test_mode = self.__config_parser__.getboolean(

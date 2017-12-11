@@ -76,7 +76,7 @@ class PowerRelay(object):
 
         return True
 
-    def get_status(self):
+    def get_io_pin_status(self):
         """
         return current status of switch, 0 or 1
         """
@@ -100,7 +100,7 @@ def test_default():
     Test that the default is off.
     '''
     power_relay = PowerRelay("Heater", DEFAULT_PIN)
-    assert power_relay.get_status == 0
+    assert power_relay.get_io_pin_status == 0
 
 
 def test_on():
@@ -109,7 +109,7 @@ def test_on():
     '''
     power_relay = PowerRelay("Heater", DEFAULT_PIN)
     power_relay.switch_high()
-    assert power_relay.get_status == 1
+    assert power_relay.get_io_pin_status() == 1
 
 
 def test_off():
@@ -119,7 +119,7 @@ def test_off():
     power_relay = PowerRelay("Heater", DEFAULT_PIN)
     power_relay.switch_high()
     power_relay.switch_low()
-    assert power_relay.get_status == 1
+    assert power_relay.get_io_pin_status() == 1
 
 
 if __name__ == '__main__':
@@ -133,7 +133,7 @@ if __name__ == '__main__':
 
     TEST_RELAY = PowerRelay("Heater", DEFAULT_PIN)
     TEST_RELAY.switch_high()
-    print str(TEST_RELAY.get_status())
+    print str(TEST_RELAY.get_io_pin_status())
     time.sleep(10)
     TEST_RELAY.switch_low()
-    print str(TEST_RELAY.get_status())
+    print str(TEST_RELAY.get_io_pin_status())

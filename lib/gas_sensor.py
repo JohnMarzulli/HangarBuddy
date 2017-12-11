@@ -14,6 +14,15 @@ DEFAULT_DEVICE_CHANNEL = 0
 DEFAULT_TRIGGER_THRESHOLD = 230
 DEFAULT_ALL_CLEAR_THRESHOLD = 220
 
+class GasSensorResult(object):
+    """
+    Object to handle the results from the gas sensor.
+    """
+
+    def __init__(self, is_gas_detected, current_value):
+        self.is_gas_detected = is_gas_detected
+        self.current_value = current_value
+
 
 class GasSensor(object):
     """
@@ -73,15 +82,6 @@ class GasSensor(object):
 
         return raw_value
 
-    def get_current_level(self):
-        """
-        Gets the current level from the sensor.
-        """
-        if self.current_value is None:
-            self.update()
-
-        return self.current_value
-
     def update(self, read_offset=DEFAULT_CHANNEL_READ_OFFSET):
         """
         Attempts to look for gas.
@@ -98,7 +98,7 @@ class GasSensor(object):
 
         self.is_gas_detected |= self.current_value >= self.sensor_trigger_threshold
 
-        return self.is_gas_detected
+        return GasSensorResult(self.is_gas_detected, self.current_value)
 
 
 if __name__ == '__main__':
@@ -107,5 +107,4 @@ if __name__ == '__main__':
     while True:
         IS_GAS_DETECTED = SENSOR.update()
         print "LVL:" + str(SENSOR.current_value) + ", " + str(IS_GAS_DETECTED)
-        # print str(sensor.update(offset))
         time.sleep(0.2)

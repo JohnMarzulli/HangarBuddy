@@ -47,4 +47,5 @@ Temporary Items
 .apdisk
 .vscode/
 *.pyc
-piWarmer.log
+*.log
+*.swp
