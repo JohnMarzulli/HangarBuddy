@@ -298,7 +298,7 @@ class CommandProcessor(object):
                 brightness = "dim."
             elif self.__sensors__.current_light_sensor_reading.lux <= \
                     self.__configuration__.hangar_lit:
-                brightness = "lit."
+                brightness = "lit AF"
 
             status += brightness
 
