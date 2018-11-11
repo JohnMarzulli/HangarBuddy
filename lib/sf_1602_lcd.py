@@ -160,6 +160,9 @@ class LcdDisplay(object):
 
         text_array = text_to_write.split('\n')
 
+        for line in text_array:
+            print('LCD:{}'.format(line))
+
         array_count = len(text_array)
 
         if array_count <= 0:
