@@ -78,7 +78,7 @@ class CommandProcessor(object):
     """
 
     ##############################
-    #--- Public functions
+    # --- Public functions
     ##############################
 
     def run_hangar_buddy(self):
@@ -199,7 +199,7 @@ class CommandProcessor(object):
                 str(num_deleted) + " old message cleared from SIM Card")
 
     ##############################
-    #--- Status builders
+    # --- Status builders
     ##############################
 
     def __get_heater_status__(self):
@@ -275,7 +275,8 @@ class CommandProcessor(object):
         Gets how long the system has been up.
         """
 
-        uptime = (datetime.datetime.now() - self.__system_start_time__).total_seconds()
+        uptime = (datetime.datetime.now() -
+                  self.__system_start_time__).total_seconds()
         return utilities.get_time_text(uptime)
 
     def __get_light_status__(self):
@@ -338,7 +339,7 @@ class CommandProcessor(object):
         return status_text
 
     ##############################
-    #-- Event callbacks
+    # -- Event callbacks
     ##############################
 
     def __heater_turned_on_callback__(self):
@@ -363,7 +364,7 @@ class CommandProcessor(object):
             "Heater turned  " + text.HEATER_OFF_COMMAND + " due to timer.")
 
     ##############################
-    #-- Message queing
+    # -- Message queing
     ##############################
 
     def __queue_message__(self, phone_number, message):
@@ -391,7 +392,7 @@ class CommandProcessor(object):
         return message
 
     ##############################
-    #-- Request handlers
+    # -- Request handlers
     ##############################
 
     def __handle_on_request__(self, phone_number):
@@ -578,7 +579,7 @@ class CommandProcessor(object):
         self.__relay_controller__.turn_off()
 
     ##############################
-    #-- Command execution
+    # -- Command execution
     ##############################
 
     def __execute_command__(self, command_response):
@@ -709,7 +710,7 @@ class CommandProcessor(object):
             queue.get()
 
     ##############################
-    #-- Recurring thread tasks
+    # -- Recurring thread tasks
     ##############################
 
     def __monitor_gas_sensor__(self):
@@ -759,7 +760,8 @@ class CommandProcessor(object):
         cbc = self.__fona_manager__.battery_condition()
 
         self.__logger__.log_info_message("GSM Battery="
-                                         + str(cbc.get_percent_battery()) + "% Volts="
+                                         + str(cbc.get_percent_battery()
+                                               ) + "% Volts="
                                          + str(cbc.get_voltage()))
 
         if not cbc.is_battery_ok():
@@ -767,6 +769,43 @@ class CommandProcessor(object):
                 str(cbc.get_percent_battery()) + "%"
             self.__queue_message_to_all_numbers__(low_battery_message)
             self.__logger__.log_warning_message(low_battery_message)
+
+    def __get_lcd_text__(self):
+        """
+        Returns the text that should be displayed on the LCD.
+        Updates the current display index as an intended side-effect.
+        
+        Returns:
+            string -- The text to show on the LCD.
+        """
+
+        if self.__lcd_status_id__ == 0:
+            return self.__get_fona_status__()
+
+        if self.__lcd_status_id__ == 1:
+            return self.__get_heater_status__()
+
+        if self.__lcd_status_id__ == 2:
+            if self.__sensors__.current_gas_sensor_reading is not None:
+                return self.__get_gas_sensor_status__()
+            else:
+                self.__lcd_status_id__ += 1
+
+        if self.__lcd_status_id__ == 3:
+            if self.__sensors__.current_light_sensor_reading is not None \
+                    and self.__sensors__.current_light_sensor_reading.enabled:
+                return self.__get_light_status__()
+            else:
+                self.__lcd_status_id__ += 1
+
+        if self.__lcd_status_id__ == 4:
+            if self.__sensors__.current_temperature_sensor_reading is not None:
+                return self.__get_temp_probe_status__()
+            else:
+                self.__lcd_status_id__ += 1
+
+        self.__lcd_status_id__ = -1
+        return "UPTIME:\n{}".format(self.__get_uptime_status__())
 
     def __update_lcd__(self):
         """
@@ -781,32 +820,11 @@ class CommandProcessor(object):
 
         self.__lcd__.clear()
 
+
         # Moves to the next status message based on the
         # interval in given to RecurringEvent (Normally 5 seconds)
         try:
-            if self.__lcd_status_id__ == 0:
-                self.__lcd__.write_text(self.__get_fona_status__())
-            if self.__lcd_status_id__ == 1:
-                self.__lcd__.write_text(self.__get_heater_status__())
-            if self.__lcd_status_id__ == 2:
-                if self.__sensors__.current_gas_sensor_reading is not None:
-                    self.__lcd__.write_text(self.__get_gas_sensor_status__())
-                else:
-                    self.__lcd_status_id__ += 1
-            if self.__lcd_status_id__ == 3:
-                if  self.__sensors__.current_light_sensor_reading is not None \
-                        and  self.__sensors__.current_light_sensor_reading.enabled:
-                    self.__lcd__.write_text(self.__get_light_status__())
-                else:
-                    self.__lcd_status_id__ += 1
-            if self.__lcd_status_id__ == 4:
-                if self.__sensors__.current_temperature_sensor_reading is not None:
-                    self.__lcd__.write_text(self.__get_temp_probe_status__())
-                else:
-                    self.__lcd_status_id__ += 1
-            if self.__lcd_status_id__ >= 5:
-                self.__lcd_status_id__ = -1
-                self.__lcd__.write_text("UPTIME:\n" + self.__get_uptime_status__())
+            self.__lcd__.write_text(self.__get_lcd_text__())
         except:
             self.__lcd__.write(0, 0, "ERROR: LCD_ID=" +
                                str(self.__lcd_status_id__))
@@ -912,7 +930,8 @@ class CommandProcessor(object):
             # in the order they were sent.
             # The order of reception by the GSM
             # chip can be out of order.
-            sorted_messages = sorted(messages, key=lambda message: message.sent_time)
+            sorted_messages = sorted(
+                messages, key=lambda message: message.sent_time)
 
             for message in sorted_messages:
                 messages_processed_count += 1
@@ -924,8 +943,8 @@ class CommandProcessor(object):
                     self.__queue_message_to_all_numbers__(old_message)
                     continue
 
-                delta_startup = (message.message_sent_time_utc() - \
-                                self.__system_start_time__).total_seconds()
+                delta_startup = (message.message_sent_time_utc() -
+                                 self.__system_start_time__).total_seconds()
                 if delta_startup < 0:
                     old_message = "MSG was sent " \
                                   + utilities.get_time_text(int(math.fabs(delta_startup))) \
