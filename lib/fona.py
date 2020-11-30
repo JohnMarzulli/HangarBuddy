@@ -428,7 +428,6 @@ class Fona(object):
         """
 
         should_quit = False
-        ret = []
 
         while not should_quit:
             try:
