@@ -6,6 +6,8 @@ import threading
 import time
 from multiprocessing import Queue as MPQueue
 
+import serial
+
 from lib import local_debug, utilities
 from lib.hangar_buddy_logger import HangarBuddyLogger
 
@@ -451,9 +453,9 @@ class Fona(object):
     def __init__(
         self,
         logger,
-        serial_connection,
-        power_status_pin,
-        ring_indicator_pin
+        serial_connection: serial.Serial,
+        power_status_pin: int,
+        ring_indicator_pin: int
     ):
 
         self.__logger__ = logger
@@ -730,9 +732,6 @@ if __name__ == '__main__':
         SERIAL_CONNECTION = serial.Serial(
             '/dev/ttyUSB0',
             9600)
-        # SERIAL_CONNECTION.set_output_flow_control(True)
-        # SERIAL_CONNECTION.set_input_flow_control(True)
-        # SERIAL_CONNECTION.stopbits = 1
 
     FONA = Fona(
         HangarBuddyLogger(

@@ -1002,9 +1002,24 @@ class CommandProcessor(object):
                 self.__logger__.log_info_message(
                     "Opening on " + self.__configuration__.cell_serial_port)
 
+                # Defaults (at least under windows)
+                # port=None
+                # baudrate=9600
+                # bytesize=EIGHTBITS
+                # parity=PARITY_NONE
+                # stopbits=STOPBITS_ONE
+                # timeout=None
+                # xonxoff=False
+                # rtscts=False
+                # write_timeout=None
+                # dsrdtr=False
+                # inter_byte_timeout=None
+                # exclusive=None
                 serial_connection = serial.Serial(
-                    self.__configuration__.cell_serial_port,
-                    self.__configuration__.cell_baud_rate)
+                    port=self.__configuration__.cell_serial_port,
+                    baudrate=self.__configuration__.cell_baud_rate,
+                    xonxoff=True,
+                    rtxcts=True)
             except:
                 self.__logger__.log_warning_message(
                     "SERIAL DEVICE NOT LOCATED."

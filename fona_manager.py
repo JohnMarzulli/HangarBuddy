@@ -7,6 +7,8 @@ import threading
 import time
 from multiprocessing import Queue as MPQueue
 
+import serial
+
 import lib.fona as fona
 import lib.local_debug as local_debug
 import text
@@ -262,7 +264,7 @@ class FonaManager(object):
     def __init__(
         self,
         logger,
-        serial_connection,
+        serial_connection: serial.Serial,
         power_status_pin,
         ring_indicator_pin,
         utc_offset
