@@ -27,19 +27,25 @@ class BatteryCondition(object):
     Class to keep the battery state.
     """
 
-    def get_percent_battery(self):
+    def get_percent_battery(
+        self
+    ):
         """
         Returns the remaining percentage of battery.
         """
         return self.battery_percent
 
-    def get_voltage(self):
+    def get_voltage(
+        self
+    ):
         """
         Returns the voltage of the battery.
         """
         return self.battery_voltage
 
-    def is_battery_ok(self):
+    def is_battery_ok(
+        self
+    ):
         """
         Is the battery OK?
         """
@@ -48,11 +54,15 @@ class BatteryCondition(object):
 
         return self.battery_percent > BATTERY_CRITICAL
 
-    def __init__(self, command_result):
+    def __init__(
+        self,
+        command_result
+    ):
         """
         Initialize.
         """
         self.error_state = False
+        results = None
 
         if command_result is None or len(command_result) < 1:
             self.error_state = True
@@ -67,7 +77,7 @@ class BatteryCondition(object):
                 if results is None or len(results) <= 2:
                     self.error_state = True
 
-        if not self.error_state:
+        if not self.error_state and results is not None and len(results) > 0:
             self.charge_state = float(results[0])
             self.battery_percent = float(results[1])
             self.battery_voltage = float(results[2]) / 10.0
@@ -82,19 +92,25 @@ class SignalStrength(object):
     Class to hold the signal strength.
     """
 
-    def get_signal_strength(self):
+    def get_signal_strength(
+        self
+    ):
         """
         Returns the signal strength.
         """
         return self.recieved_signal_strength
 
-    def get_bit_error_rate(self):
+    def get_bit_error_rate(
+        self
+    ):
         """
         Returns the bit error rate from the Fona.
         """
         return self.bit_error_rate
 
-    def classify_strength(self):
+    def classify_strength(
+        self
+    ):
         """
         Gets a human meaning to the rssi.
         """
@@ -110,7 +126,10 @@ class SignalStrength(object):
 
         return "Excellent"
 
-    def __init__(self, command_result):
+    def __init__(
+        self,
+        command_result
+    ):
         """
         Parses the command result.
         """
@@ -134,7 +153,9 @@ class SmsMessage(object):
     Class to abstract a text message.
     """
 
-    def get_sender_number(self):
+    def get_sender_number(
+        self
+    ):
         """
         Gets the sender's number.
         """
@@ -143,13 +164,17 @@ class SmsMessage(object):
 
         return None
 
-    def is_message_ok(self):
+    def is_message_ok(
+        self
+    ):
         """
         Is the message valid?
         """
         return not self.error_state
 
-    def minutes_waiting(self):
+    def minutes_waiting(
+        self
+    ):
         """
         How many hours between being sent
         and received.
@@ -158,7 +183,9 @@ class SmsMessage(object):
         return (self.received_time
                 - (self.sent_time + datetime.timedelta(hours=TIMEZONE_OFFSET))).days * 24 * 60
 
-    def message_sent_time_utc(self):
+    def message_sent_time_utc(
+        self
+    ):
         """
         When was the message sent in UTC time?
         The SIM card returns time as Local...
@@ -166,9 +193,11 @@ class SmsMessage(object):
 
         return (self.sent_time + datetime.timedelta(hours=TIMEZONE_OFFSET))
 
-    def __init__(self,
-                 message_header,
-                 message_text):
+    def __init__(
+        self,
+        message_header,
+        message_text
+    ):
         """
         Create the object.
         """
@@ -212,7 +241,9 @@ class Fona(object):
     unauthorize numbers
     """
 
-    def is_power_on(self):
+    def is_power_on(
+        self
+    ):
         """
         Returns TRUE if the power is on.
         """
@@ -231,20 +262,26 @@ class Fona(object):
         # modem connection
         return self.serial_connection is not None
 
-    def is_message_waiting(self):
+    def is_message_waiting(
+        self
+    ):
         """
         Uses the GPIO pin to see if a message is waiting.
         """
 
         return not self.__message_waiting_queue__.empty()
 
-    def get_carrier(self):
+    def get_carrier(
+        self
+    ):
         """
         Returns the carrier.
         """
         return self.__send_command__("AT+COPS?")
 
-    def get_signal_strength(self):
+    def get_signal_strength(
+        self
+    ):
         """
         Returns an object representing the signal strength.
         """
@@ -256,7 +293,9 @@ class Fona(object):
 
         return SignalStrength(command_result)
 
-    def get_current_battery_condition(self):
+    def get_current_battery_condition(
+        self
+    ):
         """
         Returns an object representing the current battery state.
         """
@@ -270,19 +309,27 @@ class Fona(object):
 
         return BatteryCondition(None)
 
-    def get_module_name(self):
+    def get_module_name(
+        self
+    ):
         """
         Returns the name of the GSM module.
         """
         return self.__send_command__("ATI")
 
-    def get_sim_card_number(self):
+    def get_sim_card_number(
+        self
+    ):
         """
         Returns the id of the sim card.
         """
         return self.__send_command__("AT+CCID")
 
-    def send_message(self, message_num, text):
+    def send_message(
+        self,
+        message_num,
+        text
+    ):
         """
         Sends a message to the specified phone numbers.
         """
@@ -313,7 +360,9 @@ class Fona(object):
 
         return True
 
-    def get_messages(self):
+    def get_messages(
+        self
+    ):
         """
         Reads text messages on the SIM card and returns
         a list of messages with three fields: id, num, message.
@@ -334,8 +383,9 @@ class Fona(object):
             if "+CMGL:" in message_header:
                 message_text = self.serial_connection.readline().strip()
 
-                new_message = SmsMessage(message_header,
-                                         message_text)
+                new_message = SmsMessage(
+                    message_header,
+                    message_text)
                 messages.append(new_message)
 
                 time.sleep(1)
@@ -344,13 +394,18 @@ class Fona(object):
 
         return messages
 
-    def delete_message(self, message_to_delete):
+    def delete_message(
+        self,
+        message_to_delete
+    ):
         """
         Deletes a message with the given Id.
         """
         self.__send_command__("AT+CMGD=" + str(message_to_delete.message_id))
 
-    def delete_messages(self):
+    def delete_messages(
+        self
+    ):
         """ Deletes any messages. """
         messages = self.get_messages()
         messages_deleted = 0
@@ -363,7 +418,9 @@ class Fona(object):
 
         return messages_deleted
 
-    def simple_terminal(self):
+    def simple_terminal(
+        self
+    ):
         """
         Simple interactive terminal to play with the Fona.
         """
@@ -379,21 +436,25 @@ class Fona(object):
                     should_quit = True
                 else:
                     ret.append(
-                        "time.sleep(" + str(time.time() - start_time) + ")")
+                        "time.sleep({})".format(time.time() - start_time))
                     write_result = self.__write_to_fona__(command)
                     start_time = time.time()
                     self.__logger__.log_info_message(write_result)
 
-                    self.__logger__.log_info_message(self.__read_from_fona__(
-                        DEFAULT_RESPONSE_READ_TIMEOUT))
-            except:
-                self.__logger__.log_warning_message("ERROR")
+                    self.__logger__.log_info_message(
+                        self.__read_from_fona__(
+                            DEFAULT_RESPONSE_READ_TIMEOUT))
+            except Exception as ex:
+                self.__logger__.log_warning_message(
+                    "Terminal EX={}".format(ex))
 
-    def __init__(self,
-                 logger,
-                 serial_connection,
-                 power_status_pin,
-                 ring_indicator_pin):
+    def __init__(
+        self,
+        logger,
+        serial_connection,
+        power_status_pin,
+        ring_indicator_pin
+    ):
 
         self.__logger__ = logger
         self.__modem_access_lock__ = threading.Lock()
@@ -416,16 +477,22 @@ class Fona(object):
         self.__initialize_gpio_pins__()
         self.__poll_for_messages__()
 
-    def __use_gpio_pins__(self):
+    def __use_gpio_pins__(
+        self
+    ):
         """
         Returns true if we should use the GPIO pins
         to tell status.
         """
 
-        return self.power_status_pin is not None \
-            and self.ring_indicator_pin is not None
+        power_status_available = self.power_status_pin is not None
+        ring_indicator_available = self.ring_indicator_pin is not None
 
-    def __initialize_gpio_pins__(self):
+        return power_status_available and ring_indicator_available
+
+    def __initialize_gpio_pins__(
+        self
+    ):
         """
         Gets the Fona ready to be interacted with by the GPIO board.
         """
@@ -445,26 +512,36 @@ class Fona(object):
             GPIO.setmode(GPIO.BOARD)
             GPIO.setup(self.ring_indicator_pin, GPIO.IN)
             GPIO.setup(self.power_status_pin, GPIO.IN)
-            GPIO.add_event_detect(self.ring_indicator_pin,
-                                  GPIO.RISING, self.__ring_indicator_pulsed__)
+            GPIO.add_event_detect(
+                self.ring_indicator_pin,
+                GPIO.RISING,
+                self.__ring_indicator_pulsed__)
 
         return True
 
-    def __poll_for_messages__(self):
+    def __poll_for_messages__(
+        self
+    ):
         """
         Check for messages every 60 seconds.
         """
         self.__message_waiting_queue__.put("POLL")
         threading.Timer(60, self.__poll_for_messages__).start()
 
-    def __ring_indicator_pulsed__(self, io_pin):
+    def __ring_indicator_pulsed__(
+        self,
+        io_pin
+    ):
         """
         The RI went from LOW to HIGH.
         That means a message.
         """
         self.__message_waiting_queue__.put("RI:" + str(io_pin))
 
-    def __write_to_fona__(self, text):
+    def __write_to_fona__(
+        self,
+        text
+    ):
         """
         Write text to the Fona in a safe manner.
         """
@@ -472,13 +549,15 @@ class Fona(object):
         if self.serial_connection is None:
             return "NO CON"
 
-        self.__logger__.log_info_message("Writting to serial")
-        num_bytes_written = self.serial_connection.write(text)
+        self.__logger__.log_info_message("Writing to serial")
+        num_bytes_written = self.serial_connection.write(str.encode(text))
         self.serial_connection.flush()
 
         self.__logger__.log_info_message("Checking return")
-        self.__logger__.log_info_message("Wrote " + str(num_bytes_written) +
-                                         ", expected " + str(len(text)))
+        self.__logger__.log_info_message(
+            "Wrote {}, expected {}".format(
+                num_bytes_written,
+                len(text)))
 
         self.__wait_for_command_response__()
 
@@ -487,7 +566,10 @@ class Fona(object):
 
         return num_bytes_written
 
-    def __read_from_fona__(self, response_timeout=2):
+    def __read_from_fona__(
+        self,
+        response_timeout=2
+    ):
         """
         Read back from the Fona in a safe manner.
         """
@@ -506,10 +588,15 @@ class Fona(object):
                 break
 
         self.__logger__.log_info_message("   done")
-        self.__logger__.log_info_message("BUFFER:" + read_buffer)
+        self.__logger__.log_info_message("BUFFER:{}".format(read_buffer))
+
         return read_buffer
 
-    def __send_command__(self, com, add_eol=True):
+    def __send_command__(
+        self,
+        com,
+        add_eol=True
+    ):
         """ send a command to the modem """
         self.__modem_access_lock__.acquire(True)
 
@@ -519,14 +606,14 @@ class Fona(object):
                 command += '\r\r\n '
 
             if self.serial_connection is not None:
-                self.serial_connection.write(command)
+                self.serial_connection.write(str.encode(command))
                 time.sleep(2)
 
             ret = []
 
             # "Starting read/wait"
             while self.serial_connection is not None and self.serial_connection.inWaiting() > 0:
-                msg = self.serial_connection.readline().strip()
+                msg = self.serial_connection.readline().decode().strip()
                 msg = msg.replace("\r", "")
                 msg = msg.replace("\n", "")
                 if msg != "":
@@ -540,26 +627,35 @@ class Fona(object):
 
         return []
 
-    def __disable_verbose_errors__(self):
+    def __disable_verbose_errors__(
+        self
+    ):
         """
         Disables verbose errors.
         Required for AT+CMGS to work.
         """
         return self.__send_command__("AT+CMEE=0")
 
-    def __enable_verbose_errors__(self):
+    def __enable_verbose_errors__(
+        self
+    ):
         """
         Enables trouble shooting errors.
         """
         return self.__send_command__("AT+CMEE=2")
 
-    def __set_sms_mode__(self):
+    def __set_sms_mode__(
+        self
+    ):
         """
         Puts the card into SMS mode.
         """
         return self.__send_command__("AT+CMGF=1")
 
-    def __read_until_text__(self, text):
+    def __read_until_text__(
+        self,
+        text
+    ):
         """
         Reads from the fona until the text is found.
         """
@@ -578,7 +674,9 @@ class Fona(object):
 
         return read_text
 
-    def __wait_for_command_response__(self):
+    def __wait_for_command_response__(
+        self
+    ):
         """
         Waits until the command has a response
         """
@@ -592,7 +690,9 @@ class Fona(object):
 
         return self.serial_connection.inWaiting() > 0
 
-    def __clear_messages_waiting_queue__(self):
+    def __clear_messages_waiting_queue__(
+        self
+    ):
         """
         Clears the queue that tells us if we should check for
         messages.
@@ -621,14 +721,21 @@ if __name__ == '__main__':
     if local_debug.is_debug():
         SERIAL_CONNECTION = None
     else:
-        SERIAL_CONNECTION = serial.Serial('/dev/ttyUSB0', 9600)
+        # Needs to be 9600, No Parity, 8 bits, 1 stop bit
+        # Flow control should be enabled.
+        SERIAL_CONNECTION = serial.Serial(
+            '/dev/ttyUSB0',
+            9600)
+        # SERIAL_CONNECTION.set_output_flow_control(True)
+        # SERIAL_CONNECTION.set_input_flow_control(True)
+        # SERIAL_CONNECTION.stopbits = 1
 
     FONA = Fona(
         HangarBuddyLogger(
             logging.getLogger("fona")),
-            SERIAL_CONNECTION,
-            DEFAULT_POWER_STATUS_PIN,
-            DEFAULT_RING_INDICATOR_PIN)
+        SERIAL_CONNECTION,
+        DEFAULT_POWER_STATUS_PIN,
+        DEFAULT_RING_INDICATOR_PIN)
 
     if not FONA.is_power_on():
         print("Power is off..")
