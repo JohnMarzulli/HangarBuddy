@@ -25,9 +25,9 @@ class LcdDisplay(object):
 
     def __init__(
         self,
-        sm_bus_id=DEFAULT_SMBUS,
-        adr=DEFAULT_1602_ADDRESS,
-        bl=1
+        sm_bus_id: int = DEFAULT_SMBUS,
+        adr: int = DEFAULT_1602_ADDRESS,
+        bl: int = 1
     ):
         """
         Intializer for a SunFounder 1602
@@ -41,7 +41,7 @@ class LcdDisplay(object):
 
         self.__blen__ = bl
         self.__lcd_addr__ = adr
-        self.enable = True
+        self.__enabled__ = True
 
         try:
             self.send_command(0x33)  # Must initialize to 8-line mode at first
@@ -57,7 +57,7 @@ class LcdDisplay(object):
             if not local_debug.is_debug() and self.__smbus__ is not None:
                 self.__smbus__.write_byte(self.__lcd_addr__, 0x08)
         except:
-            self.enable = False
+            self.__enabled__ = False
 
     def write_word(
         self,
@@ -70,7 +70,7 @@ class LcdDisplay(object):
             data {string} -- The text to write.
         """
 
-        if not self.enable:
+        if not self.__enabled__:
             return False
 
         try:
@@ -89,7 +89,7 @@ class LcdDisplay(object):
 
     def send_command(
         self,
-        comm
+        comm: int
     ) -> bool:
         """
         Sends a command to the I2C device
@@ -98,7 +98,7 @@ class LcdDisplay(object):
             comm {hex} -- The i2c command
         """
 
-        if not self.enable:
+        if not self.__enabled__:
             return False
 
         try:
@@ -122,7 +122,7 @@ class LcdDisplay(object):
 
     def send_data(
         self,
-        data
+        data: int
     ) -> bool:
         """
         Sends data to the i2c device
@@ -131,7 +131,7 @@ class LcdDisplay(object):
             data {string} -- The data to write.
         """
 
-        if not self.enable:
+        if not self.__enabled__:
             return False
 
         try:
@@ -168,13 +168,13 @@ class LcdDisplay(object):
         """
         Turns on the backlight.
         """
-        if (self.__smbus__ is not None) and self.enable:
+        if (self.__smbus__ is not None) and self.__enabled__:
             self.__smbus__.write_byte(DEFAULT_1602_ADDRESS, 0x08)
             self.__smbus__.close()
 
     def write_text(
         self,
-        text_to_write
+        text_to_write: str
     ) -> bool:
         """
         Writes a string to the LCD.
@@ -183,7 +183,7 @@ class LcdDisplay(object):
         if text_to_write is None:
             return False
 
-        if not self.enable:
+        if not self.__enabled__:
             return False
 
         text_array = text_to_write.split('\n')
@@ -204,9 +204,9 @@ class LcdDisplay(object):
 
     def write(
         self,
-        pos_x,
-        pos_y,
-        text_to_write
+        pos_x: int,
+        pos_y: int,
+        text_to_write: str
     ):
         """
         Writes to the screen.
