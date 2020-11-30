@@ -429,23 +429,20 @@ class Fona(object):
 
         should_quit = False
         ret = []
-        start_time = time.time()
 
         while not should_quit:
             try:
                 command = str(input("READY:"))
                 if command == "quit":
                     should_quit = True
-                else:
-                    ret.append(
-                        "time.sleep({})".format(time.time() - start_time))
-                    write_result = self.__write_to_fona__(command)
-                    start_time = time.time()
-                    self.__logger__.log_info_message(write_result)
+                else if command is not None and len(command) > 0:
+                    response = self.__send_command__(command)
 
-                    self.__logger__.log_info_message(
-                        self.__read_from_fona__(
-                            DEFAULT_RESPONSE_READ_TIMEOUT))
+                    if response is None or len(response) is 0:
+                        self.__logger__.log_warning_message("No response.")
+                    else:
+                        for line in response:
+                            self.__logger__.log_info_message(line)
             except Exception as ex:
                 self.__logger__.log_warning_message(
                     "Terminal EX={}".format(ex))
@@ -600,9 +597,9 @@ class Fona(object):
 
     def __send_command__(
         self,
-        com,
-        add_eol=True
-    ):
+        com: str,
+        add_eol: bool = True
+    ) -> list:
         """ send a command to the modem """
         self.__modem_access_lock__.acquire(True)
 
