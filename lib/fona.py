@@ -581,7 +581,7 @@ class Fona(object):
 
         self.__logger__.log_info_message("   starting read")
         while self.serial_connection.inWaiting() > 0:
-            read_buffer += self.serial_connection.read(1)
+            read_buffer += self.serial_connection.readline().decode()
             time_elapsed = time.time() - start_time
             if time_elapsed > response_timeout:
                 self.__logger__.log_warning_message("TIMEOUT")
