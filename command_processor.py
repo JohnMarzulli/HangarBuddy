@@ -323,8 +323,9 @@ class CommandProcessor(object):
         Gets how long the system has been up.
         """
 
-        uptime = (datetime.datetime.now() -
-                  self.__system_start_time__).total_seconds()
+        now = datetime.datetime.now()
+        delta = (now - self.__system_start_time__)
+        uptime = delta.total_seconds()
 
         return utilities.get_time_text(uptime)
 
@@ -336,20 +337,19 @@ class CommandProcessor(object):
         """
 
         if self.__sensors__.current_light_sensor_reading is not None:
-            status = str(int(self.__sensors__.current_light_sensor_reading.lux)) + \
-                " LUX of light.\n"
+            status = "{} LUX of light.\n".format(
+                self.__sensors__.current_light_sensor_reading.lux)
             status += "Hangar is "
             brightness = "Bright. Lights on?"
 
             # Determine the brightness
-            if self.__sensors__.current_light_sensor_reading.lux <= \
-                    self.__configuration__.hangar_dark:
+            current_lux = self.__sensors__.current_light_sensor_reading.lux
+
+            if current_lux <= self.__configuration__.hangar_dark:
                 brightness = "dark."
-            elif self.__sensors__.current_light_sensor_reading.lux <= \
-                    self.__configuration__.hangar_dim:
+            elif current_lux <= self.__configuration__.hangar_dim:
                 brightness = "dim."
-            elif self.__sensors__.current_light_sensor_reading.lux <= \
-                    self.__configuration__.hangar_lit:
+            elif current_lux <= self.__configuration__.hangar_lit:
                 brightness = "lit."
 
             status += brightness
