@@ -4,7 +4,7 @@ Simple wrapper around a logger.
 
 from logging import Logger
 
-from common_utils import text_tools
+from lib import text_tools
 
 
 class HangarBuddyLogger(object):
