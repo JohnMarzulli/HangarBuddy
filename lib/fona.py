@@ -435,7 +435,7 @@ class Fona(object):
                 command = str(input("READY:"))
                 if command == "quit":
                     should_quit = True
-                else if command is not None and len(command) > 0:
+                elif command is not None and len(command) > 0:
                     response = self.__send_command__(command)
 
                     if response is None or len(response) is 0:
