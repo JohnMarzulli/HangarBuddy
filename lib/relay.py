@@ -2,7 +2,8 @@
 Module to handle sending commands to the power relay.
 """
 import time
-import local_debug
+
+from lib import local_debug
 
 if not local_debug.is_debug():
     import RPi.GPIO as GPIO
@@ -21,7 +22,12 @@ class PowerRelay(object):
     the AC/D control relay is plugged into
     """
 
-    def __init__(self, name, GPIO_PIN, relay_type=DEFAULT_RELAY_TYPE):
+    def __init__(
+        self,
+        name,
+        GPIO_PIN,
+        relay_type=DEFAULT_RELAY_TYPE
+    ):
         """
         Creates a relay controller.
         """
@@ -33,13 +39,15 @@ class PowerRelay(object):
         # setup GPIO Pins
 
         if not local_debug.is_debug():
-            print "Setting " + str(GPIO_PIN) + " to BOARD/OUT"
+            print("Setting {} to BOARD/OUT".format(GPIO_PIN))
             self.expected_status = GPIO.LOW
             GPIO.setwarnings(False)
             GPIO.setmode(GPIO.BOARD)
             GPIO.setup(GPIO_PIN, GPIO.OUT)
 
-    def switch_high(self):
+    def switch_high(
+        self
+    ):
         """
         Sets the GPIO pin to HIGH
         """
@@ -49,7 +57,7 @@ class PowerRelay(object):
             return True
 
         try:
-            print "Setting to OUT/HIGH"
+            print("Setting to OUT/HIGH")
             self.expected_status = GPIO.HIGH
             GPIO.output(self.gpio_pin, GPIO.HIGH)
             time.sleep(3)
@@ -57,7 +65,9 @@ class PowerRelay(object):
             return False
         return True
 
-    def switch_low(self):
+    def switch_low(
+        self
+    ):
         """
         Sets the GPIO pin to LOW
         """
@@ -67,7 +77,7 @@ class PowerRelay(object):
             return True
 
         try:
-            print "Setting to OUT/LOW"
+            print("Setting to OUT/LOW")
             self.expected_status = GPIO.LOW
             GPIO.output(self.gpio_pin, GPIO.LOW)
             time.sleep(3)
@@ -76,7 +86,9 @@ class PowerRelay(object):
 
         return True
 
-    def get_io_pin_status(self):
+    def get_io_pin_status(
+        self
+    ):
         """
         return current status of switch, 0 or 1
         """
@@ -125,15 +137,15 @@ def test_off():
 if __name__ == '__main__':
     import doctest
 
-    print "Starting tests."
+    print("Starting tests.")
 
     doctest.testmod()
 
-    print "Tests finished"
+    print("Tests finished")
 
     TEST_RELAY = PowerRelay("Heater", DEFAULT_PIN)
     TEST_RELAY.switch_high()
-    print str(TEST_RELAY.get_io_pin_status())
+    print(str(TEST_RELAY.get_io_pin_status()))
     time.sleep(10)
     TEST_RELAY.switch_low()
-    print str(TEST_RELAY.get_io_pin_status())
+    print(str(TEST_RELAY.get_io_pin_status()))

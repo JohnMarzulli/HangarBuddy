@@ -1,7 +1,8 @@
 """ Module to help with the gas sensor. """
 
 import time
-import local_debug
+
+from lib import local_debug
 
 if not local_debug.is_debug():
     import smbus
@@ -14,12 +15,17 @@ DEFAULT_DEVICE_CHANNEL = 0
 DEFAULT_TRIGGER_THRESHOLD = 230
 DEFAULT_ALL_CLEAR_THRESHOLD = 220
 
+
 class GasSensorResult(object):
     """
     Object to handle the results from the gas sensor.
     """
 
-    def __init__(self, is_gas_detected, current_value):
+    def __init__(
+        self,
+        is_gas_detected,
+        current_value
+    ):
         self.is_gas_detected = is_gas_detected
         self.current_value = current_value
 
@@ -29,10 +35,12 @@ class GasSensor(object):
     Class to help with the gas sensor.
     """
 
-    def __init__(self,
-                 sensor_trigger_threshold=DEFAULT_TRIGGER_THRESHOLD,
-                 sensor_all_clear_threshold=DEFAULT_ALL_CLEAR_THRESHOLD):
-        print "Starting init"
+    def __init__(
+        self,
+        sensor_trigger_threshold=DEFAULT_TRIGGER_THRESHOLD,
+        sensor_all_clear_threshold=DEFAULT_ALL_CLEAR_THRESHOLD
+    ):
+        print("Starting init")
 
         self.enabled = True
 
@@ -50,7 +58,10 @@ class GasSensor(object):
         self.current_value = DEFAULT_ALL_CLEAR_THRESHOLD
         self.simulator_direction = 1
 
-    def __read__(self, read_offset=DEFAULT_CHANNEL_READ_OFFSET):
+    def __read__(
+        self,
+        read_offset=DEFAULT_CHANNEL_READ_OFFSET
+    ):
         """
         Read from the ic2 device.
         """
@@ -85,17 +96,22 @@ class GasSensor(object):
 
             raw_value = self.ic2_bus.read_byte(DEFAULT_IC2_ADDRESS)
             converted_value = raw_value * (255.0 - 125.0) / 255.0 + 125.0
-            print "RAW=" + str(raw_value) + ", CONV=" + str(converted_value)
+            print("RAW={0}, CONV={1}".format(raw_value, converted_value))
 
             self.ic2_bus.write_byte_data(
-                DEFAULT_IC2_ADDRESS, 0x40, int(converted_value))
+                DEFAULT_IC2_ADDRESS,
+                0x40,
+                int(converted_value))
 
             return raw_value
         except:
             self.enabled = False
             return None
 
-    def update(self, read_offset=DEFAULT_CHANNEL_READ_OFFSET):
+    def update(
+        self,
+        read_offset=DEFAULT_CHANNEL_READ_OFFSET
+    ):
         """
         Attempts to look for gas.
         """
@@ -103,7 +119,7 @@ class GasSensor(object):
         self.current_value = self.__read__(read_offset)
 
         if self.current_value is None or not self.enabled:
-            return GasSensorResult(False, DEFAULT_ALL_CLEAR_THRESHOLD) 
+            return GasSensorResult(False, DEFAULT_ALL_CLEAR_THRESHOLD)
 
         # For the warning to be removed, it must drop below an
         # all clear level that is lower than the trigger level.
@@ -122,6 +138,7 @@ if __name__ == '__main__':
 
     while SENSOR.enabled:
         IS_GAS_DETECTED = SENSOR.update()
-        print "LVL:" + str(IS_GAS_DETECTED.current_value) + ", " \
-            + str(IS_GAS_DETECTED.is_gas_detected)
+        print("LVL:{0}, {1}".format(
+            IS_GAS_DETECTED.current_value,
+            IS_GAS_DETECTED.is_gas_detected))
         time.sleep(0.2)

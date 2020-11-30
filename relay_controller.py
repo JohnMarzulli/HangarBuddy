@@ -3,11 +3,10 @@
 # encoding: UTF-8
 
 import time
-import Queue
 from multiprocessing import Queue as MPQueue
 
-import text
 import lib.utilities as utilities
+import text
 from lib.relay import PowerRelay
 
 

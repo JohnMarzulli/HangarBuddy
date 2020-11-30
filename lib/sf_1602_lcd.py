@@ -7,7 +7,7 @@ Based on https://github.com/sunfounder/SunFounder_SensorKit_for_RPi2/blob/master
 #!/usr/bin/env python
 
 import time
-import local_debug
+from lib import local_debug
 
 if not local_debug.is_debug():
     import smbus

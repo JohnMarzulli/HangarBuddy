@@ -2,7 +2,8 @@
 
 import os
 import time
-import local_debug
+
+from lib import local_debug
 
 # ---------------------------------------------------------------
 # Note:
@@ -21,7 +22,9 @@ import local_debug
 # https://www.sunfounder.com/learn/Sensor-Kit-v1-0-for-Raspberry-Pi/lesson-17-ds18b20-temperature-sensor-sensor-kit-v1-0-for-pi.html
 
 
-def celcius_to_farenheit(temp_in_celcius):
+def celcius_to_farenheit(
+    temp_in_celcius
+):
     """
     converts celcius to F.
     Needs a float.
@@ -29,7 +32,9 @@ def celcius_to_farenheit(temp_in_celcius):
     return ((temp_in_celcius * 9.0) / 5.0) + 32.0
 
 
-def read_sensor(sensor_id):
+def read_sensor(
+    sensor_id
+):
     """
     Reads temperature from sensor and prints to stdout
     id is the id of the sensor.
@@ -39,15 +44,16 @@ def read_sensor(sensor_id):
     """
 
     try:
-        tfile = open("/sys/bus/w1/devices/" + sensor_id + "/w1_slave")
+        tfile = open("/sys/bus/w1/devices/{}/w1_slave".format(sensor_id))
         text = tfile.read()
         tfile.close()
         secondline = text.split("\n")[1]
         temperaturedata = secondline.split(" ")[9]
         temperature = float(temperaturedata[2:])
         temperature = temperature / 1000
-        print "Sensor: " + sensor_id + " : %0.3f C" % temperature
-        print "Sensor: " + sensor_id + " : %0.3f F" % celcius_to_farenheit(temperature)
+        print("Sensor: {0} : {1:0.3}C".format(temperature))
+        print("Sensor: {0} : {1:0.3}F".format(
+            celcius_to_farenheit(temperature)))
 
         return celcius_to_farenheit(temperature)
     except:
@@ -78,16 +84,16 @@ def read_sensors():
                     if probe_value is not None:
                         temperature_probe_values.append(probe_value)
                 except:
-                    print "Failed to read sensor"
+                    print("Failed to read sensor")
     except:
-        print "Drivers not available."
+        print("Drivers not available.")
 
     array_length = 0
     if temperature_probe_values is not None:
         array_length = len(temperature_probe_values)
 
     if array_length == 0:
-        print "No sensors found! Check connection."
+        print("No sensors found! Check connection.")
 
     return temperature_probe_values
 
@@ -111,8 +117,8 @@ def destroy():
 if __name__ == '__main__':
     import doctest
 
-    print "Starting tests."
+    print("Starting tests.")
 
     doctest.testmod()
 
-    print "Tests finished"
+    print("Tests finished")

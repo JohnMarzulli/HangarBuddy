@@ -1,18 +1,22 @@
 """
-Module to hold common utilities.
+Module to hold common string and text utilities.
 """
 
-import subprocess
 
-from lib import local_debug
-
-DEFAULT_POWER_CYCLE_DELAY = 2  # Time to allow for responses to be sent
-
-
-def get_singular_or_plural(value, unit):
+def get_singular_or_plural(
+    value,
+    unit: str
+) -> str:
     """
     Returns the value with a singuar
     or plural form.
+
+    Arguments:
+        value {number} -- The number to determine the plurality.
+        unit {string} -- The representation of the units.
+
+    Returns:
+        string -- The value with the unit in singular or plural form.
     """
 
     as_int = int(value)
@@ -30,7 +34,9 @@ def get_singular_or_plural(value, unit):
     return result
 
 
-def get_time_text(number_of_seconds):
+def get_time_text(
+    number_of_seconds: int
+) -> str:
     """
     Returns the amount of time in the appropriate unit.
     >>> get_time_text(-1)
@@ -94,7 +100,9 @@ def get_time_text(number_of_seconds):
     return get_singular_or_plural(number_of_days, "day")
 
 
-def escape(text):
+def escape(
+    text: str
+) -> str:
     """
     Replaces escape sequences do they can be printed.
 
@@ -108,72 +116,6 @@ def escape(text):
     """
 
     return str(text).replace('\r', '\\r').replace('\n', '\\n').replace('\x1a', '\\x1a')
-
-
-def get_cleaned_phone_number(dirty_number):
-    """
-    Removes any text from the phone number that
-    could cause the command to not work.
-
-    >>> get_cleaned_phone_number('"2061234567"')
-    '2061234567'
-    >>> get_cleaned_phone_number('+2061234567')
-    '2061234567'
-    >>> get_cleaned_phone_number('""+2061234567')
-    '2061234567'
-    >>> get_cleaned_phone_number('2061234567')
-    '2061234567'
-    >>> get_cleaned_phone_number('(206) 123-4567')
-    '2061234567'
-    >>> get_cleaned_phone_number(None)
-    """
-    if dirty_number is not None:
-        return dirty_number.replace(
-            '+',
-            '').replace(
-                '(',
-                '').replace(
-                    ')',
-                    '').replace(
-                        '-',
-                        '').replace(
-                            ' ',
-                            '').replace(
-                                '"',
-                                '')
-    return None
-
-
-def restart():
-    """
-    Restarts down the Pi.
-    """
-
-    if not local_debug.IS_PI:
-        return
-
-    subprocess.Popen(
-        ["sudo shutdown -r 30"],
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT)
-
-
-def shutdown(
-    seconds: int = 30
-):
-    """
-    Shuts down the Pi.
-    """
-
-    if not local_debug.IS_PI:
-        return
-
-    subprocess.Popen(
-        ["sudo shutdown -h {0}".format(int(seconds))],
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT)
 
 
 if __name__ == '__main__':

@@ -1,13 +1,13 @@
 """
 Module to help with tha AdaFruit Fona modules
 """
-import time
-import threading
-from multiprocessing import Queue as MPQueue
 import datetime
-import local_debug
-import utilities
-from logger import Logger
+import threading
+import time
+from multiprocessing import Queue as MPQueue
+
+from lib import local_debug, utilities
+from lib.hangar_buddy_logger import HangarBuddyLogger
 
 if not local_debug.is_debug():
     import RPi.GPIO as GPIO
@@ -609,8 +609,9 @@ class Fona(object):
 
 
 if __name__ == '__main__':
-    import serial
     import logging
+
+    import serial
 
     if not local_debug.is_debug():
         PHONE_NUMBER = "2067654321"  # input("Phone number>")
@@ -622,37 +623,42 @@ if __name__ == '__main__':
     else:
         SERIAL_CONNECTION = serial.Serial('/dev/ttyUSB0', 9600)
 
-    FONA = Fona(Logger(logging.getLogger("fona")),
-                SERIAL_CONNECTION,
-                DEFAULT_POWER_STATUS_PIN,
-                DEFAULT_RING_INDICATOR_PIN)
+    FONA = Fona(
+        HangarBuddyLogger(
+            logging.getLogger("fona")),
+            SERIAL_CONNECTION,
+            DEFAULT_POWER_STATUS_PIN,
+            DEFAULT_RING_INDICATOR_PIN)
 
     if not FONA.is_power_on():
-        print "Power is off.."
+        print("Power is off..")
         exit()
 
     # fona.get_carrier()
     BATTERY_CONDITION = FONA.get_current_battery_condition()
-    FONA.send_message(PHONE_NUMBER, "Time:" + str(time.time()) + "\nPCT:" +
-                      str(BATTERY_CONDITION.battery_percent)
-                      + "\nv:" + str(BATTERY_CONDITION.battery_voltage))
+    FONA.send_message(
+        PHONE_NUMBER,
+        "Time:{0}\nPCT:{1}\nv:{2}".format(
+            time.time(),
+            BATTERY_CONDITION.battery_percent,
+            BATTERY_CONDITION.battery_voltage))
 
     SIGNAL_STRENGTH = FONA.get_signal_strength()
-    print "Signal:" + SIGNAL_STRENGTH.classify_strength()
-    print FONA.get_module_name()
-    print FONA.get_sim_card_number()
+    print("Signal:{}".format(SIGNAL_STRENGTH.classify_strength()))
+    print(FONA.get_module_name())
+    print(FONA.get_sim_card_number())
 
     while True:
         if FONA.is_message_waiting():
-            print "Message waiting.."
+            print("Message waiting..")
 
             for message in FONA.get_messages():
-                print "ID:" + message.message_id
-                print "SENT:" + str(message.sent_time)
-                print "Num:" + message.sender_number
-                print "Stat:" + message.message_status
-                print "SMS:" + message.message_text
-                print "REC:" + str(message.received_time)
+                print("ID:{}".format(message.message_id))
+                print("SENT:{}".format(message.sent_time))
+                print("Num:{}".format(message.sender_number))
+                print("Stat:{}".format(message.message_status))
+                print("SMS:{}".format(message.message_text))
+                print("REC:{}".format(message.received_time))
 
             FONA.delete_messages()
 

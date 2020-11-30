@@ -35,10 +35,10 @@ Main entry code for HangarBuddy
 
 import logging
 import logging.handlers
-import configuration
-from lib.logger import Logger
-import command_processor
 
+import command_processor
+import configuration
+from lib.hangar_buddy_logger import HangarBuddyLogger
 
 CONFIGURATION = configuration.Configuration()
 
@@ -54,5 +54,6 @@ LOGGER.addHandler(HANDLER)
 
 if __name__ == '__main__':
     COMMAND_PROCESSOR = command_processor.CommandProcessor(
-        CONFIGURATION, Logger(LOGGER))
+        CONFIGURATION,
+        HangarBuddyLogger(LOGGER))
     COMMAND_PROCESSOR.run_hangar_buddy()

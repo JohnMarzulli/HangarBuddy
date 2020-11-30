@@ -6,9 +6,10 @@ import sys
 import threading
 import time
 from multiprocessing import Queue as MPQueue
-import text
-import lib.local_debug as local_debug
+
 import lib.fona as fona
+import lib.local_debug as local_debug
+import text
 from lib.recurring_task import RecurringTask
 
 
@@ -27,14 +28,18 @@ class FonaManager(object):
     CHECK_BATTERY_INTERVAL = 60 * 5  # Every five minutes
     DEFAULT_RETRY_ATTEMPTS = 4
 
-    def is_power_on(self):
+    def is_power_on(
+        self
+    ):
         """
         Is the Fona on?
         """
 
         return self.__fona__.is_power_on()
 
-    def update(self):
+    def update(
+        self
+    ):
         """
         Performs all of the processing of receiving,
         sending, and status....
@@ -44,20 +49,26 @@ class FonaManager(object):
         self.__process_status_updates__()
         self.__process_send_messages__()
 
-    def send_message(self,
-                     phone_number,
-                     text_message,
-                     maximum_number_of_retries=DEFAULT_RETRY_ATTEMPTS):
+    def send_message(
+        self,
+        phone_number,
+        text_message,
+        maximum_number_of_retries=DEFAULT_RETRY_ATTEMPTS
+    ):
         """
         Queues the message to be sent out.
         """
 
         self.__lock__.acquire(True)
         self.__send_message_queue__.put(
-            [phone_number, text_message, maximum_number_of_retries])
+            [phone_number,
+             text_message,
+             maximum_number_of_retries])
         self.__lock__.release()
 
-    def signal_strength(self):
+    def signal_strength(
+        self
+    ):
         """
         Handles returning a cell signal status
         in a thread friendly manner.
@@ -65,7 +76,9 @@ class FonaManager(object):
 
         return self.__current_signal_strength__
 
-    def battery_condition(self):
+    def battery_condition(
+        self
+    ):
         """
         Handles returning the battery status
         in a thread friendly manner.
@@ -73,13 +86,17 @@ class FonaManager(object):
 
         return self.__current_battery_state__
 
-    def is_message_waiting(self):
+    def is_message_waiting(
+        self
+    ):
         """
         Is there a message waiting for us to unpack?
         """
         return self.__fona__.is_message_waiting()
 
-    def get_messages(self):
+    def get_messages(
+        self
+    ):
         """
         Gets any messages from the Fona.
         """
@@ -91,13 +108,15 @@ class FonaManager(object):
             results = self.__fona__.get_messages()
         except:
             exception_message = "ERROR fetching messages!"
-            print exception_message
+            print(exception_message)
             self.__logger__.log_warning_message(exception_message)
         self.__lock__.release()
 
         return results
 
-    def delete_messages(self):
+    def delete_messages(
+        self
+    ):
         """
         Deletes any messages from the Fona.
         """
@@ -109,13 +128,16 @@ class FonaManager(object):
             num_deleted = self.__fona__.delete_messages()
         except:
             exception_message = "ERROR deleting messages!"
-            print exception_message
+            print(exception_message)
             self.__logger__.log_warning_message(exception_message)
         self.__lock__.release()
 
         return num_deleted
 
-    def delete_message(self, message_to_delete):
+    def delete_message(
+        self,
+        message_to_delete
+    ):
         """
         Deletes any messages from the Fona.
         """
@@ -125,24 +147,30 @@ class FonaManager(object):
             self.__fona__.delete_message(message_to_delete)
         except:
             exception_message = "ERROR deleting message!"
-            print exception_message
+            print(exception_message)
             self.__logger__.log_warning_message(exception_message)
         self.__lock__.release()
 
-    def __update_battery_state__(self):
+    def __update_battery_state__(
+        self
+    ):
         """
         Updates the battery state.
         """
         self.__current_battery_state__ = self.__fona__.get_current_battery_condition()
 
-    def __update_signal_strength__(self):
+    def __update_signal_strength__(
+        self
+    ):
         """
         Updates the battery state.
         """
 
         self.__current_signal_strength__ = self.__fona__.get_signal_strength()
 
-    def __process_status_updates__(self):
+    def __process_status_updates__(
+        self
+    ):
         """
         Handles updating the cell signal
         and battery status.
@@ -168,12 +196,14 @@ class FonaManager(object):
                     signal_checked = True
         except:
             exception_message = "ERROR updating signal & battery status!"
-            print exception_message
+            print(exception_message)
             self.__logger__.log_warning_message(exception_message)
 
         self.__lock__.release()
 
-    def __process_send_messages__(self):
+    def __process_send_messages__(
+        self
+    ):
         """
         Handles sending any pending messages.
         """
@@ -211,26 +241,32 @@ class FonaManager(object):
 
         self.__lock__.release()
 
-    def __trigger_check_battery__(self):
+    def __trigger_check_battery__(
+        self
+    ):
         """
         Triggers the battery state to be checked.
         """
 
         self.__update_status_queue__.put(text.CHECK_BATTERY)
 
-    def __trigger_check_signal__(self):
+    def __trigger_check_signal__(
+        self
+    ):
         """
         Triggers the signal to be checked.
         """
 
         self.__update_status_queue__.put(text.CHECK_SIGNAL)
 
-    def __init__(self,
-                 logger,
-                 serial_connection,
-                 power_status_pin,
-                 ring_indicator_pin,
-                 utc_offset):
+    def __init__(
+        self,
+        logger,
+        serial_connection,
+        power_status_pin,
+        ring_indicator_pin,
+        utc_offset
+    ):
         """
         Initializes the Fona.
         """
@@ -238,10 +274,11 @@ class FonaManager(object):
         fona.TIMEZONE_OFFSET = utc_offset
         self.__logger__ = logger
         self.__lock__ = threading.Lock()
-        self.__fona__ = fona.Fona(logger,
-                                  serial_connection,
-                                  power_status_pin,
-                                  ring_indicator_pin)
+        self.__fona__ = fona.Fona(
+            logger,
+            serial_connection,
+            power_status_pin,
+            ring_indicator_pin)
         self.__current_battery_state__ = None
         self.__current_signal_strength__ = None
         self.__update_status_queue__ = MPQueue()
@@ -253,15 +290,17 @@ class FonaManager(object):
         self.__update_battery_state__()
         self.__update_signal_strength__()
 
-        RecurringTask("check_battery",
-                      self.CHECK_BATTERY_INTERVAL,
-                      self.__trigger_check_battery__,
-                      self.__logger__)
+        RecurringTask(
+            "check_battery",
+            self.CHECK_BATTERY_INTERVAL,
+            self.__trigger_check_battery__,
+            self.__logger__)
 
-        RecurringTask("check_signal",
-                      self.CHECK_SIGNAL_INTERVAL,
-                      self.__trigger_check_signal__,
-                      self.__logger__)
+        RecurringTask(
+            "check_signal",
+            self.CHECK_SIGNAL_INTERVAL,
+            self.__trigger_check_signal__,
+            self.__logger__)
 
 
 if __name__ == '__main__':
@@ -274,24 +313,27 @@ if __name__ == '__main__':
     else:
         SERIAL_CONNECTION = serial.Serial('/dev/ttyUSB0', 9600)
 
-    FONA_MANAGER = FonaManager(None,
-                               SERIAL_CONNECTION,
-                               fona.DEFAULT_POWER_STATUS_PIN,
-                               fona.DEFAULT_RING_INDICATOR_PIN,
-                               fona.TIMEZONE_OFFSET)
+    FONA_MANAGER = FonaManager(
+        None,
+        SERIAL_CONNECTION,
+        fona.DEFAULT_POWER_STATUS_PIN,
+        fona.DEFAULT_RING_INDICATOR_PIN,
+        fona.TIMEZONE_OFFSET)
 
     if not FONA_MANAGER.is_power_on():
-        print "Power is off.."
+        print("Power is off..")
         exit()
 
     BATTERY_CONDITION = FONA_MANAGER.battery_condition()
-    FONA_MANAGER.send_message(PHONE_NUMBER,
-                              "Time:" + str(time.time()) + "\nPCT:"
-                              + str(BATTERY_CONDITION.battery_percent)
-                              + "\nv:" + str(BATTERY_CONDITION.battery_voltage))
+    FONA_MANAGER.send_message(
+        PHONE_NUMBER,
+        "Time:{0}\nPCT:{1}\nv:{2}".format(
+            time.time(),
+            BATTERY_CONDITION.battery_percent,
+            BATTERY_CONDITION.battery_voltage))
 
     SIGNAL_STRENGTH = FONA_MANAGER.signal_strength()
-    print "Signal:" + SIGNAL_STRENGTH.classify_strength()
+    print("Signal:" + SIGNAL_STRENGTH.classify_strength())
 
     while True:
         BATTERY_CONDITION = FONA_MANAGER.battery_condition()
@@ -301,7 +343,7 @@ if __name__ == '__main__':
             MESSAGES = FONA_MANAGER.get_messages()
             FONA_MANAGER.delete_messages()
 
-            print "Battery:" + str(BATTERY_CONDITION.battery_percent)
-            print "Signal:" + SIGNAL_STRENGTH.classify_strength()
+            print("Battery:" + str(BATTERY_CONDITION.battery_percent))
+            print("Signal:" + SIGNAL_STRENGTH.classify_strength())
 
         FONA_MANAGER.update()
