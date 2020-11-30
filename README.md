@@ -79,9 +79,9 @@ For a complete set of installation instructions, visit
 
 #### Fona Status
 
-* ORANGE Fona PS to GPIO23
-* YELLOW Fona Key to GPIO GND
-* GREEN Fona RI to GPIO24
+* YELLOW Fona Key to GPIO GND (PHYS 14)
+* ORANGE Fona PS to GPIO23 (PHYS 16)
+* GREEN Fona RI to GPIO24 (PHYS 18)
 
 #### Fona Power... Again
 
