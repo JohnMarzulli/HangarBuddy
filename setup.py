@@ -7,8 +7,7 @@ from lib.local_debug import IS_PI
 installs = ['pyserial']
 
 if IS_PI:
-    installs += 'RPi.GPIO'
-    installs += 'smbus2'
+    installs = ['pyserial', 'RPi.GPIO', 'smbus2']
 
 setup(
     name='HangarBuddy',
