@@ -15,6 +15,7 @@ if not local_debug.is_debug():
 DEFAULT_SMBUS = 1
 DEFAULT_1602_ADDRESS = 0x27
 
+
 class LcdDisplay(object):
     """
     LCD OUTPUT
@@ -22,7 +23,12 @@ class LcdDisplay(object):
     Class to abstract a 1602 LCD display
     """
 
-    def __init__(self, sm_bus_id=DEFAULT_SMBUS, adr=DEFAULT_1602_ADDRESS, bl=1):
+    def __init__(
+        self,
+        sm_bus_id=DEFAULT_SMBUS,
+        adr=DEFAULT_1602_ADDRESS,
+        bl=1
+    ):
         """
         Intializer for a SunFounder 1602
 
@@ -53,7 +59,10 @@ class LcdDisplay(object):
         except:
             self.enable = False
 
-    def write_word(self, data):
+    def write_word(
+        self,
+        data
+    ) -> bool:
         """
         Writes a word to the memory in the i2c device
 
@@ -61,17 +70,27 @@ class LcdDisplay(object):
             data {string} -- The text to write.
         """
 
-        temp = data
-        if self.__blen__ == 1:
-            temp |= 0x08
-        else:
-            temp &= 0xF7
+        if not self.enable:
+            return False
 
-        if not local_debug.is_debug() and self.__smbus__ is not None:
-            self.__smbus__.write_byte(self.__lcd_addr__, temp)
+        try:
+            temp = data
+            if self.__blen__ == 1:
+                temp |= 0x08
+            else:
+                temp &= 0xF7
 
+            if not local_debug.is_debug() and self.__smbus__ is not None:
+                self.__smbus__.write_byte(self.__lcd_addr__, temp)
 
-    def send_command(self, comm):
+                return True
+        except:
+            return False
+
+    def send_command(
+        self,
+        comm
+    ) -> bool:
         """
         Sends a command to the I2C device
 
@@ -79,24 +98,32 @@ class LcdDisplay(object):
             comm {hex} -- The i2c command
         """
 
-        # Send bit7-4 firstly
-        buf = comm & 0xF0
-        buf |= 0x04               # RS = 0, RW = 0, EN = 1
-        self.write_word(buf)
-        time.sleep(0.002)
-        buf &= 0xFB               # Make EN = 0
-        self.write_word(buf)
+        if not self.enable:
+            return False
 
-        # Send bit3-0 secondly
-        buf = (comm & 0x0F) << 4
-        buf |= 0x04               # RS = 0, RW = 0, EN = 1
-        self.write_word(buf)
-        time.sleep(0.002)
-        buf &= 0xFB               # Make EN = 0
-        self.write_word(buf)
+        try:
+            # Send bit7-4 firstly
+            buf = comm & 0xF0
+            buf |= 0x04               # RS = 0, RW = 0, EN = 1
+            self.write_word(buf)
+            time.sleep(0.002)
+            buf &= 0xFB               # Make EN = 0
+            self.write_word(buf)
 
+            # Send bit3-0 secondly
+            buf = (comm & 0x0F) << 4
+            buf |= 0x04               # RS = 0, RW = 0, EN = 1
+            self.write_word(buf)
+            time.sleep(0.002)
+            buf &= 0xFB               # Make EN = 0
+            return self.write_word(buf)
+        except:
+            return False
 
-    def send_data(self, data):
+    def send_data(
+        self,
+        data
+    ) -> bool:
         """
         Sends data to the i2c device
 
@@ -104,44 +131,59 @@ class LcdDisplay(object):
             data {string} -- The data to write.
         """
 
-        # Send bit7-4 firstly
-        buf = data & 0xF0
-        buf |= 0x05               # RS = 1, RW = 0, EN = 1
-        self.write_word(buf)
-        time.sleep(0.002)
-        buf &= 0xFB               # Make EN = 0
-        self.write_word(buf)
+        if not self.enable:
+            return False
 
-        # Send bit3-0 secondly
-        buf = (data & 0x0F) << 4
-        buf |= 0x05               # RS = 1, RW = 0, EN = 1
-        self.write_word(buf)
-        time.sleep(0.002)
-        buf &= 0xFB               # Make EN = 0
-        self.write_word(buf)
+        try:
+            # Send bit7-4 firstly
+            buf = data & 0xF0
+            buf |= 0x05               # RS = 1, RW = 0, EN = 1
+            self.write_word(buf)
+            time.sleep(0.002)
+            buf &= 0xFB               # Make EN = 0
+            self.write_word(buf)
 
-    def clear(self):
+            # Send bit3-0 secondly
+            buf = (data & 0x0F) << 4
+            buf |= 0x05               # RS = 1, RW = 0, EN = 1
+            self.write_word(buf)
+            time.sleep(0.002)
+            buf &= 0xFB               # Make EN = 0
+            return self.write_word(buf)
+        except:
+            return False
+
+    def clear(
+        self
+    ) -> bool:
         """
         Clears the screen.
         """
 
-        self.send_command(0x01)  # Clear Screen
+        return self.send_command(0x01)  # Clear Screen
 
-
-    def openlight(self):  # Enable the backlight
+    def openlight(
+        self
+    ):  # Enable the backlight
         """
         Turns on the backlight.
         """
-        if self.__smbus__ is not None:
+        if (self.__smbus__ is not None) and self.enable:
             self.__smbus__.write_byte(DEFAULT_1602_ADDRESS, 0x08)
             self.__smbus__.close()
 
-    def write_text(self, text_to_write):
+    def write_text(
+        self,
+        text_to_write
+    ) -> bool:
         """
         Writes a string to the LCD.
         """
 
         if text_to_write is None:
+            return False
+
+        if not self.enable:
             return False
 
         text_array = text_to_write.split('\n')
@@ -160,7 +202,12 @@ class LcdDisplay(object):
 
         return True
 
-    def write(self, pos_x, pos_y, text_to_write):
+    def write(
+        self,
+        pos_x,
+        pos_y,
+        text_to_write
+    ):
         """
         Writes to the screen.
 
