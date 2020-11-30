@@ -573,7 +573,7 @@ class Fona(object):
         """
         Read back from the Fona in a safe manner.
         """
-        read_buffer = ""
+        read_buffer = []
         start_time = time.time()
 
         if self.serial_connection is None:
@@ -581,17 +581,20 @@ class Fona(object):
 
         self.__logger__.log_info_message("   starting read")
         while self.serial_connection.inWaiting() > 0:
-            read_buffer += self.serial_connection.readline(
-                response_timeout).decode()
+            read_buffer += self.serial_connection.read(1)
             time_elapsed = time.time() - start_time
             if time_elapsed > response_timeout:
                 self.__logger__.log_warning_message("TIMEOUT")
                 break
 
-        self.__logger__.log_info_message("   done")
-        self.__logger__.log_info_message("BUFFER:{}".format(read_buffer))
+        response = ''
+        for char in read_buffer:
+            response += chr(char)
 
-        return read_buffer
+        self.__logger__.log_info_message("   done")
+        self.__logger__.log_info_message("BUFFER:{}".format(response))
+
+        return response
 
     def __send_command__(
         self,
