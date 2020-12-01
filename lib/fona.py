@@ -427,21 +427,24 @@ class Fona(object):
         Simple interactive terminal to play with the Fona.
         """
 
-        should_quit = False
-
-        while not should_quit:
+        while True:
             try:
                 command = str(input("READY:"))
-                if command == "quit":
-                    should_quit = True
-                elif command is not None and len(command) > 0:
-                    response = self.__send_command__(command)
 
-                    if response is None or len(response) is 0:
-                        self.__logger__.log_warning_message("No response.")
-                    else:
-                        for line in response:
-                            self.__logger__.log_info_message(line)
+                if command is None or len(command) is 0:
+                    continue
+
+                if command == "quit":
+                    return
+
+                response = self.__send_command__(command)
+
+                if response is not None and len(response) > 0:
+                    for line in response:
+                        self.__logger__.log_info_message(line)
+                else:
+                    self.__logger__.log_warning_message("No response.")
+
             except Exception as ex:
                 self.__logger__.log_warning_message(
                     "Terminal EX={}".format(ex))

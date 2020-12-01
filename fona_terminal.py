@@ -23,8 +23,9 @@ if __name__ == '__main__':
         fona.DEFAULT_POWER_STATUS_PIN,
         fona.DEFAULT_RING_INDICATOR_PIN)
 
-    if not FONA.is_power_on():
+    if FONA.is_power_on():
+        FONA.simple_terminal()
+    else:
         print("Power is off..")
-        exit()
 
-    FONA.simple_terminal()
+    exit()
