@@ -122,3 +122,14 @@ if __name__ == '__main__':
     doctest.testmod()
 
     print("Tests finished")
+
+    if local_debug.is_debug():
+        print("Debug mode, will not attempt to read sensor")
+    else:
+        sensor_readings = read_sensors()
+        if sensor_readings is not None:
+            results_count = len(sensor_readings)
+            if results_count > 0:
+                print("TEMP, F={}".format(sensor_readings[0]))
+            else:
+                print("Unable to read temperature sensor")
