@@ -13,7 +13,7 @@ it has been extended and modified in a number of ways.
 1. Allow extensibility to add more features.
 1. Gas sensor is now sent through an analog converter so the exact gas level can be known.
 1. The gas sensor has a trigger level, and a lower "all clear" level so the alert will keep firing until the issue is addressed, but not spam your phone.
-1. The gas sensor will alert you to gas **__anytime__** it is detected, not just when the heater is being operated.
+1. The gas sensor will alert you to gas \***\*anytime\*\*** it is detected, not just when the heater is being operated.
 1. A light sensor has been added so you can tell if you left the lights on.
 1. A temperature sensor has been added so you know if you need to turn on the heater.
 1. A LCD was added so you can position the unit and know what the signal quality is.
@@ -46,7 +46,7 @@ The commands are not case sensitive.
 | ON          | Turn the Relay/Heater on                      |
 | OFF         | Turn the Relay/Heater off                     |
 | STATUS      | Return status of the Relay/Heater (on or off) |
-| HELP        | Return the list of commands.         |
+| HELP        | Return the list of commands.                  |
 | SHUTDOWN    | Shutdown the Pi                               |
 
 ## Setup
@@ -64,28 +64,28 @@ For a complete set of installation instructions, visit
 
 ### Relay
 
-* Red wire from GPIO25 to Relay "+"
-* Black wire from Relay "-" to GPIO GND
+- Red wire from GPIO25 to Relay "+"
+- Black wire from Relay "-" to GPIO GND
 
 ### Fona
 
 #### Fona Serial/Modem Communication
 
-* TTL Black to Fona "GND"
-* TTL White to Fona "TX"
-* TTL Green to Fona "RX"
-* TTL Red to Fona "Vio"
-* USB to Pi USB
+- TTL Black to Fona "GND"
+- TTL White to Fona "TX"
+- TTL Green to Fona "RX"
+- TTL Red to Fona "Vio"
+- USB to Pi USB
 
 #### Fona Status
 
-* YELLOW Fona Key to GPIO GND (PHYS 14)
-* ORANGE Fona PS to GPIO23 (PHYS 16)
-* GREEN Fona RI to GPIO24 (PHYS 18)
+- YELLOW Fona Key to GPIO GND (PHYS 14)
+- ORANGE Fona PS to GPIO23 (PHYS 16)
+- GREEN Fona RI to GPIO24 (PHYS 18)
 
 #### Fona Power... Again
 
-* USB power into the Fona mini-USB port
+- USB power into the Fona mini-USB port
 
 **Note**:GPIO23 is physical pin 16 **Note**:GPIO24 is physical pin 18
 
@@ -93,36 +93,45 @@ For a complete set of installation instructions, visit
 
 #### ADC
 
-* Red F/M: VCC to GPIO 3V3
-* Black ADC GND to GPIO GND
-* White ADC SDA to GPIO SDAI
-* Gray ADC SCL to GPIO SCLI
-* White F/F ADC AIN0 to MQ2 White
+- Red F/M: VCC to GPIO 3V3
+- Black ADC GND to GPIO GND
+- White ADC SDA to GPIO SDAI
+- Gray ADC SCL to GPIO SCLI
+- White F/F ADC AIN0 to MQ2 White
 
 #### MQ2
 
-* Pigtail Connector into reciever
-* Red to GPIO 3V3
-* Black to GPIO GND
-* Brown to GPIO 12
+- Pigtail Connector into reciever
+- Red to GPIO 3V3
+- Black to GPIO GND
+- Brown to GPIO 12
 
 ### Temp Sensor
 
-* White plug into Temp Sensor
-* Yellow to GPIO04
-* Red to +5VO
-* Black to GPIO GND
+- White plug into Temp Sensor
+- Yellow to GPIO04
+- Red to +5VO
+- Black to GPIO GND
+
+Additional setup:
+
+`sudo raspi-config`
+
+- Under `Interfaces`, enable "1 Wire".
+- Save, quit, reboot.
+- `sudo modprobe w1-gpio`
+- `sudo modprobe w1-therm`
 
 ## Light Sensor
 
 **NOTE**: If you have the IO hat installed on the Pi, then you
 can use the duplicate SDA/SLC connectors on the set screw
-side __AND__ the connector pin side.
+side **AND** the connector pin side.
 
-* VCC (Red) to GPIO 3.3V
-* GND (Black) to GPIO Ground
-* SDA (White) to GPIO SDA
-* SLC (Gray) to GPIO SLC
+- VCC (Red) to GPIO 3.3V
+- GND (Black) to GPIO Ground
+- SDA (White) to GPIO SDA
+- SLC (Gray) to GPIO SLC
 
 ### Status Display
 
@@ -141,15 +150,15 @@ then a splitter for the SDAI and SCLI lines will need to be made.
 If you intend to use two or fewer, then no work needs to be done, and
 any free SDA/SCL pins may be used.
 
-* Red wire from LCD VCC to GPIO 5V
-* Black wire from LCD GND to GPIO GND
-* White wire from LCD SDA to GPIO SDA
-* Gray wire from LCD SCL to GPIO SCL
+- Red wire from LCD VCC to GPIO 5V
+- Black wire from LCD GND to GPIO GND
+- White wire from LCD SDA to GPIO SDA
+- Gray wire from LCD SCL to GPIO SCL
 
 ## Additional Links And Setup Notes
 
-**The MQ-2 needs to be installed with an analog-to-digital converter** You
-need to enable I2C using `raspi-config` You need to modprobe two modules for the
+**The MQ-2 needs to be installed with an analog-to-digital converter**
+You need to enable I2C using `raspi-config` You need to modprobe two modules for the
 temperature sensor to work `w1-gpio` and `w1-therm`
 
 ## Materials List
@@ -168,16 +177,16 @@ GPIO pins, and an I2C bus.
 The LiPo battery is absolutely required and used directly by the GSM board.
 
 A MicroUSB to USB adapter is required for the modem to connect into the Pi
-Zero's ****only**** USB port.
+Zero's \***\*only\*\*** USB port.
 
-* [ ] [Raspberry Pi W, case, and IO pins](https://www.amazon.com/Raspberry-Starter-Power-Supply-Premium/dp/B0748MBFTS/ref=sr_1_3?s=electronics&ie=UTF8&qid=1512070820&sr=1-3&keywords=raspberry+pi+zero+pins)
-* [ ] [Adafruit GSM board, SMA edition](https://www.amazon.com/gp/product/B011P07916/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1)
-* [ ] [Adafruit 1S Lipo W/ JST connector](https://www.amazon.com/Battery-Packs-Lithium-Polymer-1200mAh/dp/B00J2QET64/ref=sr_1_5?ie=UTF8&qid=1512070675&sr=8-5&keywords=adafruit+lipo)
-* [ ] [MicroUSB to USB adapter](https://www.amazon.com/Ksmile%C2%AE-Female-Adapter-SamSung-tablets/dp/B01C6032G0/ref=sr_1_1?dd=tLyVcVfk00xcTUme6zjHhQ%2C%2C&ddc_refnmnt=pfod&ie=UTF8&qid=1512071097&sr=8-1&keywords=micro+usb+adapter&refinements=p_97%3A11292772011)
-* [ ] [USB to TTL/Serial adapter](https://www.amazon.com/gp/product/B00QT7LQ88/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
-* [ ] [Ting GSM Sim Card](https://www.amazon.com/gp/product/B013LKL5IQ/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1)
-* [ ] [Iot Power Relay](https://www.amazon.com/gp/product/B00WV7GMA2/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1)
-* [ ] [Experimentation board with wires](https://www.amazon.com/gp/product/B01LYN4J3B/ref=oh_aui_detailpage_o08_s00?ie=UTF8&psc=1)
+- [ ] [Raspberry Pi W, case, and IO pins](https://www.amazon.com/Raspberry-Starter-Power-Supply-Premium/dp/B0748MBFTS/ref=sr_1_3?s=electronics&ie=UTF8&qid=1512070820&sr=1-3&keywords=raspberry+pi+zero+pins)
+- [ ] [Adafruit GSM board, SMA edition](https://www.amazon.com/gp/product/B011P07916/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1)
+- [ ] [Adafruit 1S Lipo W/ JST connector](https://www.amazon.com/Battery-Packs-Lithium-Polymer-1200mAh/dp/B00J2QET64/ref=sr_1_5?ie=UTF8&qid=1512070675&sr=8-5&keywords=adafruit+lipo)
+- [ ] [MicroUSB to USB adapter](https://www.amazon.com/Ksmile%C2%AE-Female-Adapter-SamSung-tablets/dp/B01C6032G0/ref=sr_1_1?dd=tLyVcVfk00xcTUme6zjHhQ%2C%2C&ddc_refnmnt=pfod&ie=UTF8&qid=1512071097&sr=8-1&keywords=micro+usb+adapter&refinements=p_97%3A11292772011)
+- [ ] [USB to TTL/Serial adapter](https://www.amazon.com/gp/product/B00QT7LQ88/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
+- [ ] [Ting GSM Sim Card](https://www.amazon.com/gp/product/B013LKL5IQ/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1)
+- [ ] [Iot Power Relay](https://www.amazon.com/gp/product/B00WV7GMA2/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1)
+- [ ] [Experimentation board with wires](https://www.amazon.com/gp/product/B01LYN4J3B/ref=oh_aui_detailpage_o08_s00?ie=UTF8&psc=1)
 
 #### Antenna
 
@@ -186,26 +195,26 @@ antenna that will work if the device is near a window or your hangar has good
 reception. The 7dbi (high gain) antenna option should be used if reception is an
 issue
 
-* [ ] [Adafruit GSM Quadband Antenna](https://www.amazon.com/gp/product/B00N4Y2C4G/ref=oh_aui_detailpage_o08_s00?ie=UTF8&psc=1)
-* [ ] [High gain antenna](https://www.amazon.com/gp/product/B01M9F08JR/ref=oh_aui_detailpage_o00_s01?ie=UTF8&psc=1)
+- [ ] [Adafruit GSM Quadband Antenna](https://www.amazon.com/gp/product/B00N4Y2C4G/ref=oh_aui_detailpage_o08_s00?ie=UTF8&psc=1)
+- [ ] [High gain antenna](https://www.amazon.com/gp/product/B01M9F08JR/ref=oh_aui_detailpage_o00_s01?ie=UTF8&psc=1)
 
 ### For Optional Gas Sensor
 
-* [ ] [Additional wires for breadboard](https://www.amazon.com/gp/product/B072L1XMJR/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1)
-* [ ] [SunFounder MQ-2 sensor](https://www.amazon.com/gp/product/B013G8A76E/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
-* [ ] [SunFounder Analog To Digital Converter](https://www.amazon.com/gp/product/B072J2VCMH/ref=oh_aui_detailpage_o05_s01?ie=UTF8&psc=1)
+- [ ] [Additional wires for breadboard](https://www.amazon.com/gp/product/B072L1XMJR/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1)
+- [ ] [SunFounder MQ-2 sensor](https://www.amazon.com/gp/product/B013G8A76E/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
+- [ ] [SunFounder Analog To Digital Converter](https://www.amazon.com/gp/product/B072J2VCMH/ref=oh_aui_detailpage_o05_s01?ie=UTF8&psc=1)
 
 ### For Optional Temperature Sensor
 
-* [ ] [SunFounder Temperature Sensor](https://www.amazon.com/gp/product/B013GB27HS/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
+- [ ] [SunFounder Temperature Sensor](https://www.amazon.com/gp/product/B013GB27HS/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
 
 ### For Optional Light Sensor
 
-* [ ] [Adafruit Light Sensor](https://www.amazon.com/gp/product/B00XW2OFWW/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
+- [ ] [Adafruit Light Sensor](https://www.amazon.com/gp/product/B00XW2OFWW/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
 
 ### For Optional Status Display
 
-* [ ] [SunFounder 1602 LCD](https://www.amazon.com/gp/product/B01E6N19YC/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
+- [ ] [SunFounder 1602 LCD](https://www.amazon.com/gp/product/B01E6N19YC/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
 
 ### Adapters
 
@@ -216,8 +225,8 @@ as it allows a keyboard, mouse, and the Fona modem to be connected
 simultanously. When the HangarBuddy is "deployed" only the Fona will be plugged
 into the USB port.
 
-* [ ] [MiniHDMI to HDMI adapter](https://www.amazon.com/Adapter-VCE-Converter-Camcorder-Devices/dp/B01HYURR04/ref=sr_1_8?s=electronics&ie=UTF8&qid=1512070954&sr=1-8&keywords=mini+hdmi+adapter)
-* [ ] [USB Hub](https://www.amazon.com/gp/product/B00XMD7KPU/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1)
+- [ ] [MiniHDMI to HDMI adapter](https://www.amazon.com/Adapter-VCE-Converter-Camcorder-Devices/dp/B01HYURR04/ref=sr_1_8?s=electronics&ie=UTF8&qid=1512070954&sr=1-8&keywords=mini+hdmi+adapter)
+- [ ] [USB Hub](https://www.amazon.com/gp/product/B00XMD7KPU/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1)
 
 ## Device Reference
 
