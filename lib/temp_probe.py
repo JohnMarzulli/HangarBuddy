@@ -21,6 +21,10 @@ from lib import local_debug
 # Modified from SunFounder's page at
 # https://www.sunfounder.com/learn/Sensor-Kit-v1-0-for-Raspberry-Pi/lesson-17-ds18b20-temperature-sensor-sensor-kit-v1-0-for-pi.html
 
+# EXAMPLE data from w1
+# 5c 01 55 05 7f a5 a5 66 50 : crc=50 YES
+# 5c 01 55 05 7f a5 a5 66 50 t=21750
+
 
 def celcius_to_farenheit(
     temp_in_celcius
@@ -47,11 +51,13 @@ def read_sensor(
         full_path = "/sys/bus/w1/devices/{}/w1_slave".format(sensor_id)
         print("Attempting to read from '{}'".format(full_path))
         tfile = open(full_path)
-        text = tfile.read()
+        text = tfile.readlines()
+        print("Read from probe. Raw={}".format(text[1]))
         tfile.close()
-        secondline = text.split("\n")[1]
-        temperaturedata = secondline.split(" ")[9]
-        temperature = float(temperaturedata[2:])
+        secondline = text[1]
+        raw_temperature_data = secondline.split(" ")[9]
+        print("Raw temp:={}".format(raw_temperature_data))
+        temperature = float(raw_temperature_data[2:])
         temperature = temperature / 1000
         print("Sensor: {0} : {1:0.3}C".format(temperature))
         print("Sensor: {0} : {1:0.3}F".format(
