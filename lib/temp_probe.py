@@ -44,7 +44,9 @@ def read_sensor(
     """
 
     try:
-        tfile = open("/sys/bus/w1/devices/{}/w1_slave".format(sensor_id))
+        full_path = "/sys/bus/w1/devices/{}/w1_slave".format(sensor_id)
+        print("Attempting to read from '{}'".format(full_path))
+        tfile = open(full_path)
         text = tfile.read()
         tfile.close()
         secondline = text.split("\n")[1]
@@ -77,8 +79,11 @@ def read_sensors():
 
     try:
         for driver_file in os.listdir("/sys/bus/w1/devices/"):
+            print("Inspecting '{}'".format(driver_file))
+
             if driver_file.startswith("28-"):
                 try:
+                    print("Attempting to read probe")
                     probe_value = read_sensor(driver_file)
 
                     if probe_value is not None:
