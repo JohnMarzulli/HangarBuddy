@@ -1020,10 +1020,12 @@ class CommandProcessor(object):
                     baudrate=self.__configuration__.cell_baud_rate,
                     xonxoff=True,
                     rtxcts=True)
-            except:
+            except Exception as ex:
                 self.__logger__.log_warning_message(
-                    "SERIAL DEVICE NOT LOCATED."
-                    + " Try changing /dev/ttyUSB0 to different USB port"
+                    "Error initializing the serial device. EX={}".format(ex))
+
+                self.__logger__.log_warning_message(
+                    " Try changing /dev/ttyUSB0 to different USB port"
                     + " (like /dev/ttyUSB1) in configuration file or"
                     + " check to make sure device is connected correctly")
 
