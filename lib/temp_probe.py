@@ -59,8 +59,11 @@ def read_sensor(
         print("Raw temp:={}".format(raw_temperature_data))
         temperature = float(raw_temperature_data[2:])
         temperature = temperature / 1000
-        print("Sensor: {0} : {1:0.3}C".format(temperature))
+        print("Sensor: {0} : {1:0.3}C".format(
+            sensor_id,
+            temperature))
         print("Sensor: {0} : {1:0.3}F".format(
+            sensor_id,
             celcius_to_farenheit(temperature)))
 
         return celcius_to_farenheit(temperature)
