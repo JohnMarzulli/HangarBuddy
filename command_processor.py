@@ -1017,9 +1017,7 @@ class CommandProcessor(object):
                 # exclusive=None
                 serial_connection = serial.Serial(
                     port=self.__configuration__.cell_serial_port,
-                    baudrate=self.__configuration__.cell_baud_rate,
-                    xonxoff=True,
-                    rtxcts=True)
+                    baudrate=self.__configuration__.cell_baud_rate)
             except Exception as ex:
                 self.__logger__.log_warning_message(
                     "Error initializing the serial device. EX={}".format(ex))
