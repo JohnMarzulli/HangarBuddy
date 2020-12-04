@@ -676,12 +676,13 @@ class Fona(object):
                 msg = msg.replace("\r", "")
                 msg = msg.replace("\n", "")
                 if msg != "":
-                    self.__logger__.log_info_message(msg)
+                    self.__logger__.log_info_message("RESP:{}".format(msg))
                     ret.append(msg)
 
             self.__modem_access_lock__.release()
             return ret
-        except:
+        except Exception as ex:
+            self.__logger__.log_info_message("COMMAND EX={}".format(ex))
             self.__modem_access_lock__.release()
 
         return []
