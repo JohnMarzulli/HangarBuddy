@@ -612,17 +612,14 @@ class Fona(object):
 
     def __send_command__(
         self,
-        com: str,
-        add_eol: bool = False
+        com: str
     ) -> list:
         """ send a command to the modem """
         self.__modem_access_lock__.acquire(True)
         modem_reponses = []
 
         try:
-            command = com
-            if add_eol:
-                command += '\r\r\n '
+            command = '${}\r\n'.format(com)
 
             if self.serial_connection is not None:
                 self.__logger__.log_info_message("CMD: {}".format(command))
