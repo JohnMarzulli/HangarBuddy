@@ -381,7 +381,7 @@ class Fona(object):
         time.sleep(3)
         messages = []
         while self.serial_connection.inWaiting() > 0:
-            raw_messages += self.serial_connection.readline().strip()
+            raw_messages += self.serial_connection.readline().decode().strip()
 
         for message in raw_messages:
             self.__logger__.log_info_message(message)
@@ -407,6 +407,8 @@ class Fona(object):
         a list of messages with three fields: id, num, message.
         """
 
+        self.__logger__.log_info_message("get_messages()")
+
         if self.serial_connection is None:
             return []
 
@@ -422,7 +424,7 @@ class Fona(object):
         time.sleep(3)
         messages = []
         while self.serial_connection.inWaiting() > 0:
-            raw_read = self.serial_connection.readline()
+            raw_read = self.serial_connection.readline().decode()
             message_header = raw_read.strip()
 
             self.__logger__.log_info_message(
@@ -430,7 +432,7 @@ class Fona(object):
                     raw_read))
 
             if "+CMGL:" in message_header:
-                message_text = self.serial_connection.readline().strip()
+                message_text = self.serial_connection.readline().decode.strip()
 
                 self.__logger__.log_info_message(
                     "Get RESP - TEXT={}".format(
@@ -662,6 +664,7 @@ class Fona(object):
                 command += '\r\r\n '
 
             if self.serial_connection is not None:
+                self.__logger__.log_info_message("COMMAND: {}".format(command))
                 self.serial_connection.write(str.encode(command))
                 time.sleep(2)
 
