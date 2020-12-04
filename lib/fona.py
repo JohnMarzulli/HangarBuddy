@@ -377,7 +377,7 @@ class Fona(object):
 
         self.__set_sms_mode__()
         # get all text messages currently on SIM Card
-        self.serial_connection.write('AT+CMGL="ALL"\r')
+        self.__send_command__('AT+CMGL="ALL"\r')
         time.sleep(3)
         messages = []
         while self.serial_connection.inWaiting() > 0:
@@ -388,7 +388,7 @@ class Fona(object):
                 new_message = SmsMessage(
                     message_header,
                     message_text)
-                messages.append(new_message)
+                messages += (new_message)
 
                 time.sleep(1)
 
@@ -623,7 +623,7 @@ class Fona(object):
                 msg = msg.replace("\n", "")
                 if msg != "":
                     self.__logger__.log_info_message(msg)
-                    ret.append(msg)
+                    ret += msg
 
             self.__modem_access_lock__.release()
             return ret

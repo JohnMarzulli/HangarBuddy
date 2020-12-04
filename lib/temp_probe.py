@@ -96,7 +96,7 @@ def read_sensors():
                     probe_value = read_sensor(driver_file)
 
                     if probe_value is not None:
-                        temperature_probe_values.append(probe_value)
+                        temperature_probe_values += probe_value
                 except:
                     print("Failed to read sensor")
     except:

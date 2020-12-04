@@ -121,8 +121,8 @@ class FonaManager(object):
         self.__lock__.acquire(True)
         try:
             results = self.__fona__.get_messages()
-        except:
-            exception_message = "ERROR fetching messages!"
+        except Exception as ex:
+            exception_message = "ERROR fetching messages! EX={}".format(ex)
             print(exception_message)
             self.__logger__.log_warning_message(exception_message)
         self.__lock__.release()
@@ -244,7 +244,7 @@ class FonaManager(object):
 
                     message_to_send[3] -= 1
                     if message_to_send[3] > 0:
-                        messages_to_retry.append(message_to_send)
+                        messages_to_retry += message_to_send
         except:
             self.__logger__.log_warning_message(
                 "Exception servicing outgoing queue:" + str(sys.exc_info()[0]))
