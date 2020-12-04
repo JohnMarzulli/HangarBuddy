@@ -361,8 +361,45 @@ class Fona(object):
         self.__logger__.log_info_message("Check phone")
 
         return True
-
+    
     def get_messages(
+        self
+    ) -> list:
+        """
+        Reads text messages on the SIM card and returns
+        a list of messages with three fields: id, num, message.
+        """
+
+        if self.serial_connection is None:
+            return []
+
+        # put into SMS mode
+
+        self.__set_sms_mode__()
+        # get all text messages currently on SIM Card
+        raw_messages  = self.__send_command__('AT+CMGL="ALL"\r')
+        time.sleep(3)
+        messages = []
+        while self.serial_connection.inWaiting() > 0:
+            raw_messages += self.serial_connection.readline().strip()
+        
+        for message in raw_messages:
+            self.__logger__.log_info_message(message)
+            # if "+CMGL:" in message_header:
+            #     message_text = self.serial_connection.readline().strip()
+
+            #     new_message = SmsMessage(
+            #         message_header,
+            #         message_text)
+            #     messages += (new_message)
+
+            #     time.sleep(1)
+
+        self.__clear_messages_waiting_queue__()
+
+        return messages
+
+    def __get_messages__(
         self
     ) -> list:
         """
