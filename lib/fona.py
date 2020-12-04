@@ -399,7 +399,7 @@ class Fona(object):
 
         return messages
 
-    def __get_messages__(
+    def get_messages(
         self
     ) -> list:
         """
