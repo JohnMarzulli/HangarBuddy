@@ -89,6 +89,18 @@ class FonaManager(object):
 
         return self.__current_battery_state__
 
+    def is_waiting_to_send(
+        self
+    ) -> bool:
+        """
+        Is a message waiting to be sent?
+
+        Returns:
+            bool: True if a message is waiting to be sent.
+        """
+
+        return not self.__send_message_queue__.empty()
+
     def is_message_waiting(
         self
     ):
@@ -341,7 +353,10 @@ if __name__ == '__main__':
     SIGNAL_STRENGTH = FONA_MANAGER.signal_strength()
     print("Signal:" + SIGNAL_STRENGTH.classify_strength())
 
-    quit()
+    while FONA_MANAGER.is_waiting_to_send():
+        time.sleep(1)
+
+    exit()
 
     # while True:
 
