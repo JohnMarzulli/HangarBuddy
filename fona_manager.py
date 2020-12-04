@@ -12,6 +12,7 @@ import serial
 import lib.fona as fona
 import lib.local_debug as local_debug
 import text
+from lib.hangar_buddy_logger import HangarBuddyLogger
 from lib.recurring_task import RecurringTask
 
 
@@ -263,7 +264,7 @@ class FonaManager(object):
 
     def __init__(
         self,
-        logger,
+        logger: HangarBuddyLogger,
         serial_connection: serial.Serial,
         power_status_pin,
         ring_indicator_pin,
@@ -316,7 +317,7 @@ if __name__ == '__main__':
         SERIAL_CONNECTION = serial.Serial('/dev/ttyUSB0', 9600)
 
     FONA_MANAGER = FonaManager(
-        None,
+        HangarBuddyLogger(logging.getLogger("heater"),
         SERIAL_CONNECTION,
         fona.DEFAULT_POWER_STATUS_PIN,
         fona.DEFAULT_RING_INDICATOR_PIN,
@@ -326,7 +327,7 @@ if __name__ == '__main__':
         print("Power is off..")
         exit()
 
-    BATTERY_CONDITION = FONA_MANAGER.battery_condition()
+    BATTERY_CONDITION=FONA_MANAGER.battery_condition()
     FONA_MANAGER.send_message(
         PHONE_NUMBER,
         "Time:{0}\nPCT:{1}\nv:{2}".format(
@@ -334,15 +335,15 @@ if __name__ == '__main__':
             BATTERY_CONDITION.battery_percent,
             BATTERY_CONDITION.battery_voltage))
 
-    SIGNAL_STRENGTH = FONA_MANAGER.signal_strength()
+    SIGNAL_STRENGTH=FONA_MANAGER.signal_strength()
     print("Signal:" + SIGNAL_STRENGTH.classify_strength())
 
     while True:
-        BATTERY_CONDITION = FONA_MANAGER.battery_condition()
-        SIGNAL_STRENGTH = FONA_MANAGER.signal_strength()
+        BATTERY_CONDITION=FONA_MANAGER.battery_condition()
+        SIGNAL_STRENGTH=FONA_MANAGER.signal_strength()
 
         if FONA_MANAGER.is_message_waiting():
-            MESSAGES = FONA_MANAGER.get_messages()
+            MESSAGES=FONA_MANAGER.get_messages()
             FONA_MANAGER.delete_messages()
 
             print("Battery:" + str(BATTERY_CONDITION.battery_percent))
