@@ -362,7 +362,7 @@ class Fona(object):
 
         return True
 
-    def get_messages(
+    def __get_messages__(
         self
     ) -> list:
         """
@@ -414,13 +414,27 @@ class Fona(object):
 
         self.__set_sms_mode__()
         # get all text messages currently on SIM Card
-        self.__send_command__('AT+CMGL="ALL"\r')
+        responses = self.__send_command__('AT+CMGL="ALL"\r')
+
+        for resp in responses:
+            self.__logger__.log_info_message("Get RESP:{}".format(resp))
+
         time.sleep(3)
         messages = []
         while self.serial_connection.inWaiting() > 0:
-            message_header = self.serial_connection.readline().strip()
+            raw_read = self.serial_connection.readline()
+            message_header = raw_read.strip()
+
+            self.__logger__.log_info_message(
+                "Get RESP - RAW={}".format(
+                    raw_read))
+
             if "+CMGL:" in message_header:
                 message_text = self.serial_connection.readline().strip()
+
+                self.__logger__.log_info_message(
+                    "Get RESP - TEXT={}".format(
+                        message_text))
 
                 new_message = SmsMessage(
                     message_header,
