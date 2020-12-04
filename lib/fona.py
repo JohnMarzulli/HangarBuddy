@@ -654,6 +654,7 @@ class Fona(object):
     ) -> list:
         """ send a command to the modem """
         self.__modem_access_lock__.acquire(True)
+        modem_reponses = []
 
         try:
             command = com
@@ -665,19 +666,13 @@ class Fona(object):
                 self.serial_connection.write(str.encode(command))
                 time.sleep(2)
 
-            ret = []
-
             # "Starting read/wait"
             while self.serial_connection is not None and self.serial_connection.inWaiting() > 0:
-                msg = self.serial_connection.readall().decode().strip()
-                msg = msg.replace("\r", "")
-                msg = msg.replace("\n", "")
-                if msg != "" and msg not in command:
-                    self.__logger__.log_info_message("RESP:{}".format(msg))
-                    ret.append(msg)
+                modem_reponses.append(self.serial_connection.readlines())
 
             self.__modem_access_lock__.release()
-            return ret
+
+            return [msg.decode().strip().replace("\r", "").replace("\n", "") for msg in modem_reponses]
         except Exception as ex:
             self.__logger__.log_info_message("COMMAND EX={}".format(ex))
             self.__modem_access_lock__.release()
