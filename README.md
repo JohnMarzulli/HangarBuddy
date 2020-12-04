@@ -104,7 +104,7 @@ For a complete set of installation instructions, visit
 - Pigtail Connector into reciever
 - Red to GPIO 3V3
 - Black to GPIO GND
-- Brown to GPIO 12
+- Brown -> protect end with shrink wrap
 
 ### Temp Sensor
 
