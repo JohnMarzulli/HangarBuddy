@@ -214,8 +214,8 @@ class SmsMessage(object):
             metadata_list = message_header.split(",")
             message_id = metadata_list[0]
             message_id = message_id.rpartition(":")[2].strip()
-            message_status = metadata_list[1]
-            sender_number = metadata_list[2]
+            message_status = metadata_list[1].replace('"', "")
+            sender_number = metadata_list[2].replace('"', "")
             message_date = metadata_list[4].replace('"', '')
             date_tokens = message_date.split('/')
             message_time = metadata_list[5].split('-')[0]
@@ -385,25 +385,22 @@ class Fona(object):
             self.__logger__.log_info_message("Get RESP:{}".format(resp))
 
         messages = []
-        while self.serial_connection.inWaiting() > 0:
-            raw_read = self.serial_connection.readline().decode()
-            message_header = raw_read.strip()
-
-            self.__logger__.log_info_message(
-                "Get RESP - RAW={}".format(
-                    raw_read))
+        for index in range(0, len(responses)):
+            message_header = responses[index]
 
             if "+CMGL:" in message_header:
-                message_text = self.serial_connection.readline().decode.strip()
+                message_text = responses[index + 1]
 
                 self.__logger__.log_info_message(
-                    "Get RESP - TEXT={}".format(
+                    "get_messages:\n\tHEAD={}\n\tTEXT={}".format(
+                        message_header,
                         message_text))
 
                 new_message = SmsMessage(
                     message_header,
                     message_text)
                 messages.append(new_message)
+                index += 1
 
         self.__clear_messages_waiting_queue__()
 
