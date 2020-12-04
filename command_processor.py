@@ -16,6 +16,7 @@ import serial  # Requires "pyserial"
 import lib.local_debug as local_debug
 import lib.utilities as utilities
 import text
+from configuration import Configuration
 from fona_manager import FonaManager
 from hangar_buddy_sensors import Sensors
 from lib.hangar_buddy_logger import HangarBuddyLogger
@@ -168,8 +169,8 @@ class CommandProcessor(object):
 
     def __init__(
         self,
-        buddy_configuration,
-        logger
+        buddy_configuration: Configuration,
+        logger: HangarBuddyLogger
     ):
         """
         Initialize the object.
@@ -1071,7 +1072,7 @@ class CommandProcessor(object):
                     self.__handle_gas_warning__(gas_sensor_status)
                 elif text.GAS_OK in gas_sensor_status:
                     self.__handle_gas_ok__(gas_sensor_status)
-        except Queue.Empty:
+        except:
             pass
 
         return self.__is_gas_detected__
