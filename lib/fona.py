@@ -662,14 +662,16 @@ class Fona(object):
                 command += '\r\r\n '
 
             if self.serial_connection is not None:
-                self.__logger__.log_info_message("COMMAND: {}".format(command))
+                self.__logger__.log_info_message("CMD: {}".format(command))
                 self.serial_connection.write(str.encode(command))
                 time.sleep(2)
 
             # "Starting read/wait"
             while self.serial_connection is not None and self.serial_connection.inWaiting() > 0:
-                modem_reponses.append(
-                    self.serial_connection.readline().decode())
+                raw_response = self.serial_connection.readline().decode()
+                self.__logger__.log_info_message(
+                    "RSP: {}".format(raw_response))
+                modem_reponses.append(raw_response)
 
             self.__modem_access_lock__.release()
 
