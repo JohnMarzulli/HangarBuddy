@@ -668,11 +668,12 @@ class Fona(object):
 
             # "Starting read/wait"
             while self.serial_connection is not None and self.serial_connection.inWaiting() > 0:
-                modem_reponses.append(self.serial_connection.readlines())
+                modem_reponses.append(
+                    self.serial_connection.readline().decode())
 
             self.__modem_access_lock__.release()
 
-            return [msg.decode().strip().replace("\r", "").replace("\n", "") for msg in modem_reponses]
+            return [msg.strip().replace("\r", "").replace("\n", "") for msg in modem_reponses]
         except Exception as ex:
             self.__logger__.log_info_message("COMMAND EX={}".format(ex))
             self.__modem_access_lock__.release()
