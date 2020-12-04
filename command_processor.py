@@ -1155,6 +1155,8 @@ class CommandProcessor(object):
             self.__logger__.log_warning_message(
                 "Unable to service " + service_name)
 
+        self.__logger__.log_info_message("SERVICING:{}".format(service_name))
+
         try:
             service_callback()
         except KeyboardInterrupt:
@@ -1164,6 +1166,8 @@ class CommandProcessor(object):
             self.__logger__.log_warning_message(
                 "Exception while servicing " + service_name)
             print("Error:{}".format(sys.exc_info()[0]))
+
+        self.__logger__.log_info_message("FINISHED:{}".format(service_name))
 
 
 ##################
