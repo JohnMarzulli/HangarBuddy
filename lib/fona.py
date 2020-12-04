@@ -635,7 +635,7 @@ class Fona(object):
 
             self.__modem_access_lock__.release()
 
-            return [msg.strip().replace("\r", "").replace("\n", "") for msg in modem_reponses]
+            return [msg.strip().replace("\r", "").replace("\n", "") for msg in modem_reponses][1:]
         except Exception as ex:
             self.__logger__.log_info_message("COMMAND EX={}".format(ex))
             self.__modem_access_lock__.release()
