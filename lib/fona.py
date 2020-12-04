@@ -675,7 +675,7 @@ class Fona(object):
                 msg = self.serial_connection.readline().decode().strip()
                 msg = msg.replace("\r", "")
                 msg = msg.replace("\n", "")
-                if msg != "":
+                if msg != "" and msg not in command:
                     self.__logger__.log_info_message("RESP:{}".format(msg))
                     ret.append(msg)
 
