@@ -323,7 +323,7 @@ if __name__ == '__main__':
         serial_connection=SERIAL_CONNECTION,
         power_status_pin=fona.DEFAULT_POWER_STATUS_PIN,
         ring_indicator_pin=fona.DEFAULT_RING_INDICATOR_PIN,
-        utc_offset=fona.TIMEZONE_OFFSET))
+        utc_offset=fona.TIMEZONE_OFFSET)
 
     if not FONA_MANAGER.is_power_on():
         print("Power is off..")
