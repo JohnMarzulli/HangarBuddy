@@ -317,11 +317,11 @@ if __name__ == '__main__':
     if local_debug.is_debug():
         SERIAL_CONNECTION = None
     else:
-        SERIAL_CONNECTION = serial.Serial('/dev/ttyUSB0', 9600)
+        SERIAL_CONNECTION = serial.Serial(config.cell_serial_port, 9600)
 
     FONA_MANAGER = FonaManager(
         logger=HangarBuddyLogger(logging.getLogger("heater")),
-        serial_connection=config.cell_serial_port,
+        serial_connection=SERIAL_CONNECTION,
         power_status_pin=config.cell_power_status_pin,
         ring_indicator_pin=config.cell_ring_indicator_pin,
         utc_offset=fona.TIMEZONE_OFFSET)
