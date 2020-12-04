@@ -20,7 +20,7 @@ from configuration import Configuration
 from fona_manager import FonaManager
 from hangar_buddy_sensors import Sensors
 from lib.hangar_buddy_logger import HangarBuddyLogger
-from lib.recurring_task import RecurringTask
+from lib.recurring_task import IntermittentTask, RecurringTask
 from lib.sf_1602_lcd import LcdDisplay
 from relay_controller import RelayManager
 
@@ -105,26 +105,27 @@ class CommandProcessor(object):
         # and writes into the MPqueue...
         # It kicks off every 30 seconds
 
-        RecurringTask(
-            "monitor_gas_sensor",
-            30,
-            self.__monitor_gas_sensor__,
-            self.__logger__)
-
-        RecurringTask(
-            "battery_check",
-            60 * 5,
-            self.__monitor_fona_health__,
-            self.__logger__)
-
-        RecurringTask(
-            "update_lcd",
-            5,
-            self.__update_lcd__,
-            self.__logger__)
+        tasks = [
+            IntermittentTask(
+                "monitor_gas_sensor",
+                30,
+                self.__monitor_gas_sensor__,
+                self.__logger__),
+            IntermittentTask(
+                "battery_check",
+                60 * 5,
+                self.__monitor_fona_health__,
+                self.__logger__),
+            IntermittentTask(
+                "update_lcd",
+                5,
+                self.__update_lcd__,
+                self.__logger__)]
 
         # The main service loop
         while True:
+            [task.run() for task in tasks]
+
             self.__run_servicer__(
                 self.__service_gas_sensor_queue__,
                 "Gas sensor queue")
