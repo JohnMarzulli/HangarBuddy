@@ -421,7 +421,6 @@ class Fona(object):
         for resp in responses:
             self.__logger__.log_info_message("Get RESP:{}".format(resp))
 
-        time.sleep(3)
         messages = []
         while self.serial_connection.inWaiting() > 0:
             raw_read = self.serial_connection.readline().decode()
@@ -442,8 +441,6 @@ class Fona(object):
                     message_header,
                     message_text)
                 messages.append(new_message)
-
-                time.sleep(1)
 
         self.__clear_messages_waiting_queue__()
 
@@ -672,7 +669,7 @@ class Fona(object):
 
             # "Starting read/wait"
             while self.serial_connection is not None and self.serial_connection.inWaiting() > 0:
-                msg = self.serial_connection.readline().decode().strip()
+                msg = self.serial_connection.readall().decode().strip()
                 msg = msg.replace("\r", "")
                 msg = msg.replace("\n", "")
                 if msg != "" and msg not in command:
