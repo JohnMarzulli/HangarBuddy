@@ -362,43 +362,6 @@ class Fona(object):
 
         return True
 
-    def __get_messages__(
-        self
-    ) -> list:
-        """
-        Reads text messages on the SIM card and returns
-        a list of messages with three fields: id, num, message.
-        """
-
-        if self.serial_connection is None:
-            return []
-
-        # put into SMS mode
-
-        self.__set_sms_mode__()
-        # get all text messages currently on SIM Card
-        raw_messages = self.__send_command__('AT+CMGL="ALL"\r')
-        time.sleep(3)
-        messages = []
-        while self.serial_connection.inWaiting() > 0:
-            raw_messages += self.serial_connection.readline().decode().strip()
-
-        for message in raw_messages:
-            self.__logger__.log_info_message(message)
-            # if "+CMGL:" in message_header:
-            #     message_text = self.serial_connection.readline().strip()
-
-            #     new_message = SmsMessage(
-            #         message_header,
-            #         message_text)
-            #     messages += (new_message)
-
-            #     time.sleep(1)
-
-        self.__clear_messages_waiting_queue__()
-
-        return messages
-
     def get_messages(
         self
     ) -> list:
@@ -416,7 +379,7 @@ class Fona(object):
 
         self.__set_sms_mode__()
         # get all text messages currently on SIM Card
-        responses = self.__send_command__('AT+CMGL="ALL"\r')
+        responses = self.__send_command__('AT+CMGL="ALL"')
 
         for resp in responses:
             self.__logger__.log_info_message("Get RESP:{}".format(resp))
@@ -650,7 +613,7 @@ class Fona(object):
     def __send_command__(
         self,
         com: str,
-        add_eol: bool = True
+        add_eol: bool = False
     ) -> list:
         """ send a command to the modem """
         self.__modem_access_lock__.acquire(True)
