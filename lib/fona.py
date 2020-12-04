@@ -31,7 +31,7 @@ class BatteryCondition(object):
 
     def get_percent_battery(
         self
-    ):
+    ) -> float:
         """
         Returns the remaining percentage of battery.
         """
@@ -39,7 +39,7 @@ class BatteryCondition(object):
 
     def get_voltage(
         self
-    ):
+    ) -> float:
         """
         Returns the voltage of the battery.
         """
@@ -47,7 +47,7 @@ class BatteryCondition(object):
 
     def is_battery_ok(
         self
-    ):
+    ) -> bool:
         """
         Is the battery OK?
         """
@@ -58,7 +58,7 @@ class BatteryCondition(object):
 
     def __init__(
         self,
-        command_result
+        command_result: str
     ):
         """
         Initialize.
@@ -96,7 +96,7 @@ class SignalStrength(object):
 
     def get_signal_strength(
         self
-    ):
+    ) -> int:
         """
         Returns the signal strength.
         """
@@ -104,7 +104,7 @@ class SignalStrength(object):
 
     def get_bit_error_rate(
         self
-    ):
+    ) -> int:
         """
         Returns the bit error rate from the Fona.
         """
@@ -112,7 +112,7 @@ class SignalStrength(object):
 
     def classify_strength(
         self
-    ):
+    ) -> str:
         """
         Gets a human meaning to the rssi.
         """
@@ -130,7 +130,7 @@ class SignalStrength(object):
 
     def __init__(
         self,
-        command_result
+        command_result: str
     ):
         """
         Parses the command result.
@@ -157,7 +157,7 @@ class SmsMessage(object):
 
     def get_sender_number(
         self
-    ):
+    ) -> str:
         """
         Gets the sender's number.
         """
@@ -168,7 +168,7 @@ class SmsMessage(object):
 
     def is_message_ok(
         self
-    ):
+    ) -> bool:
         """
         Is the message valid?
         """
@@ -176,7 +176,7 @@ class SmsMessage(object):
 
     def minutes_waiting(
         self
-    ):
+    ) -> float:
         """
         How many hours between being sent
         and received.
@@ -187,7 +187,7 @@ class SmsMessage(object):
 
     def message_sent_time_utc(
         self
-    ):
+    ) -> datetime:
         """
         When was the message sent in UTC time?
         The SIM card returns time as Local...
@@ -197,8 +197,8 @@ class SmsMessage(object):
 
     def __init__(
         self,
-        message_header,
-        message_text
+        message_header: str,
+        message_text: str
     ):
         """
         Create the object.
@@ -245,7 +245,7 @@ class Fona(object):
 
     def is_power_on(
         self
-    ):
+    ) -> bool:
         """
         Returns TRUE if the power is on.
         """
@@ -266,7 +266,7 @@ class Fona(object):
 
     def is_message_waiting(
         self
-    ):
+    ) -> bool:
         """
         Uses the GPIO pin to see if a message is waiting.
         """
@@ -275,15 +275,15 @@ class Fona(object):
 
     def get_carrier(
         self
-    ):
+    ) -> str:
         """
         Returns the carrier.
         """
-        return self.__send_command__("AT+COPS?")
+        return self.__send_command__("AT+COPS?")[:1]
 
     def get_signal_strength(
         self
-    ):
+    ) -> SignalStrength:
         """
         Returns an object representing the signal strength.
         """
@@ -297,7 +297,7 @@ class Fona(object):
 
     def get_current_battery_condition(
         self
-    ):
+    ) -> BatteryCondition:
         """
         Returns an object representing the current battery state.
         """
@@ -313,25 +313,25 @@ class Fona(object):
 
     def get_module_name(
         self
-    ):
+    ) -> str:
         """
         Returns the name of the GSM module.
         """
-        return self.__send_command__("ATI")
+        return self.__send_command__("ATI")[:1]
 
     def get_sim_card_number(
         self
-    ):
+    ) -> str:
         """
         Returns the id of the sim card.
         """
-        return self.__send_command__("AT+CCID")
+        return self.__send_command__("AT+CCID")[:1]
 
     def send_message(
         self,
-        message_num,
-        text
-    ):
+        message_num: str,
+        text: str
+    ) -> bool:
         """
         Sends a message to the specified phone numbers.
         """
@@ -364,7 +364,7 @@ class Fona(object):
 
     def get_messages(
         self
-    ):
+    ) -> list:
         """
         Reads text messages on the SIM card and returns
         a list of messages with three fields: id, num, message.
@@ -398,7 +398,7 @@ class Fona(object):
 
     def delete_message(
         self,
-        message_to_delete
+        message_to_delete: SmsMessage
     ):
         """
         Deletes a message with the given Id.
@@ -407,7 +407,7 @@ class Fona(object):
 
     def delete_messages(
         self
-    ):
+    ) -> int:
         """ Deletes any messages. """
         messages = self.get_messages()
         messages_deleted = 0
@@ -480,7 +480,7 @@ class Fona(object):
 
     def __use_gpio_pins__(
         self
-    ):
+    ) -> bool:
         """
         Returns true if we should use the GPIO pins
         to tell status.
@@ -493,7 +493,7 @@ class Fona(object):
 
     def __initialize_gpio_pins__(
         self
-    ):
+    ) -> bool:
         """
         Gets the Fona ready to be interacted with by the GPIO board.
         """
@@ -531,7 +531,7 @@ class Fona(object):
 
     def __ring_indicator_pulsed__(
         self,
-        io_pin
+        io_pin: int
     ):
         """
         The RI went from LOW to HIGH.
@@ -541,8 +541,8 @@ class Fona(object):
 
     def __write_to_fona__(
         self,
-        text
-    ):
+        text: str
+    ) -> int:
         """
         Write text to the Fona in a safe manner.
         """
