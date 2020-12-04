@@ -431,7 +431,7 @@ class Fona(object):
             try:
                 command = str(input("READY:"))
 
-                if command is None or len(command) is 0:
+                if command is None or len(command) == 0:
                     continue
 
                 if command == "quit":
@@ -451,7 +451,7 @@ class Fona(object):
 
     def __init__(
         self,
-        logger,
+        logger: HangarBuddyLogger,
         serial_connection: serial.Serial,
         power_status_pin: int,
         ring_indicator_pin: int
@@ -711,64 +711,3 @@ class Fona(object):
             self.__logger__.log_info_message("Q:" + event)
 
         return events_cleared
-
-
-if __name__ == '__main__':
-    import logging
-
-    import serial
-
-    if not local_debug.is_debug():
-        PHONE_NUMBER = "2067654321"  # input("Phone number>")
-    else:
-        PHONE_NUMBER = "2061234567"
-
-    if local_debug.is_debug():
-        SERIAL_CONNECTION = None
-    else:
-        # Needs to be 9600, No Parity, 8 bits, 1 stop bit
-        # Flow control should be enabled.
-        SERIAL_CONNECTION = serial.Serial(
-            '/dev/ttyUSB0',
-            9600)
-
-    FONA = Fona(
-        HangarBuddyLogger(
-            logging.getLogger("fona")),
-        SERIAL_CONNECTION,
-        DEFAULT_POWER_STATUS_PIN,
-        DEFAULT_RING_INDICATOR_PIN)
-
-    if not FONA.is_power_on():
-        print("Power is off..")
-        exit()
-
-    # fona.get_carrier()
-    BATTERY_CONDITION = FONA.get_current_battery_condition()
-    FONA.send_message(
-        PHONE_NUMBER,
-        "Time:{0}\nPCT:{1}\nv:{2}".format(
-            time.time(),
-            BATTERY_CONDITION.battery_percent,
-            BATTERY_CONDITION.battery_voltage))
-
-    SIGNAL_STRENGTH = FONA.get_signal_strength()
-    print("Signal:{}".format(SIGNAL_STRENGTH.classify_strength()))
-    print(FONA.get_module_name())
-    print(FONA.get_sim_card_number())
-
-    while True:
-        if FONA.is_message_waiting():
-            print("Message waiting..")
-
-            for message in FONA.get_messages():
-                print("ID:{}".format(message.message_id))
-                print("SENT:{}".format(message.sent_time))
-                print("Num:{}".format(message.sender_number))
-                print("Stat:{}".format(message.message_status))
-                print("SMS:{}".format(message.message_text))
-                print("REC:{}".format(message.received_time))
-
-            FONA.delete_messages()
-
-    # fona.get_messages(False)
