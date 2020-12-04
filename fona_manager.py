@@ -4,7 +4,6 @@ the Fona in a thread safe way.
 """
 import sys
 import threading
-import time
 from multiprocessing import Queue as MPQueue
 
 import serial
@@ -12,6 +11,7 @@ import serial
 import lib.fona as fona
 import lib.local_debug as local_debug
 import text
+from configuration import Configuration
 from lib.hangar_buddy_logger import HangarBuddyLogger
 from lib.recurring_task import RecurringTask
 
@@ -308,10 +308,11 @@ class FonaManager(object):
 
 if __name__ == '__main__':
     import logging
+    import time
 
     import serial
 
-    PHONE_NUMBER = "2061234567"
+    config = Configuration()
 
     if local_debug.is_debug():
         SERIAL_CONNECTION = None
@@ -320,35 +321,35 @@ if __name__ == '__main__':
 
     FONA_MANAGER = FonaManager(
         logger=HangarBuddyLogger(logging.getLogger("heater")),
-        serial_connection=SERIAL_CONNECTION,
-        power_status_pin=fona.DEFAULT_POWER_STATUS_PIN,
-        ring_indicator_pin=fona.DEFAULT_RING_INDICATOR_PIN,
+        serial_connection=config.cell_serial_port,
+        power_status_pin=config.cell_power_status_pin,
+        ring_indicator_pin=config.cell_ring_indicator_pin,
         utc_offset=fona.TIMEZONE_OFFSET)
 
     if not FONA_MANAGER.is_power_on():
         print("Power is off..")
         exit()
 
-    BATTERY_CONDITION=FONA_MANAGER.battery_condition()
+    BATTERY_CONDITION = FONA_MANAGER.battery_condition()
     FONA_MANAGER.send_message(
-        PHONE_NUMBER,
+        config.allowed_phone_numbers[0],
         "Time:{0}\nPCT:{1}\nv:{2}".format(
             time.time(),
             BATTERY_CONDITION.battery_percent,
             BATTERY_CONDITION.battery_voltage))
 
-    SIGNAL_STRENGTH=FONA_MANAGER.signal_strength()
+    SIGNAL_STRENGTH = FONA_MANAGER.signal_strength()
     print("Signal:" + SIGNAL_STRENGTH.classify_strength())
 
-    while True:
-        BATTERY_CONDITION=FONA_MANAGER.battery_condition()
-        SIGNAL_STRENGTH=FONA_MANAGER.signal_strength()
+    quit()
 
-        if FONA_MANAGER.is_message_waiting():
-            MESSAGES=FONA_MANAGER.get_messages()
-            FONA_MANAGER.delete_messages()
+    # while True:
 
-            print("Battery:" + str(BATTERY_CONDITION.battery_percent))
-            print("Signal:" + SIGNAL_STRENGTH.classify_strength())
+    #     if FONA_MANAGER.is_message_waiting():
+    #         MESSAGES=FONA_MANAGER.get_messages()
+    #         FONA_MANAGER.delete_messages()
 
-        FONA_MANAGER.update()
+    #         print("Battery:" + str(BATTERY_CONDITION.battery_percent))
+    #         print("Signal:" + SIGNAL_STRENGTH.classify_strength())
+
+    #     FONA_MANAGER.update()
