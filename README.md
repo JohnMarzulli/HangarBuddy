@@ -1,7 +1,8 @@
 # HangarBuddy
 
-This is a Python scipt that controls an AC/DC relay attached to a Raspberry Pi
-with a space heater plugged in. There is an adafruit GSM Board that receives
+This is a tool that controls an AC/DC relay attached to a Raspberry Pi.
+The idea is to use a heater with ducting or Tanis-style pre-heater.
+There is an AdaFruit GSM Board that receives
 text messages using a Ting SIM card connected to the Raspberry Pi. When the Pi
 receives a text messgae it will turn the AC/DC relay on or off accordingly, thus
 powering the heater on or off. The following are a list of commands that can be
@@ -91,6 +92,8 @@ For a complete set of installation instructions, visit
 
 ### MQ2 Gas Sensor / ADC
 
+If you choose to use the light sensor, you will need to run `sudo raspi-config` then enable the SPI bus.
+
 #### ADC
 
 - Red F/M: VCC to GPIO 3V3
@@ -132,6 +135,8 @@ side **AND** the connector pin side.
 - GND (Black) to GPIO Ground
 - SDA (White) to GPIO SDA
 - SLC (Gray) to GPIO SLC
+
+If you choose to use the light sensor, you will need to run `sudo raspi-config` then enable the SPI bus.
 
 ### Status Display
 
