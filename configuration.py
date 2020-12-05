@@ -2,11 +2,56 @@
 
 # encoding: UTF-8
 
+import os
 from configparser import ConfigParser
+from pathlib import Path
 
 import lib.local_debug as local_debug
 
 # read in configuration settings
+
+
+def __get_resolved_filepath__(
+    filename: str
+) -> str:
+    """
+    Try to resolve a filename to the proper full path.
+    Used to help resolve relative path issues and issues with the working path when started from crontab.
+
+    Arguments:
+        filename {str} -- The filename (optionally with a partial path) to resolve to a fully qualified file path.
+
+    Returns:
+        str -- The fully resolved filepath
+    """
+
+    print("Attempting to resolve '{}'".format(filename))
+    print("__file__='{}'".format(__file__))
+
+    try:
+        raw_path = filename
+
+        if './' in filename:
+            raw_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                filename.replace("./", ""))
+        else:
+            print("Attempting to expand user pathing.")
+            raw_path = Path(os.path.expanduser(filename))
+
+            raw_path = str(raw_path)
+
+        print("Before normalization path='{}'".format(raw_path))
+
+        normalized_path = os.path.normpath(raw_path)
+
+        print("Normalized path='{}'".format(raw_path))
+
+        return normalized_path
+    except Exception as ex:
+        print(
+            "__get_resolved_filepath__:Attempted to resolve. got EX={}".format(ex))
+        return None
 
 
 def get_config_file_location():
@@ -17,7 +62,7 @@ def get_config_file_location():
     './HangarBuddy.config'
     """
 
-    return './HangarBuddy.config'
+    return __get_resolved_filepath__('./HangarBuddy.config')
 
 
 class Configuration(object):
