@@ -51,7 +51,7 @@ CONFIGURATION = configuration.Configuration()
 
 LOGGER = logging.getLogger("heater")
 LOGGER.setLevel(logging.INFO)
-MODEM = MeshtasticSerial()
+MESSAGING: MeshtasticSerial = MeshtasticSerial()
 SENSORS_MANAGER = SensorsManager(CONFIGURATION)
 HANDLER = logging.handlers.RotatingFileHandler(
     CONFIGURATION.log_filename, maxBytes=1048576, backupCount=3
@@ -72,10 +72,22 @@ def send_message(message: str) -> bool:
         # Here you can add more logic to send the alert, e.g., via email or SMS.
         # For now, it just logs the message.
         with contextlib.suppress(Exception):
-            MODEM.send(recipient, message)
+            MESSAGING.send(recipient, message)
             is_one_message_sent = True
 
     return is_one_message_sent
+
+
+def is_radio_connected() -> bool:
+    """
+    Checks if the radio is connected.
+    """
+
+    try:
+        return MESSAGING.__is_connected__()
+    except Exception as e:
+        LOGGER.error(f"Error checking radio connection: {e}")
+        return False
 
 
 if __name__ == "__main__":
@@ -91,11 +103,19 @@ if __name__ == "__main__":
 
     while True:
         SENSORS_MANAGER.update()
+        MESSAGING.service()
         gas_safety_manager.update()
-        messages = MODEM.get_message_queue()
+        messages = MESSAGING.get_message_queue()
 
         for message in messages:
             LOGGER.info(f"Received message: {message}")
+
+            if message["toId"] != MESSAGING.device_id:
+                LOGGER.warning(
+                    f"Message not intended for this device: {message.to} != {MESSAGING.__meshastic_interface__.configId}"
+                )
+                continue
+
             message_text = (
                 message.get("decoded", {}).get("payload", b"").decode("utf-8")
             )
