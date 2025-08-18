@@ -1,9 +1,11 @@
-""" Module to help with the gas sensor. """
+"""Module to help with the gas sensor."""
 
+import platform
 import time
-import local_debug
 
-if not local_debug.is_debug():
+IS_DEBUG: bool = platform.system() in ["win32", "Windows", "darwin"]
+
+if not IS_DEBUG:
     import smbus
 
 DEFAULT_IC2_BUS = 1
@@ -13,6 +15,7 @@ DEFAULT_CHANNEL_READ_OFFSET = 0x40
 DEFAULT_DEVICE_CHANNEL = 0
 DEFAULT_TRIGGER_THRESHOLD = 245
 DEFAULT_ALL_CLEAR_THRESHOLD = 235
+
 
 class GasSensorResult(object):
     """
@@ -29,14 +32,16 @@ class GasSensor(object):
     Class to help with the gas sensor.
     """
 
-    def __init__(self,
-                 sensor_trigger_threshold=DEFAULT_TRIGGER_THRESHOLD,
-                 sensor_all_clear_threshold=DEFAULT_ALL_CLEAR_THRESHOLD):
-        print "Starting init"
+    def __init__(
+        self,
+        sensor_trigger_threshold=DEFAULT_TRIGGER_THRESHOLD,
+        sensor_all_clear_threshold=DEFAULT_ALL_CLEAR_THRESHOLD,
+    ):
+        print("Starting init")
 
         self.enabled = True
 
-        if local_debug.is_debug():
+        if IS_DEBUG:
             self.ic2_bus = None
         else:
             try:
@@ -59,23 +64,28 @@ class GasSensor(object):
             return None
 
         # Provide a mock/simulator for debugging on Mac/Windows
-        if local_debug.is_debug():
+        if IS_DEBUG:
             bounce_up_threshold = DEFAULT_ALL_CLEAR_THRESHOLD * 0.9
             bounce_down_threshold = DEFAULT_TRIGGER_THRESHOLD * 1.1
-            if self.simulator_direction < 0 and self.current_value is None \
-                    or (self.current_value <= 0 or self.current_value < bounce_up_threshold):
+            if (
+                self.simulator_direction < 0
+                and self.current_value is None
+                or (self.current_value <= 0 or self.current_value < bounce_up_threshold)
+            ):
                 self.simulator_direction = 1
                 self.current_value = DEFAULT_ALL_CLEAR_THRESHOLD * 0.9
-            elif self.simulator_direction > 0 and self.current_value > bounce_down_threshold:
-                self.current_value = (DEFAULT_TRIGGER_THRESHOLD * 1.2)
+            elif (
+                self.simulator_direction > 0
+                and self.current_value > bounce_down_threshold
+            ):
+                self.current_value = DEFAULT_TRIGGER_THRESHOLD * 1.2
                 self.simulator_direction = -1
 
             self.current_value += self.simulator_direction
             return int(self.current_value)
 
         try:
-            self.ic2_bus.write_byte(DEFAULT_IC2_ADDRESS,
-                                    read_offset)
+            self.ic2_bus.write_byte(DEFAULT_IC2_ADDRESS, read_offset)
 
             # Needs a "dummy read" for the conversion to happen
             # The write back needs to compress the range of values
@@ -85,10 +95,11 @@ class GasSensor(object):
 
             raw_value = self.ic2_bus.read_byte(DEFAULT_IC2_ADDRESS)
             converted_value = raw_value * (255.0 - 125.0) / 255.0 + 125.0
-            print "RAW=" + str(raw_value) + ", CONV=" + str(converted_value)
+            print(f"RAW={str(raw_value)}, CONV={str(converted_value)}")
 
             self.ic2_bus.write_byte_data(
-                DEFAULT_IC2_ADDRESS, 0x40, int(converted_value))
+                DEFAULT_IC2_ADDRESS, 0x40, int(converted_value)
+            )
 
             return raw_value
         except:
@@ -103,7 +114,7 @@ class GasSensor(object):
         self.current_value = self.__read__(read_offset)
 
         if self.current_value is None or not self.enabled:
-            return GasSensorResult(False, DEFAULT_ALL_CLEAR_THRESHOLD) 
+            return GasSensorResult(False, DEFAULT_ALL_CLEAR_THRESHOLD)
 
         # For the warning to be removed, it must drop below an
         # all clear level that is lower than the trigger level.
@@ -117,11 +128,12 @@ class GasSensor(object):
         return GasSensorResult(self.is_gas_detected, self.current_value)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     SENSOR = GasSensor()
 
     while SENSOR.enabled:
         IS_GAS_DETECTED = SENSOR.update()
-        print "LVL:" + str(IS_GAS_DETECTED.current_value) + ", " \
-            + str(IS_GAS_DETECTED.is_gas_detected)
+        print(
+            f"LVL:{str(IS_GAS_DETECTED.current_value)}, {str(IS_GAS_DETECTED.is_gas_detected)}"
+        )
         time.sleep(0.2)

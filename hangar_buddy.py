@@ -1,10 +1,12 @@
+# !python
+
 """
 Main entry code for HangarBuddy
 """
-# !python
+
 #
 #
-# Author: Mari DeGrazia
+# Inspired by Mari DeGrazia's piWarmer
 # http://az4n6.blogspot.com/
 # arizona4n6@gmail.com
 # This program is distributed in the hope that it will be useful,
@@ -14,7 +16,7 @@ Main entry code for HangarBuddy
 #
 # You can view the GNU General Public License at <http://www.gnu.org/licenses/>
 #
-# Written for Python 2.7
+# Written for Python 3.x
 # You will need to "pip install pyserial"
 #
 # Includes provisions for the basic logic to be run
@@ -35,24 +37,64 @@ Main entry code for HangarBuddy
 
 import logging
 import logging.handlers
-import configuration
-from lib.logger import Logger
-import command_processor
 
+import command_processor.command_processor as command_processor
+import configuration
+from communication.meshtastic_serial import MeshtasticSerial
+from managers.gas_safety_manager import GasSafetyManager
+from managers.relay_manager import RelayManager
+from managers.sensors_manager import SensorsManager
 
 CONFIGURATION = configuration.Configuration()
 
-LOG_LEVEL = logging.INFO
-
 LOGGER = logging.getLogger("heater")
-LOGGER.setLevel(LOG_LEVEL)
+LOGGER.setLevel(logging.INFO)
+MODEM = MeshtasticSerial()
+SENSORS_MANAGER = SensorsManager(CONFIGURATION)
 HANDLER = logging.handlers.RotatingFileHandler(
-    CONFIGURATION.log_filename, maxBytes=1048576, backupCount=3)
-HANDLER.setFormatter(logging.Formatter(
-    '%(asctime)s %(levelname)-8s %(message)s'))
+    CONFIGURATION.log_filename, maxBytes=1048576, backupCount=3
+)
+HANDLER.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(message)s"))
 LOGGER.addHandler(HANDLER)
 
-if __name__ == '__main__':
-    COMMAND_PROCESSOR = command_processor.CommandProcessor(
-        CONFIGURATION, Logger(LOGGER))
-    COMMAND_PROCESSOR.run_hangar_buddy()
+
+def send_message(message: str):
+    """
+    Sends an alert message.
+    """
+
+    for recipient in CONFIGURATION.allowed_phone_numbers:
+        LOGGER.warning(f"{recipient}: `{message}`")
+        # Here you can add more logic to send the alert, e.g., via email or SMS.
+        # For now, it just logs the message.
+        MODEM.send(recipient, message)
+
+
+if __name__ == "__main__":
+    heater = RelayManager(CONFIGURATION, LOGGER, send_message)
+    gas_safety_manager: GasSafetyManager = GasSafetyManager(
+        SENSORS_MANAGER, heater, send_message
+    )
+    command_processor = command_processor.CommandProcessor(
+        SENSORS_MANAGER, heater, gas_safety_manager
+    )
+
+    send_message("Starting HangarBuddy...")
+
+    while True:
+        SENSORS_MANAGER.update()
+        messages = MODEM.get_message_queue()
+        for message in messages:
+            LOGGER.info(f"Received message: {message}")
+            response, is_relay_on = command_processor.process(message)
+
+            is_relay_on &= not gas_safety_manager.is_gas_present()
+
+            if is_relay_on is None:
+                LOGGER.info("No relay action required.")
+            elif is_relay_on:
+                heater.turn_on()
+                LOGGER.info("Heater turned ON.")
+            else:
+                heater.turn_off()
+                LOGGER.info("Heater turned OFF.")

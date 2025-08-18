@@ -7,13 +7,14 @@ Based on https://github.com/sunfounder/SunFounder_SensorKit_for_RPi2/blob/master
 #!/usr/bin/env python
 
 import time
-import local_debug
+import lib.local_debug as local_debug
 
 if not local_debug.is_debug():
     import smbus
 
 DEFAULT_SMBUS = 1
 DEFAULT_1602_ADDRESS = 0x27
+
 
 class LcdDisplay(object):
     """
@@ -75,7 +76,6 @@ class LcdDisplay(object):
         if not local_debug.is_debug() and self.__smbus__ is not None:
             self.__smbus__.write_byte(self.__lcd_addr__, temp)
 
-
     def send_command(self, comm):
         """
         Sends a command to the I2C device
@@ -89,20 +89,19 @@ class LcdDisplay(object):
 
         # Send bit7-4 firstly
         buf = comm & 0xF0
-        buf |= 0x04               # RS = 0, RW = 0, EN = 1
+        buf |= 0x04  # RS = 0, RW = 0, EN = 1
         self.write_word(buf)
         time.sleep(0.002)
-        buf &= 0xFB               # Make EN = 0
+        buf &= 0xFB  # Make EN = 0
         self.write_word(buf)
 
         # Send bit3-0 secondly
         buf = (comm & 0x0F) << 4
-        buf |= 0x04               # RS = 0, RW = 0, EN = 1
+        buf |= 0x04  # RS = 0, RW = 0, EN = 1
         self.write_word(buf)
         time.sleep(0.002)
-        buf &= 0xFB               # Make EN = 0
+        buf &= 0xFB  # Make EN = 0
         self.write_word(buf)
-
 
     def send_data(self, data):
         """
@@ -117,18 +116,18 @@ class LcdDisplay(object):
 
         # Send bit7-4 firstly
         buf = data & 0xF0
-        buf |= 0x05               # RS = 1, RW = 0, EN = 1
+        buf |= 0x05  # RS = 1, RW = 0, EN = 1
         self.write_word(buf)
         time.sleep(0.002)
-        buf &= 0xFB               # Make EN = 0
+        buf &= 0xFB  # Make EN = 0
         self.write_word(buf)
 
         # Send bit3-0 secondly
         buf = (data & 0x0F) << 4
-        buf |= 0x05               # RS = 1, RW = 0, EN = 1
+        buf |= 0x05  # RS = 1, RW = 0, EN = 1
         self.write_word(buf)
         time.sleep(0.002)
-        buf &= 0xFB               # Make EN = 0
+        buf &= 0xFB  # Make EN = 0
         self.write_word(buf)
 
     def clear(self):
@@ -137,7 +136,6 @@ class LcdDisplay(object):
         """
 
         self.send_command(0x01)  # Clear Screen
-
 
     def openlight(self):  # Enable the backlight
         """
@@ -158,7 +156,7 @@ class LcdDisplay(object):
         if not self.enable:
             return False
 
-        text_array = text_to_write.split('\n')
+        text_array = text_to_write.split("\n")
 
         array_count = len(text_array)
 
@@ -187,14 +185,10 @@ class LcdDisplay(object):
         if not self.enable:
             return
 
-        if pos_x < 0:
-            pos_x = 0
-        if pos_x > 15:
-            pos_x = 15
-        if pos_y < 0:
-            pos_y = 0
-        if pos_y > 1:
-            pos_y = 1
+        pos_x = max(pos_x, 0)
+        pos_x = min(pos_x, 15)
+        pos_y = max(pos_y, 0)
+        pos_y = min(pos_y, 1)
 
         # Move cursor
         addr = 0x80 + 0x40 * pos_y + pos_x
@@ -204,7 +198,7 @@ class LcdDisplay(object):
             self.send_data(ord(char))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     LCD = LcdDisplay(1, DEFAULT_1602_ADDRESS, 1)  # Slave with background light
-    LCD.write(0, 0, 'CSQ:9 MARGINAL')
-    LCD.write(0, 1, 'BAT:98% V:4.12')
+    LCD.write(0, 0, "CSQ:9 MARGINAL")
+    LCD.write(0, 1, "BAT:98% V:4.12")

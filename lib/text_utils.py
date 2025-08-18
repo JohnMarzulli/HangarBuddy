@@ -2,10 +2,6 @@
 Module to hold common utilities.
 """
 
-import subprocess
-import local_debug
-
-DEFAULT_POWER_CYCLE_DELAY = 2 # Time to allow for responses to be sent
 
 def get_singular_or_plural(value, unit):
     """
@@ -20,12 +16,13 @@ def get_singular_or_plural(value, unit):
     if as_int == value:
         value = as_int
 
-    result = str(value) + " " + unit
+    result = f"{str(value)} {unit}"
 
     if value != 1:
         result += "s"
 
     return result
+
 
 def get_time_text(number_of_seconds):
     """
@@ -90,6 +87,7 @@ def get_time_text(number_of_seconds):
 
     return get_singular_or_plural(number_of_days, "day")
 
+
 def escape(text):
     """
     Replaces escape sequences do they can be printed.
@@ -103,7 +101,7 @@ def escape(text):
     ''
     """
 
-    return str(text).replace('\r', '\\r').replace('\n', '\\n').replace('\x1a', '\\x1a')
+    return str(text).replace("\r", "\\r").replace("\n", "\\n").replace("\x1a", "\\x1a")
 
 
 def get_cleaned_phone_number(dirty_number):
@@ -124,40 +122,22 @@ def get_cleaned_phone_number(dirty_number):
     >>> get_cleaned_phone_number(None)
     """
     if dirty_number is not None:
-        return dirty_number.replace('+',
-                                    '').replace('(',
-                                                '').replace(')',
-                                                            '').replace('-',
-                                                                        '').replace(' ',
-                                                                                    '').replace('"',
-                                                                                                '')
+        return (
+            dirty_number.replace("+", "")
+            .replace("(", "")
+            .replace(")", "")
+            .replace("-", "")
+            .replace(" ", "")
+            .replace('"', "")
+        )
     return None
 
-def restart():
-    """
-    Restarts down the Pi.
-    """
 
-    if not local_debug.is_debug():
-        subprocess.Popen(["sudo shutdown -r 30"],
-                         shell=True, stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
-
-def shutdown():
-    """
-    Shuts down the Pi.
-    """
-
-    if not local_debug.is_debug():
-        subprocess.Popen(["sudo shutdown -h 30"],
-                         shell=True, stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
-    print "Starting tests."
+    print("Starting tests.")
 
     doctest.testmod()
 
-    print "Tests finished"
+    print("Tests finished")

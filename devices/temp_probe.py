@@ -1,8 +1,8 @@
-""" Module to deal with the SunFounder temperature probe. """
+"""Module to deal with the SunFounder temperature probe."""
 
 import os
+import platform
 import time
-import local_debug
 
 # ---------------------------------------------------------------
 # Note:
@@ -19,6 +19,14 @@ import local_debug
 
 # Modified from SunFounder's page at
 # https://www.sunfounder.com/learn/Sensor-Kit-v1-0-for-Raspberry-Pi/lesson-17-ds18b20-temperature-sensor-sensor-kit-v1-0-for-pi.html
+
+
+def is_debug():
+    """
+    returns True if this should be run as a local debug (Mac or Windows).
+    """
+
+    return platform.system() in ["win32", "Windows", "darwin"]
 
 
 def celcius_to_farenheit(temp_in_celcius):
@@ -45,9 +53,9 @@ def read_sensor(sensor_id):
         secondline = text.split("\n")[1]
         temperaturedata = secondline.split(" ")[9]
         temperature = float(temperaturedata[2:])
-        temperature = temperature / 1000
-        print "Sensor: " + sensor_id + " : %0.3f C" % temperature
-        print "Sensor: " + sensor_id + " : %0.3f F" % celcius_to_farenheit(temperature)
+        temperature /= 1000
+        print(f"Sensor: {sensor_id}" + " : %0.3f C" % temperature)
+        print(f"Sensor: {sensor_id}" + " : %0.3f F" % celcius_to_farenheit(temperature))
 
         return celcius_to_farenheit(temperature)
     except:
@@ -66,7 +74,7 @@ def read_sensors():
     """
     temperature_probe_values = []
 
-    if local_debug.is_debug():
+    if is_debug():
         return temperature_probe_values
 
     try:
@@ -78,22 +86,22 @@ def read_sensors():
                     if probe_value is not None:
                         temperature_probe_values.append(probe_value)
                 except:
-                    print "Failed to read sensor"
+                    print("Failed to read sensor")
     except:
-        print "Drivers not available."
+        print("Drivers not available.")
 
     array_length = 0
     if temperature_probe_values is not None:
         array_length = len(temperature_probe_values)
 
     if array_length == 0:
-        print "No sensors found! Check connection."
+        print("No sensors found! Check connection.")
 
     return temperature_probe_values
 
 
 def loop():
-    """ read temperature every second for all connected sensors """
+    """read temperature every second for all connected sensors"""
     while True:
         read_sensors()
         time.sleep(1)
@@ -101,18 +109,18 @@ def loop():
 
 # Nothing to cleanup
 def destroy():
-    """ Tears down the  object. """
+    """Tears down the  object."""
     pass
 
 
 ##############
 # UNIT TESTS #
 ##############
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
-    print "Starting tests."
+    print("Starting tests.")
 
     doctest.testmod()
 
-    print "Tests finished"
+    print("Tests finished")
