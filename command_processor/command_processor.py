@@ -6,7 +6,9 @@ import time
 # Ensure the parent directory is in sys.path so 'managers' can be imported
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from lib import local_debug
+from datetime import datetime, timezone
+
+from lib import local_debug, text_utils
 from managers.gas_safety_manager import GasSafetyManager
 from managers.relay_manager import RelayManager
 from managers.sensors_manager import SensorsManager
@@ -81,6 +83,7 @@ class CommandProcessor:
         relay_manager: RelayManager,
         gas_safety_manager: GasSafetyManager,
     ):
+        self.__system_start_time__ = datetime.now(timezone.utc)
         self.last_relay_state = False  # Track last relay state to detect changes
         self.__sensors_manager__: SensorsManager = sensor_manager
         self.__relay_manager__: RelayManager = relay_manager
@@ -139,8 +142,10 @@ class CommandProcessor:
         return False if message is None else command.lower() in message.lower()
 
     def __get_uptime_text__(self) -> str:
+        time_up = datetime.now(timezone.utc) - self.__system_start_time__
+        time_text = text_utils.get_time_text(time_up.total_seconds())
         # For demo: just return system uptime in seconds
-        return f"Uptime: {int(time.time())} seconds since epoch."
+        return f"Uptime: {time_text}"
 
     def __get_full_status_text__(self) -> str:
         # Example: return a summary of sensor states
@@ -148,21 +153,20 @@ class CommandProcessor:
         gas = self.__sensors_manager__.current_gas_sensor_reading
         light = self.__sensors_manager__.current_light_sensor_reading
 
+        gas_reading = gas.current_value if gas is not None else "Not available"
+        temp_reading = str(temp) if temp is not None else "Not available"
+        light_reading = (
+            f"{light.lux} LUX"
+            if light is not None and light.lux is not None
+            else "Not available"
+        )
+
         status_message: str = "Status:\n"
-        status_message += f"Relay is {'ON' if self.last_relay_state else 'OFF'}\n"
-
-        if temp is not None:
-            status_message += f"Temp: {temp}\n"
-        else:
-            status_message += "Temp: Not available\n"
-
-        if gas is not None:
-            status_message += f"Gas: {gas.current_value}\n"
-        else:
-            status_message += "Gas: Not available\n"
-
-        if light is not None and light.lux is not None:
-            status_message += f"Light: {light.lux} LUX\n"
+        status_message += f"{self.__get_uptime_text__()}\n"
+        status_message += f"Relay: {'ON' if self.last_relay_state else 'OFF'}\n"
+        status_message += f"Temp: {temp_reading}\n"
+        status_message += f"Gas: {gas_reading}\n"
+        status_message += f"Light: {light_reading}"
 
         return status_message
 
