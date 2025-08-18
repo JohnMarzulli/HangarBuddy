@@ -99,11 +99,9 @@ class LightSensor(object):
 
     def set_timing(self, integration):
         if not self.enabled:
-            print("set_timing:Not enbabled")
             return
 
-        print("set_timing:Enabling")
-        self.enable()
+        self.is_enable()
         self.integration_time = integration
         if not local_debug.is_debug():
             print("set_timing:Writing data byte")
@@ -112,14 +110,13 @@ class LightSensor(object):
                 COMMAND_BIT | REGISTER_CONTROL,
                 self.integration_time | self.gain,
             )
-        print("Disabling")
         self.disable()
 
     def get_timing(self):
         return self.integration_time
 
     def set_gain(self, gain):
-        self.enable()
+        self.is_enable()
         self.gain = gain
 
         if not self.enabled:
@@ -177,13 +174,11 @@ class LightSensor(object):
         # The highest value is the approximate lux equivalent
         return max([lux1, lux2])
 
-    def enable(self):
-        print("Entering enable")
+    def is_enable(self):
         if local_debug.is_debug():
-            print("Local debug")
             return
+
         if not self.enabled:
-            print("Not enabled")
             return
 
         print("enable:writing to data bus.")
@@ -203,7 +198,7 @@ class LightSensor(object):
         )
 
     def get_full_luminosity(self):
-        self.enable()
+        self.is_enable()
         # not sure if we need it "// Wait x ms for ADC to complete"
         time.sleep(0.120 * self.integration_time + 1)
 
