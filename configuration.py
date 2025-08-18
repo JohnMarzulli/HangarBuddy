@@ -49,8 +49,8 @@ class Configuration(object):
         self.hangar_dark: int = self.__config_parser__.getint("SETTINGS", "HANGAR_DARK")
         self.hangar_dim: int = self.__config_parser__.getint("SETTINGS", "HANGAR_DIM")
         self.hangar_lit: int = self.__config_parser__.getint("SETTINGS", "HANGAR_LIT")
-        self.allowed_phone_numbers: list[str] = self.__config_parser__.get(
-            "SETTINGS", "ALLOWED_PHONE_NUMBERS"
+        self.allowed_senders: list[str] = self.__config_parser__.get(
+            "SETTINGS", "ALLOWED_SENDERS"
         ).split(",")
         self.max_minutes_to_run: int = self.__config_parser__.getint(
             "SETTINGS", "MAX_HEATER_TIME"
@@ -78,8 +78,8 @@ def test_configuration():
     """Test that the configuration is valid."""
     config = Configuration()
 
-    assert config.allowed_phone_numbers is not None
-    assert len(config.allowed_phone_numbers) > 0
+    assert config.allowed_senders is not None
+    assert len(config.allowed_senders) > 0
     assert config.heater_pin is not None
     assert config.heater_pin >= 1
     assert config.heater_pin < 32

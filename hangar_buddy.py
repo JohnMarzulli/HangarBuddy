@@ -63,7 +63,7 @@ def send_message(message: str):
     Sends an alert message.
     """
 
-    for recipient in CONFIGURATION.allowed_phone_numbers:
+    for recipient in CONFIGURATION.allowed_senders:
         LOGGER.warning(f"{recipient}: `{message}`")
         # Here you can add more logic to send the alert, e.g., via email or SMS.
         # For now, it just logs the message.
