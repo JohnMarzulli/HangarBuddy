@@ -49,9 +49,13 @@ class Configuration(object):
         self.hangar_dark: int = self.__config_parser__.getint("SETTINGS", "HANGAR_DARK")
         self.hangar_dim: int = self.__config_parser__.getint("SETTINGS", "HANGAR_DIM")
         self.hangar_lit: int = self.__config_parser__.getint("SETTINGS", "HANGAR_LIT")
-        self.allowed_senders: list[str] = self.__config_parser__.get(
+        raw_senders_entry: str = self.__config_parser__.get(
             "SETTINGS", "ALLOWED_SENDERS"
-        ).split(",")
+        )
+        raw_senders_list: list[str] = raw_senders_entry.split(",")
+        self.allowed_senders: list[str] = [
+            sender.strip() for sender in raw_senders_list if sender.strip()
+        ]
         self.max_minutes_to_run: int = self.__config_parser__.getint(
             "SETTINGS", "MAX_HEATER_TIME"
         )
