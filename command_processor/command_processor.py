@@ -108,7 +108,7 @@ class CommandProcessor:
             __restart__()
             return "System restarting.", False
         elif self.__is_command__(HEATER_ON_COMMAND, msg):
-            self.__gas_safety_manager__.is_gas_present()
+            self.__gas_safety_manager__.update()
             if not self.__gas_safety_manager__.can_turn_on_heater():
                 self.last_relay_state = False
                 return "Cannot turn on heater: Gas detected!", False

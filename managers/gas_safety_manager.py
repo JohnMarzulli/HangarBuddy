@@ -12,7 +12,7 @@ class GasSafetyManager:
         self.__is_gas_detected__ = False
         self.__last_alert_time__ = 0
 
-    def is_gas_present(self) -> bool:
+    def update(self) -> bool:
         now = time.time()
         gas_sensor_reading = self.__sensors_.current_gas_sensor_reading
 
@@ -36,6 +36,9 @@ class GasSafetyManager:
             self.__alert_callback__("WARNING: Gas detected! Heater is OFF.")
             self.__last_alert_time__ = now
 
+        return self.__is_gas_detected__
+
+    def is_gas_detected(self) -> bool:
         return self.__is_gas_detected__
 
     def can_turn_on_heater(self):
