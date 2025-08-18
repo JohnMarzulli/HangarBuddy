@@ -112,11 +112,21 @@ class CommandProcessor:
             if not self.__gas_safety_manager__.can_turn_on_heater():
                 self.last_relay_state = False
                 return "Cannot turn on heater: Gas detected!", False
+            response_message: str = (
+                "Heater turning ON."
+                if not self.last_relay_state
+                else "Heater is already ON."
+            )
             self.last_relay_state = True
-            return "Heater turning ON.", True
+            return response_message, True
         elif self.__is_command__(HEATER_OFF_COMMAND, msg):
+            response_message: str = (
+                "Heater turning OFF."
+                if self.last_relay_state
+                else "Heater is already OFF."
+            )
             self.last_relay_state = False
-            return "Heater turning OFF.", False
+            return response_message, False
         elif self.__is_command__(UPTIME_COMMAND, msg):
             return self.__get_uptime_text__(), self.last_relay_state
         elif self.__is_command__(FULL_STATUS_COMMAND, msg):
@@ -131,7 +141,7 @@ class CommandProcessor:
             return self.__get_help_text__(), self.last_relay_state
         else:
             return (
-                "Command '{message}' received, unable to process it.",
+                f"Command '{message}' received, unable to process it.",
                 self.last_relay_state,
             )
 
