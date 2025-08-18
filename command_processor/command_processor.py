@@ -127,8 +127,10 @@ class CommandProcessor:
         elif self.__is_command__(HELP_COMMAND, msg):
             return self.__get_help_text__(), self.last_relay_state
         else:
-            print(f"Command '{message}' received, unable to process it.")
-            return None, self.last_relay_state
+            return (
+                "Command '{message}' received, unable to process it.",
+                self.last_relay_state,
+            )
 
     def __is_command__(self, command: str | None, message: str) -> bool:
         if command is None or not command:
@@ -147,6 +149,7 @@ class CommandProcessor:
         light = self.__sensors_manager__.current_light_sensor_reading
 
         status_message: str = "Status:\n"
+        status_message += f"Relay is {'ON' if self.last_relay_state else 'OFF'}\n"
 
         if temp is not None:
             status_message += f"Temp: {temp}\n"
@@ -158,8 +161,8 @@ class CommandProcessor:
         else:
             status_message += "Gas: Not available\n"
 
-        if light is not None:
-            status_message += f"Light: {light}\n"
+        if light is not None and light.lux is not None:
+            status_message += f"Light: {light.lux} LUX\n"
 
         return status_message
 
