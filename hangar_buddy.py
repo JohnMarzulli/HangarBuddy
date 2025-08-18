@@ -91,7 +91,9 @@ if __name__ == "__main__":
 
     while True:
         SENSORS_MANAGER.update()
+        gas_safety_manager.update()
         messages = MODEM.get_message_queue()
+
         for message in messages:
             LOGGER.info(f"Received message: {message}")
             message_text = (
@@ -99,17 +101,19 @@ if __name__ == "__main__":
             )
             (response, is_relay_on) = command_processor.process(message_text)
 
-            is_relay_on &= not gas_safety_manager.is_gas_present()
+            is_relay_on &= not gas_safety_manager.is_gas_detected()
 
             if is_relay_on is None:
-                LOGGER.info("No relay action required.")
+                LOGGER.warning(
+                    "Value of `is_relay_on` is None. Probable bug, skipping heater control."
+                )
             elif is_relay_on:
                 heater.turn_on()
                 LOGGER.info("Heater turned ON.")
             else:
                 heater.turn_off()
                 LOGGER.info("Heater turned OFF.")
-            
+
             if response is not None and len(response) > 0:
                 send_message(response)
                 LOGGER.info(f"Response sent: {response}")
