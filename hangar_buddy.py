@@ -4,6 +4,7 @@
 Main entry code for HangarBuddy
 """
 
+
 #
 #
 # Inspired by Mari DeGrazia's piWarmer
@@ -40,6 +41,7 @@ import logging.handlers
 
 import command_processor.command_processor as command_processor
 import configuration
+import contextlib
 from communication.meshtastic_serial import MeshtasticSerial
 from managers.gas_safety_manager import GasSafetyManager
 from managers.relay_manager import RelayManager
@@ -58,16 +60,22 @@ HANDLER.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(message)s"
 LOGGER.addHandler(HANDLER)
 
 
-def send_message(message: str):
+def send_message(message: str) -> bool:
     """
     Sends an alert message.
     """
+
+    is_one_message_sent: bool = False
 
     for recipient in CONFIGURATION.allowed_senders:
         LOGGER.warning(f"{recipient}: `{message}`")
         # Here you can add more logic to send the alert, e.g., via email or SMS.
         # For now, it just logs the message.
-        MODEM.send(recipient, message)
+        with contextlib.suppress(Exception):
+            MODEM.send(recipient, message)
+            is_one_message_sent = True
+
+    return is_one_message_sent
 
 
 if __name__ == "__main__":
@@ -86,7 +94,10 @@ if __name__ == "__main__":
         messages = MODEM.get_message_queue()
         for message in messages:
             LOGGER.info(f"Received message: {message}")
-            response, is_relay_on = command_processor.process(message)
+            message_text = (
+                message.get("decoded", {}).get("payload", b"").decode("utf-8")
+            )
+            (response, is_relay_on) = command_processor.process(message_text)
 
             is_relay_on &= not gas_safety_manager.is_gas_present()
 
@@ -98,3 +109,7 @@ if __name__ == "__main__":
             else:
                 heater.turn_off()
                 LOGGER.info("Heater turned OFF.")
+            
+            if response is not None and len(response) > 0:
+                send_message(response)
+                LOGGER.info(f"Response sent: {response}")
