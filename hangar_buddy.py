@@ -18,7 +18,7 @@ Main entry code for HangarBuddy
 # You can view the GNU General Public License at <http://www.gnu.org/licenses/>
 #
 # Written for Python 3.x
-# You will need to "pip install pyserial"
+# You will need to "pip3 install meshtastic"
 #
 # Includes provisions for the basic logic to be run
 # for development\testing under Windows or Mac
@@ -27,14 +27,14 @@ Main entry code for HangarBuddy
 #
 # 1. sudo vim /etc/rc.local
 # 2. Add the following line:
-#    cd /home/pi/piWarmer
+#    cd /home/pi/HangarBuddy
 # 3. (OPTIONAL) To have the device update its code automatically
 #    when connected to wifi, add the following line
 #    at the bottom of the file:
-#    /bin/sh /home/pi/piWarmer/update.sh
+#    /bin/sh /home/pi/HangarBuddy/update.sh
 # 4. Add the following line at the bottom of the file:
 #    NOTE: if this should be below the optional auto-update line
-#    python /home/pi/piWarmer/hangar_buddy.py &
+#    python /home/pi/HangarBuddy/hangar_buddy.py &
 
 import logging
 import logging.handlers

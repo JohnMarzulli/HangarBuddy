@@ -21,7 +21,7 @@ it has been extended and modified in a number of ways.
 
 ## Acknowledgements
 
-This version was based on the piWarmer by Maria DeGrazia.
+This project started as a fork of piWarmer by Maria DeGrazia.
 [https://github.com/mdegrazia/piWarmer](https://github.com/mdegrazia/piWarmer)
 
 I want to extend my many thanks to Maria for starting such an amazing project!
@@ -54,9 +54,6 @@ The commands are not case sensitive.
 You will need to modify the HangarBuddy.config file to match your installation.
 This file includes a list of phone numbers that are authorized to issue
 commands. The file also includes a phone number that any alerts will be sent to.
-
-For a complete set of installation instructions, visit
-[https://github.com/mdegrazia/piWarmer/wiki](https://github.com/mdegrazia/piWarmer/wiki).
 
 ## Wiring
 
@@ -257,13 +254,13 @@ into the USB port.
 1. Log in to your rasperry pi as the `pi` user.
 1. `mkdir src`
 1. `cd src`
-1. `git clone https://github.com/JohnMarzulli/piWarmer/`
-1. `cd piWarmer`
-1. `sudo cp piWarmer.logrotate.conf /etc/logrotate.d/`
-1. `sudo chown root root /etc/logrotate.d/piWarmer.logrotate.conf`
-1. `sudo cp piWarmer.service /etc/systemd/system/`
-1. `sudo chown root root /etc/systemd/system/piWarmer.service`
-1. `sudo systemctl enable piWarmer.service`
+1. `git clone https://github.com/JohnMarzulli/HangarBuddy/`
+1. `cd HangarBuddy`
+1. `sudo cp hangar_buddy.logrotate.conf /etc/logrotate.d/`
+1. `sudo chown root root /etc/logrotate.d/hangar_buddy.logrotate.conf`
+1. `sudo cp hangar_buddy.service /etc/systemd/system/`
+1. `sudo chown root root /etc/systemd/system/hangar_buddy.service`
+1. `sudo systemctl enable hangar_buddy.service`
 1. `sudo reboot`
 
-Once you reboot, the piWarmer service should be started automatically.  You can view any startup errors for the service in `/var/log/syslog`.
+Once you reboot, the hangar_buddy service should be started automatically.  You can view any startup errors for the service in `/var/log/syslog`.
