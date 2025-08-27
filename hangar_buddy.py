@@ -38,6 +38,7 @@ Main entry code for HangarBuddy
 
 import logging
 import logging.handlers
+from time import sleep
 
 import command_processor.command_processor as command_processor
 import configuration
@@ -134,6 +135,7 @@ if __name__ == "__main__":
         MESSAGING.service()
         gas_safety_manager.update()
         messages = MESSAGING.get_message_queue()
+        heater.update()
 
         for message in messages:
             LOGGER.info(f"Received message: {message}")
@@ -152,17 +154,15 @@ if __name__ == "__main__":
 
             is_relay_on &= not gas_safety_manager.is_gas_detected()
 
-            if is_relay_on is None:
-                LOGGER.warning(
-                    "Value of `is_relay_on` is None. Probable bug, skipping heater control."
-                )
-            elif is_relay_on:
+            if is_relay_on:
                 heater.turn_on()
-                LOGGER.info("Heater turned ON.")
+                LOGGER.info("Attempting to turn ON heater.")
             else:
                 heater.turn_off()
-                LOGGER.info("Heater turned OFF.")
+                LOGGER.info("Attempting to turn OFF heater.")
 
             if response is not None and len(response) > 0:
                 send_message(response)
                 LOGGER.info(f"Response sent: {response}")
+
+        sleep(1)
