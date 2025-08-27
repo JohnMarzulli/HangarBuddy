@@ -94,6 +94,27 @@ def is_radio_connected() -> bool:
         LOGGER.error(f"Error checking radio connection: {e}")
         return False
 
+def is_for_this_node(
+        message: dict
+) -> bool:
+    message_to:str = message["toId"]
+    message_to = message_to.strip()
+
+    return message_to == MESSAGING.device_id
+
+def is_from_known_sender(
+        message: dict
+) -> bool:
+    message_from:str = message["fromId"]
+    message_from = message_from.lstrip('!')
+    is_from_known_sender = message_from in CONFIGURATION.allowed_senders
+
+    return is_from_known_sender
+
+def get_message_text(
+        message: dict
+) -> str:
+    return message.get("decoded", {}).get("payload", b"").decode("utf-8")
 
 if __name__ == "__main__":
     heater = RelayManager(CONFIGURATION, LOGGER, send_message)
@@ -117,27 +138,16 @@ if __name__ == "__main__":
         for message in messages:
             LOGGER.info(f"Received message: {message}")
 
-            message_to:str = message["toId"] 
-            message_from:str = message["fromId"]
-            message_from = message_from.lstrip('!')
-
-            if message_to != MESSAGING.device_id:
-                LOGGER.warning(
-                    f"Message not intended for this device: {message_to} != {MESSAGING.device_id}"
-                )
+            if not is_for_this_node(message):
                 continue
 
-            is_from_known_sender = message_from in CONFIGURATION.allowed_senders
-
-            if not is_from_known_sender:
+            if not is_from_known_sender(message):
                 known_senders_text: str = ",".join(CONFIGURATION.allowed_senders)
-                send_message(f"Unknown sender `{message_from}`, known: {known_senders_text}")
+                send_message(f"Unknown sender `{message['fromId']}`, known: {known_senders_text}")
 
                 continue
 
-            message_text = (
-                message.get("decoded", {}).get("payload", b"").decode("utf-8")
-            )
+            message_text = get_message_text(message)
             (response, is_relay_on) = command_processor.process(message_text)
 
             is_relay_on &= not gas_safety_manager.is_gas_detected()
