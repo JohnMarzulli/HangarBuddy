@@ -55,6 +55,22 @@ You will need to modify the HangarBuddy.config file to match your installation.
 This file includes a list of phone numbers that are authorized to issue
 commands. The file also includes a phone number that any alerts will be sent to.
 
+The basic install process (from scratch):
+- Image a micro-SD card using the Raspberry Pi Imager. Keep the user name as `Pi`. You may optionally setup your wifi network name and password.
+- In the Pi user directory, make a directory name `src`, navigate into it, then clone the Hangar Buddy repo
+- In `/home/user/pi/src/HangarBuddy`, you will need to run and activate a "Python Virtual Environment"
+- `python -m venv venv`
+- `source ./venv/bin/activate`
+- `pip install meshtastic`
+- IF you are using an older version of Raspberry Pi OS and NOT using a PI 5: `pip install RPi.GPIO`
+- For Pi5 & Bookworm: ``
+- `pip install smbus`
+- `pip install pyserial`
+
+You will also need to enable some system settings:
+- `sudo raspi-config`
+- Enable I2C, SPI, and the Serial interface
+
 ## Wiring
 
 **Note**: GPIO25 is physical pin 22
