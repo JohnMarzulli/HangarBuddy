@@ -5,11 +5,20 @@ configuration in order
 
 import logging
 import logging.handlers
+import platform
 
+IS_DEBUG: bool = platform.system() in ["win32", "Windows", "darwin"]
+
+from devices.gas_sensor_result import GasSensorResult
 import devices.temp_probe as temp_probe
-from devices.gas_sensor import GasSensor, GasSensorResult
+from devices.gas_sensor import GasSensor
 from devices.light_sensor import LightSensor, LightSensorResult
 from lib.intermittent_task import IntermittentTask
+
+if not IS_DEBUG:
+    from devices.mq2_gas_sensor import Mq2GasSensor
+else:
+    from devices.simulated_gas_sensor import SimulatedGasSensor
 
 DEFAULT_SENSOR_LOG = "sensors.log"
 DEFAULT_LIGHT_SENSOR_UPDATE_INTERVAL = 30
@@ -33,7 +42,9 @@ class SensorsManager:
             logging.Formatter("%(asctime)s %(levelname)-8s %(message)s")
         )
 
-        self.__gas_sensor__: GasSensor = GasSensor()
+        self.__gas_sensor__: GasSensor = (
+            SimulatedGasSensor() if IS_DEBUG else Mq2GasSensor()
+        )
         self.__light_sensor__: LightSensor = LightSensor()
 
         self.__gas_sensor_task__: IntermittentTask = IntermittentTask(
