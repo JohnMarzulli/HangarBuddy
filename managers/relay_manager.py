@@ -10,7 +10,6 @@ from configuration import Configuration
 from devices.relay import PowerRelay
 
 
-
 class RelayManager(object):
     """
     Class to command and control the power relay.
@@ -111,13 +110,6 @@ class RelayManager(object):
         # make sure and turn relay off
         self.__relay__.switch_low()
 
-    def __max_time_immediate__(self):
-        """
-        Trigger everything associated with the timer
-        being triggered.
-        """
-        self.__turn_off_relay__()
-
     def __turn_off_immediate__(self):
         """
         Turn off the relay RIGHT NOW.
@@ -186,6 +178,7 @@ class RelayManager(object):
         """
 
         if self.__shutoff_timer__ is not None and self.__shutoff_timer__ < time.time():
+            self.__send_message__("Timer expired.")
             self.turn_off()
         elif self.__shutoff_timer__ is None and self.is_relay_on():
             self.__logger__.warning(
