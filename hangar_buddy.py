@@ -40,8 +40,8 @@ import logging
 import logging.handlers
 from time import sleep
 
-import command_processor.command_processor as command_processor
 import configuration
+from command_processor.command_processor import CommandProcessor
 from communication.meshtastic_serial import MeshtasticSerial
 from managers.gas_safety_manager import GasSafetyManager
 from managers.relay_manager import RelayManager
@@ -68,7 +68,7 @@ def send_message(message: str) -> bool:
     is_one_message_sent: bool = False
 
     for recipient in CONFIGURATION.allowed_senders:
-        print(f"SENDING: {recipient}: `{message}`") #LOGGER.info
+        print(f"SENDING: {recipient}: `{message}`")  # LOGGER.info
         # Here you can add more logic to send the alert, e.g., via email or SMS.
         # For now, it just logs the message.
         try:
@@ -94,36 +94,58 @@ def is_radio_connected() -> bool:
         LOGGER.error(f"Error checking radio connection: {e}")
         return False
 
-def is_for_this_node(
-        message: dict
-) -> bool:
-    message_to:str = message["toId"]
+
+def is_for_this_node(message: dict) -> bool:
+    message_to: str = message["toId"]
     message_to = message_to.strip()
 
     return message_to == MESSAGING.device_id
 
-def is_from_known_sender(
-        message: dict
-) -> bool:
-    message_from:str = message["fromId"]
-    message_from = message_from.lstrip('!')
-    is_from_known_sender = message_from in CONFIGURATION.allowed_senders
 
-    return is_from_known_sender
+def is_from_known_sender(message: dict) -> bool:
+    message_from: str = message["fromId"]
+    message_from = message_from.lstrip("!")
 
-def get_message_text(
-        message: dict
-) -> str:
+    return message_from in CONFIGURATION.allowed_senders
+
+
+def get_message_text(message: dict) -> str:
     return message.get("decoded", {}).get("payload", b"").decode("utf-8")
+
+
+def process_messages(command_processor: CommandProcessor):
+    messages = MESSAGING.get_message_queue()
+
+    for message in messages:
+        LOGGER.info(f"Received message: {message}")
+
+        if not is_for_this_node(message):
+            continue
+
+        if not is_from_known_sender(message):
+            known_senders_text: str = ",".join(CONFIGURATION.allowed_senders)
+            unknown_sender_message: str = (
+                f"Unknown sender `{message['fromId']}`, known: {known_senders_text}"
+            )
+
+            send_message(unknown_sender_message)
+
+            continue
+
+        message_text = get_message_text(message)
+        response = command_processor.process(message_text)
+
+        if response is not None and len(response) > 0:
+            send_message(response)
+            LOGGER.info(f"Response sent: {response}")
+
 
 if __name__ == "__main__":
     heater = RelayManager(CONFIGURATION, LOGGER, send_message)
     gas_safety_manager: GasSafetyManager = GasSafetyManager(
         SENSORS_MANAGER, heater, send_message
     )
-    command_processor = command_processor.CommandProcessor(
-        SENSORS_MANAGER, heater, gas_safety_manager
-    )
+    command_processor = CommandProcessor(SENSORS_MANAGER, heater, gas_safety_manager)
 
     send_message("Starting HangarBuddy...")
 
@@ -134,26 +156,6 @@ if __name__ == "__main__":
         MESSAGING.service()
         gas_safety_manager.update()
         heater.update()
-        
-        messages = MESSAGING.get_message_queue()
-
-        for message in messages:
-            LOGGER.info(f"Received message: {message}")
-
-            if not is_for_this_node(message):
-                continue
-
-            if not is_from_known_sender(message):
-                known_senders_text: str = ",".join(CONFIGURATION.allowed_senders)
-                send_message(f"Unknown sender `{message['fromId']}`, known: {known_senders_text}")
-
-                continue
-
-            message_text = get_message_text(message)
-            response = command_processor.process(message_text)
-
-            if response is not None and len(response) > 0:
-                send_message(response)
-                LOGGER.info(f"Response sent: {response}")
+        process_messages(command_processor)
 
         sleep(1)
