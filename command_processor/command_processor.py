@@ -83,66 +83,60 @@ class CommandProcessor:
         gas_safety_manager: GasSafetyManager,
     ):
         self.__system_start_time__ = datetime.now(timezone.utc)
-        self.last_relay_state = False  # Track last relay state to detect changes
         self.__sensors_manager__: SensorsManager = sensor_manager
         self.__relay_manager__: RelayManager = relay_manager
         self.__gas_safety_manager__: GasSafetyManager = gas_safety_manager
 
-    def process(self, message: str) -> tuple[str | None, bool]:
+    def process(self, message: str) -> str | None:
         """
         Process an incoming text message. Returns a tuple (response_text, relay_should_be_on) if a valid command,
         otherwise returns (None, None).
         """
         if not isinstance(message, str):
-            return None, None
+            return None
         msg = message.strip().upper()
         # Only process if the message matches a valid command
 
         if self.__is_command__(SHUTDOWN_COMMAND, msg):
+            self.__relay_manager__.turn_off()
             __shutdown__()
-            self.last_relay_state = False
-            return "System shutting down.", False
+            return "System shutting down."
         elif self.__is_command__(RESTART_COMMAND, msg):
-            self.last_relay_state = False
+            self.__relay_manager__.turn_off()
             __restart__()
-            return "System restarting.", False
+            return "System restarting."
         elif self.__is_command__(HEATER_ON_COMMAND, msg):
-            self.__gas_safety_manager__.update()
             if not self.__gas_safety_manager__.can_turn_on_heater():
-                self.last_relay_state = False
-                return "Cannot turn on heater: Gas detected!", False
+                return "Cannot turn on heater: Gas detected!"
             response_message: str = (
                 "Heater turning ON."
-                if not self.last_relay_state
+                if not self.__relay_manager__.is_relay_on()
                 else f"Heater is already ON. {self.__relay_manager__.get_time_remaining()}"
             )
-            self.last_relay_state = True
-            return response_message, True
+            self.__relay_manager__.turn_on()
+            return response_message
         elif self.__is_command__(HEATER_OFF_COMMAND, msg):
             response_message: str = (
                 f"Heater turning OFF with {self.__relay_manager__.get_time_remaining()}"
-                if self.last_relay_state
+                if self.__relay_manager__.is_relay_on()
                 else "Heater is already OFF."
             )
-            self.last_relay_state = False
-            return response_message, False
+            self.__relay_manager__.turn_off()
+            return response_message
         elif self.__is_command__(UPTIME_COMMAND, msg):
-            return self.__get_uptime_text__(), self.last_relay_state
+            return self.__get_uptime_text__()
         elif self.__is_command__(FULL_STATUS_COMMAND, msg):
-            return self.__get_full_status_text__(), self.last_relay_state
+            return self.__get_full_status_text__()
         elif self.__is_command__(TEMPERATURE_COMMAND, msg):
             temp = self.__sensors_manager__.current_temperature_sensor_reading
-            return f"Temperature: {temp}", self.last_relay_state
+            return f"Temperature: {temp}"
         elif self.__is_command__(LIGHTS_COMMAND, msg):
             light = self.__sensors_manager__.current_light_sensor_reading
-            return f"Light: {light}", self.last_relay_state
+            return f"Light: {light}"
         elif self.__is_command__(HELP_COMMAND, msg):
-            return self.__get_help_text__(), self.last_relay_state
+            return self.__get_help_text__()
         else:
-            return (
-                f"Command '{message}' received, unable to process it.",
-                self.last_relay_state,
-            )
+            return f"Command '{message}' received, unable to process it."
 
     def __is_command__(self, command: str | None, message: str) -> bool:
         if command is None or not command:
@@ -158,7 +152,8 @@ class CommandProcessor:
 
     def __get_full_status_text__(self) -> str:
         # Example: return a summary of sensor states
-        temp = self.__sensors_manager__.current_temperature_sensor_reading
+        is_relay_on: bool = self.__relay_manager__.is_relay_on()
+        temp: int | None = self.__sensors_manager__.current_temperature_sensor_reading
         gas = self.__sensors_manager__.current_gas_sensor_reading
         light = self.__sensors_manager__.current_light_sensor_reading
 
@@ -172,7 +167,7 @@ class CommandProcessor:
 
         status_message: str = "Status:\n"
         status_message += f"{self.__get_uptime_text__()}\n"
-        status_message += f"Relay: {'ON w/' if self.last_relay_state else 'OFF'} {self.__relay_manager__.get_time_remaining() if self.last_relay_state else ''}\n"
+        status_message += f"Relay: {'ON w/' if is_relay_on else 'OFF'} {self.__relay_manager__.get_time_remaining() if is_relay_on else ''}\n"
         status_message += f"Temp: {temp_reading}\n"
         status_message += f"Gas: {gas_reading}\n"
         status_message += f"Light: {light_reading}"
