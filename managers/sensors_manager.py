@@ -89,14 +89,11 @@ class SensorsManager:
         """
 
         self.current_light_sensor_reading = LightSensorResult(self.__light_sensor__)
-        print(
-            ", LIGHT, Lux="
-            + str(int(self.current_light_sensor_reading.lux))
-            + ", VIS="
-            + str(self.current_light_sensor_reading.full_spectrum)
-            + ", IR="
-            + str(self.current_light_sensor_reading.infrared)
-        )
+        lux_reading: int = int(self.current_light_sensor_reading.lux)
+        visible_reading: int = self.current_light_sensor_reading.full_spectrum
+        ir_reading: int = self.current_light_sensor_reading.infrared
+
+        print(f"LIGHT: Lux={lux_reading}, VIS={visible_reading}, IR={ir_reading}")
 
     def __update_gas_sensor__(self):
         """
@@ -110,11 +107,11 @@ class SensorsManager:
         self.current_gas_sensor_reading = self.__gas_sensor__.update()
 
         if self.current_gas_sensor_reading is not None:
+            current_level: int = self.current_gas_sensor_reading.current_value
+            is_detected: bool = self.current_gas_sensor_reading.is_gas_detected
+            threshold: int = self.__gas_sensor__.sensor_trigger_threshold
             print(
-                ", GAS, Level="
-                + str(self.current_gas_sensor_reading.current_value)
-                + ", Detected="
-                + str(self.current_gas_sensor_reading.is_gas_detected)
+                f"GAS: Level={current_level}, Detected={is_detected}, Threshold={threshold}"
             )
 
     def __update_temperature_sensor__(self):
@@ -127,6 +124,6 @@ class SensorsManager:
             results_count = len(sensor_readings)
             if results_count > 0:
                 self.current_temperature_sensor_reading = int(sensor_readings[0])
-                print(f", TEMP, F={self.current_temperature_sensor_reading}")
+                print(f"TEMP: Current={self.current_temperature_sensor_reading}F")
             else:
                 self.current_temperature_sensor_reading = None
