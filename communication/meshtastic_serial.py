@@ -68,10 +68,10 @@ class MeshtasticSerial:
         self.__meshastic_interface__: meshtastic.serial_interface.SerialInterface = (
             self.__connect_to_device__()
         )
-        self.__meshastic_interface__.onReceive = self.__on_receive__ # type: ignore
+        self.__meshastic_interface__.onReceive = self.__on_receive__  # type: ignore
         self.short_name = str(self.__meshastic_interface__.getShortName())
         self.long_name = str(self.__meshastic_interface__.getLongName())
-        self.device_id = f"!{hex(self.__meshastic_interface__.myInfo.my_node_num).replace('0x', '')}" # type: ignore
+        self.device_id = f"!{hex(self.__meshastic_interface__.myInfo.my_node_num).replace('0x', '')}"  # type: ignore
         self.id = (
             self.__meshastic_interface__.configId
             if self.__meshastic_interface__.configId is not None
