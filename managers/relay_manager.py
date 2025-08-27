@@ -102,7 +102,7 @@ class RelayManager(object):
 
         # create relay instance
         self.__relay__ = PowerRelay("relay", configuration.relay_pin)
-        self.__message_queue__:Queue = Queue()
+        self.__message_queue__: Queue = Queue()
 
         # create queue to hold relay timer.
         self.__shutoff_timer__ = None
@@ -122,7 +122,9 @@ class RelayManager(object):
         """
         Turn on the relay RIGHT NOW.
         """
-        self.__send_message__("Turning relay ON.")
+        self.__send_message__(
+            f"Turning relay ON for {self.__configuration__.max_minutes_to_run} minutes."
+        )
         self.__turn_on_relay__()
 
     def __send_message__(self, message: str):
@@ -178,7 +180,10 @@ class RelayManager(object):
         """
 
         if self.__shutoff_timer__ is not None and self.__shutoff_timer__ < time.time():
-            self.__send_message__("Timer expired.")
+            minutes = self.__configuration__.max_minutes_to_run
+            expired_message: str = f"Timer expired after {minutes} minutes"
+
+            self.__send_message__(expired_message)
             self.turn_off()
         elif self.__shutoff_timer__ is None and self.is_relay_on():
             self.__logger__.warning(
