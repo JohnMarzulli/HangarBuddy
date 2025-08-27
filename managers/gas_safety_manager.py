@@ -22,6 +22,8 @@ class GasSafetyManager:
 
         # Triggering state
         if gas_sensor_reading.is_gas_detected and not self.__is_gas_detected__:
+            details:str = "Turning relay OFF." if self.__relay__.is_relay_on() else "Preventing relay from being activated"
+            self.__alert_callback__(f"Gas detected. {details}")
             self.__is_gas_detected__ = True
             self.__relay__.turn_off()
         # Relaxing state
