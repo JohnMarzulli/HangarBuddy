@@ -22,7 +22,11 @@ class GasSafetyManager:
 
         # Triggering state
         if gas_sensor_reading.is_gas_detected and not self.__is_gas_detected__:
-            details:str = "Turning relay OFF." if self.__relay__.is_relay_on() else "Preventing relay from being activated"
+            details: str = (
+                "Turning relay OFF."
+                if self.__relay__.is_relay_on()
+                else "Preventing relay from being activated"
+            )
             self.__alert_callback__(f"Gas detected. {details}")
             self.__is_gas_detected__ = True
             self.__relay__.turn_off()
@@ -35,7 +39,8 @@ class GasSafetyManager:
         if self.__is_gas_detected__ and (
             now - self.__last_alert_time__ > 1800
         ):  # 30 minutes
-            self.__alert_callback__("WARNING: Gas detected! Heater is OFF.")
+            relay_status: str = "ON" if self.__relay__.is_relay_on() else "OFF"
+            self.__alert_callback__(f"WARNING: Gas is still detected! Relay is {relay_status}.")
             self.__last_alert_time__ = now
 
         return self.__is_gas_detected__
