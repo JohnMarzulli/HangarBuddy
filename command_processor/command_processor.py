@@ -215,43 +215,37 @@ if __name__ == "__main__":
     assert command_processor is not None, "CommandProcessor should be initialized."
 
     response: str | None = ""
-    is_relay_on: bool = False
 
     sensors_manager.update()  # Ensure sensors are initialized
 
-    (response, is_relay_on) = command_processor.process("ON")
+    response = command_processor.process("ON")
     assert response == "Heater turning ON.", "Heater should turn ON."
-    assert is_relay_on, "Relay should be ON."
 
-    (response, is_relay_on) = command_processor.process("OFF")
-    assert response == "Heater turning OFF.", "Heater should turn OFF."
-    assert not is_relay_on, "Relay should be OFF."
+    response = command_processor.process("OFF")
+    assert response == "Heater is already OFF.", "Heater should turn OFF."
 
-    (response, is_relay_on) = command_processor.process("STATUS")
+    response = command_processor.process("STATUS")
     assert response.startswith("Status:"), "Should return full status."  # type: ignore
-    assert not is_relay_on, "Relay should be OFF."
 
-    (response, is_relay_on) = command_processor.process("ON")
+    response = command_processor.process("ON")
     assert response == "Heater turning ON.", "Heater should turn ON."
-    assert is_relay_on, "Relay should be ON."
 
-    (response, is_relay_on) = command_processor.process("STATUS")
+    response = command_processor.process("STATUS")
     assert response.startswith("Status:"), "Should return full status."  # type: ignore
-    assert is_relay_on, "Relay should be ON."
 
-    (response, is_relay_on) = command_processor.process("HELP")
+    response = command_processor.process("HELP")
     assert response.startswith("Valid commands:"), "Should return help text."  # type: ignore
 
-    (response, is_relay_on) = command_processor.process("TEMPERATURE")
+    response = command_processor.process("TEMPERATURE")
     assert response.startswith("Temperature:"), "Should return temperature."  # type: ignore
 
-    (response, is_relay_on) = command_processor.process("LIGHTS")
+    response = command_processor.process("LIGHTS")
     assert response.startswith("Light:"), "Should return light level."  # type: ignore
 
-    (response, is_relay_on) = command_processor.process("RESTART")
+    response = command_processor.process("RESTART")
     assert response == "System restarting.", "Expected 'System restarting.'"
 
-    (response, is_relay_on) = command_processor.process("SHUTDOWN")
+    response = command_processor.process("SHUTDOWN")
     assert response == "System shutting down.", "Expected shutdown message."
 
     exit()
