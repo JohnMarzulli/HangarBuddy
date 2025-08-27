@@ -42,7 +42,6 @@ from time import sleep
 
 import command_processor.command_processor as command_processor
 import configuration
-import sys
 from communication.meshtastic_serial import MeshtasticSerial
 from managers.gas_safety_manager import GasSafetyManager
 from managers.relay_manager import RelayManager
@@ -134,8 +133,9 @@ if __name__ == "__main__":
         SENSORS_MANAGER.update()
         MESSAGING.service()
         gas_safety_manager.update()
-        messages = MESSAGING.get_message_queue()
         heater.update()
+        
+        messages = MESSAGING.get_message_queue()
 
         for message in messages:
             LOGGER.info(f"Received message: {message}")
@@ -150,16 +150,7 @@ if __name__ == "__main__":
                 continue
 
             message_text = get_message_text(message)
-            (response, is_relay_on) = command_processor.process(message_text)
-
-            is_relay_on &= not gas_safety_manager.is_gas_detected()
-
-            if is_relay_on:
-                heater.turn_on()
-                LOGGER.info("Attempting to turn ON heater.")
-            else:
-                heater.turn_off()
-                LOGGER.info("Attempting to turn OFF heater.")
+            response = command_processor.process(message_text)
 
             if response is not None and len(response) > 0:
                 send_message(response)
