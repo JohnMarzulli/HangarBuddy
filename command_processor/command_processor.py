@@ -114,13 +114,13 @@ class CommandProcessor:
             response_message: str = (
                 "Heater turning ON."
                 if not self.last_relay_state
-                else "Heater is already ON."
+                else f"Heater is already ON. {self.__relay_manager__.get_time_remaining()}"
             )
             self.last_relay_state = True
             return response_message, True
         elif self.__is_command__(HEATER_OFF_COMMAND, msg):
             response_message: str = (
-                "Heater turning OFF."
+                f"Heater turning OFF with {self.__relay_manager__.get_time_remaining()}"
                 if self.last_relay_state
                 else "Heater is already OFF."
             )
@@ -172,7 +172,7 @@ class CommandProcessor:
 
         status_message: str = "Status:\n"
         status_message += f"{self.__get_uptime_text__()}\n"
-        status_message += f"Relay: {'ON' if self.last_relay_state else 'OFF'}\n"
+        status_message += f"Relay: {'ON w/' if self.last_relay_state else 'OFF'} {self.__relay_manager__.get_time_remaining() if self.last_relay_state else ''}\n"
         status_message += f"Temp: {temp_reading}\n"
         status_message += f"Gas: {gas_reading}\n"
         status_message += f"Light: {light_reading}"
