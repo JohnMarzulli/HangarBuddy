@@ -38,7 +38,7 @@ class Configuration(object):
 
         self.__config_parser__: ConfigParser = ConfigParser()
         self.__config_parser__.read(get_config_file_location())
-        self.heater_pin: int = self.__config_parser__.getint("SETTINGS", "HEATER_PIN")
+        self.relay_pin: int = self.__config_parser__.getint("SETTINGS", "HEATER_PIN")
         self.is_mq2_enabled: bool = self.__config_parser__.getboolean("SETTINGS", "MQ2")
         self.is_temp_probe_enabled: bool = self.__config_parser__.getboolean(
             "SETTINGS", "TEMP"
@@ -84,9 +84,9 @@ def test_configuration():
 
     assert config.allowed_senders is not None
     assert len(config.allowed_senders) > 0
-    assert config.heater_pin is not None
-    assert config.heater_pin >= 1
-    assert config.heater_pin < 32
+    assert config.relay_pin is not None
+    assert config.relay_pin >= 1
+    assert config.relay_pin < 32
     assert config.is_mq2_enabled is not None
     assert config.is_temp_probe_enabled is not None
     assert config.log_filename is not None
