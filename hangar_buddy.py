@@ -130,7 +130,7 @@ if __name__ == "__main__":
             is_from_known_sender = message_from in CONFIGURATION.allowed_senders
 
             if not is_from_known_sender:
-                known_senders_text: str = join(CONFIGURATION.allowed_senders)
+                known_senders_text: str = ",".join(CONFIGURATION.allowed_senders)
                 send_message(f"Unknown sender `{message_from}`, known: {known_senders_text}")
 
                 continue
