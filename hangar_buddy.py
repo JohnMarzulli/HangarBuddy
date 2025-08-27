@@ -41,7 +41,7 @@ import logging.handlers
 
 import command_processor.command_processor as command_processor
 import configuration
-import contextlib
+import sys
 from communication.meshtastic_serial import MeshtasticSerial
 from managers.gas_safety_manager import GasSafetyManager
 from managers.relay_manager import RelayManager
@@ -68,12 +68,17 @@ def send_message(message: str) -> bool:
     is_one_message_sent: bool = False
 
     for recipient in CONFIGURATION.allowed_senders:
-        LOGGER.warning(f"{recipient}: `{message}`")
+        print(f"SENDING: {recipient}: `{message}`") #LOGGER.info
         # Here you can add more logic to send the alert, e.g., via email or SMS.
         # For now, it just logs the message.
-        with contextlib.suppress(Exception):
+        try:
             MESSAGING.send(recipient, message)
             is_one_message_sent = True
+        except Exception as ex:
+            print(f"While sending to {recipient}, EX={ex}")
+
+    if not is_one_message_sent:
+        print("ERROR trying to send message to any authorized recievers")
 
     return is_one_message_sent
 
@@ -101,6 +106,8 @@ if __name__ == "__main__":
 
     send_message("Starting HangarBuddy...")
 
+    print(f"Connected to {MESSAGING.long_name}/{MESSAGING.device_id}")
+
     while True:
         SENSORS_MANAGER.update()
         MESSAGING.service()
@@ -110,10 +117,22 @@ if __name__ == "__main__":
         for message in messages:
             LOGGER.info(f"Received message: {message}")
 
-            if message["toId"] != MESSAGING.device_id:
+            message_to:str = message["toId"] 
+            message_from:str = message["fromId"]
+            message_from = message_from.lstrip('!')
+
+            if message_to != MESSAGING.device_id:
                 LOGGER.warning(
-                    f"Message not intended for this device: {message.to} != {MESSAGING.__meshastic_interface__.configId}"
+                    f"Message not intended for this device: {message_to} != {MESSAGING.device_id}"
                 )
+                continue
+
+            is_from_known_sender = message_from in CONFIGURATION.allowed_senders
+
+            if not is_from_known_sender:
+                known_senders_text: str = join(CONFIGURATION.allowed_senders)
+                send_message(f"Unknown sender `{message_from}`, known: {known_senders_text}")
+
                 continue
 
             message_text = (
