@@ -3,7 +3,7 @@
 import contextlib
 import time
 from logging import Logger
-from multiprocessing import Queue as MPQueue
+from queue import Queue
 
 import lib.text_utils as text_utils
 from configuration import Configuration
@@ -87,10 +87,9 @@ class RelayManager(object):
             with contextlib.suppress(Exception):
                 status_queue = self.__message_queue__.get()
 
-                if True in status_queue:
+                if status_queue:
                     self.__turn_on_immediate__()
-
-                if False in status_queue:
+                else:
                     self.__turn_off_immediate__()
 
     def __init__(
@@ -102,14 +101,14 @@ class RelayManager(object):
         self.__logger__: Logger = logger
         self.__send_message_callback__ = send_message_callback
 
-        # create heater relay instance
-        self.__relay__ = PowerRelay("heater_relay", configuration.heater_pin)
-        self.__message_queue__ = MPQueue()
+        # create relay instance
+        self.__relay__ = PowerRelay("relay", configuration.relay_pin)
+        self.__message_queue__:Queue = Queue()
 
-        # create queue to hold heater timer.
+        # create queue to hold relay timer.
         self.__shutoff_timer__ = None
 
-        # make sure and turn heater off
+        # make sure and turn relay off
         self.__relay__.switch_low()
 
     def __max_time_immediate__(self):
@@ -149,7 +148,7 @@ class RelayManager(object):
         """
         self.__logger__.info("__turn_off_relay__::switch_low()")
         self.__relay__.switch_low()
-        self.__logger__.info("__turn_off_relay__::stop_heater_timer()")
+        self.__logger__.info("__turn_off_relay__::stop_relay_timer()")
         self.__stop_auto_off_timer__()
 
     def __turn_on_relay__(self):
@@ -166,7 +165,7 @@ class RelayManager(object):
         Stops the auto-off timer.
         """
 
-        self.__logger__.info("Cancelling the heater shutoff timer.")
+        self.__logger__.info("Cancelling the relay shutoff timer.")
         self.__shutoff_timer__ = None
 
     def __start_automatic_shutoff_timer__(self):
@@ -187,9 +186,9 @@ class RelayManager(object):
         """
 
         if self.__shutoff_timer__ is not None and self.__shutoff_timer__ < time.time():
-            self.__message_queue__.put(False)
+            self.turn_off()
         elif self.__shutoff_timer__ is None and self.is_relay_on():
             self.__logger__.warning(
-                "The relay should not be on, but the PIN is still active... attempting shutdown."
+                "The relay should not be on, but the PIN is still active... turning pin off again."
             )
-            self.__message_queue__.put(False)
+            self.turn_off()
