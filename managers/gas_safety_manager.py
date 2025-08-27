@@ -15,6 +15,7 @@ class GasSafetyManager:
     def update(self) -> bool:
         now = time.time()
         gas_sensor_reading = self.__sensors_.current_gas_sensor_reading
+        is_relay_on: bool = self.__relay__.is_relay_on()
 
         if gas_sensor_reading is None:
             self.__is_gas_detected__ = False
@@ -22,12 +23,6 @@ class GasSafetyManager:
 
         # Triggering state
         if gas_sensor_reading.is_gas_detected and not self.__is_gas_detected__:
-            details: str = (
-                "Turning relay OFF."
-                if self.__relay__.is_relay_on()
-                else "Preventing relay from being activated"
-            )
-            self.__alert_callback__(f"Gas detected. {details}")
             self.__is_gas_detected__ = True
             self.__relay__.turn_off()
         # Relaxing state
@@ -39,8 +34,10 @@ class GasSafetyManager:
         if self.__is_gas_detected__ and (
             now - self.__last_alert_time__ > 1800
         ):  # 30 minutes
-            relay_status: str = "ON" if self.__relay__.is_relay_on() else "OFF"
-            self.__alert_callback__(f"WARNING: Gas is still detected! Relay is {relay_status}.")
+            relay_status: str = "ON" if is_relay_on else "OFF"
+            alert_message: str = f"WARNING: Gas is detected! Relay is {relay_status}."
+            self.__alert_callback__(alert_message)
+            self.__relay__.turn_off()
             self.__last_alert_time__ = now
 
         return self.__is_gas_detected__
