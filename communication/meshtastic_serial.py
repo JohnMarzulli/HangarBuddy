@@ -82,7 +82,8 @@ class MeshtasticSerial:
         return self.__meshastic_interface__
 
     def __connect_to_device__(self) -> meshtastic.serial_interface.SerialInterface:
-        ports = [port.device for port in serial.tools.list_ports.comports()]
+        all_ports = serial.tools.list_ports.comports()
+        ports = [port.device for port in all_ports]
         for port in ports:
             print(f"Trying to connect to Meshtastic device on {port}...")
 
@@ -96,7 +97,8 @@ class MeshtasticSerial:
                     print(f"Connected to Meshtastic device on {port}.")
 
                     return potential_meshastic_interface
-            except Exception:
+            except Exception as ex:
+                print(f"While attempting connection to Meshtastic on {port}, EX={ex}")
                 continue
         raise ConnectionError(
             "No Meshtastic device found on any serial port, or all the devices is already connected."
