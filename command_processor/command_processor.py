@@ -126,7 +126,7 @@ class CommandProcessor:
         elif self.__is_command__(UPTIME_COMMAND, msg):
             return self.__get_uptime_text__()
         elif self.__is_command__(FULL_STATUS_COMMAND, msg):
-            return self.__get_full_status_text__()
+            return self.get_full_status_text()
         elif self.__is_command__(TEMPERATURE_COMMAND, msg):
             temp = self.__sensors_manager__.current_temperature_sensor_reading
             return f"Temperature: {temp}"
@@ -146,30 +146,26 @@ class CommandProcessor:
 
     def __get_uptime_text__(self) -> str:
         time_up = datetime.now(timezone.utc) - self.__system_start_time__
-        time_text = text_utils.get_time_text(time_up.total_seconds())
-        # For demo: just return system uptime in seconds
-        return f"Uptime: {time_text}"
+        return text_utils.get_time_text(time_up.total_seconds())
 
-    def __get_full_status_text__(self) -> str:
+    def get_full_status_text(self) -> str:
         # Example: return a summary of sensor states
         is_relay_on: bool = self.__relay_manager__.is_relay_on()
         temp: int | None = self.__sensors_manager__.current_temperature_sensor_reading
         gas = self.__sensors_manager__.current_gas_sensor_reading
         light = self.__sensors_manager__.current_light_sensor_reading
 
-        gas_reading = gas.current_value if gas is not None else "Not available"
+        gas_reading = gas.current_value if gas is not None else "UNK"
         gas_threshold = self.__sensors_manager__.__gas_sensor__.sensor_trigger_threshold
-        temp_reading = str(temp) if temp is not None else "Not available"
+        temp_reading = str(temp) if temp is not None else "UNK"
         light_reading = (
-            f"{light.lux} LUX"
-            if light is not None and light.lux is not None
-            else "Not available"
+            f"{light.lux} LUX" if light is not None and light.lux is not None else "UNK"
         )
 
-        status_message: str = "Status:\n"
-        status_message += f"{self.__get_uptime_text__()}\n"
+        status_message: str = "-= Status =-\n"
+        status_message += f"Uptime: {self.__get_uptime_text__()}\n"
         status_message += f"Relay: {'ON w/' if is_relay_on else 'OFF'} {self.__relay_manager__.get_time_remaining() if is_relay_on else ''}\n"
-        status_message += f"Temp: {temp_reading}\n"
+        status_message += f"Temp: {temp_reading}F\n"
         status_message += f"Gas: {gas_reading}/{gas_threshold}\n"
         status_message += f"Light: {light_reading}"
 
