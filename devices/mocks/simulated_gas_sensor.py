@@ -1,8 +1,8 @@
 """Module to simulate the gas sensor."""
 
-from devices.gas_sensor import GasSensor
-from devices.gas_sensor_result import GasSensorResult
-from devices.sensor_simulator import SensorSimulator
+from devices.interfaces.gas_sensor import GasSensor
+from devices.mocks.sensor_simulator import SensorSimulator
+from devices.results.gas_sensor_result import GasSensorResult
 
 DEFAULT_TRIGGER_THRESHOLD = 245
 DEFAULT_ALL_CLEAR_THRESHOLD = 235
@@ -27,7 +27,7 @@ class SimulatedGasSensor(GasSensor):
         self.sensor_trigger_threshold = sensor_trigger_threshold
         self.sensor_all_clear_threshold = sensor_all_clear_threshold
         self.__sensor_simulator__: SensorSimulator = SensorSimulator(
-            sensor_all_clear_threshold * 0.8, sensor_trigger_threshold * 1.1, 5
+            sensor_all_clear_threshold * 0.5, sensor_trigger_threshold * 1.1, 2.5
         )
         self.current_value = int(self.__sensor_simulator__.get_current_value())
 
@@ -38,6 +38,10 @@ class SimulatedGasSensor(GasSensor):
 
         self.current_value = int(self.__sensor_simulator__.read())
 
-        self.is_gas_detected = self.current_value > self.sensor_all_clear_threshold
+        if not self.is_gas_detected:
+            self.is_gas_detected = self.current_value > self.sensor_trigger_threshold
+
+        if self.is_gas_detected:
+            self.is_gas_detected = self.current_value < self.sensor_all_clear_threshold
 
         return GasSensorResult(self.is_gas_detected, self.current_value)

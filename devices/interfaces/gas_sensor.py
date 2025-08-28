@@ -1,4 +1,4 @@
-from devices.gas_sensor_result import GasSensorResult
+from devices.results.gas_sensor_result import GasSensorResult
 
 DEFAULT_TRIGGER_THRESHOLD: int = 245
 DEFAULT_ALL_CLEAR_THRESHOLD: int = 235

@@ -5,12 +5,12 @@ import time
 # Only will be run on Raspberry Pi
 import smbus  # type: ignore
 
-from devices.gas_sensor import (
+from devices.interfaces.gas_sensor import (
     DEFAULT_ALL_CLEAR_THRESHOLD,
     DEFAULT_TRIGGER_THRESHOLD,
     GasSensor,
 )
-from devices.gas_sensor_result import GasSensorResult
+from devices.results.gas_sensor_result import GasSensorResult
 
 DEFAULT_IC2_BUS = 1
 DEFAULT_IC2_ADDRESS = 0x48

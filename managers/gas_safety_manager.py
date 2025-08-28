@@ -35,7 +35,9 @@ class GasSafetyManager:
             now - self.__last_alert_time__ > 1800
         ):  # 30 minutes
             relay_status: str = "ON" if is_relay_on else "OFF"
-            alert_message: str = f"WARNING: Gas is detected! Relay is {relay_status}."
+            alert_message: str = (
+                f"WARNING: Gas is detected! Currently {gas_sensor_reading.current_value}PPM Relay is {relay_status}."
+            )
             self.__alert_callback__(alert_message)
             self.__relay__.turn_off()
             self.__last_alert_time__ = now
