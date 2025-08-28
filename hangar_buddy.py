@@ -36,10 +36,10 @@ Main entry code for HangarBuddy
 #    NOTE: if this should be below the optional auto-update line
 #    python /home/pi/HangarBuddy/hangar_buddy.py &
 
-import os
-import sys
 import logging
 import logging.handlers
+import sys
+from datetime import datetime, timezone
 from time import sleep
 
 import configuration
@@ -62,6 +62,30 @@ HANDLER.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(message)s"
 LOGGER.addHandler(HANDLER)
 
 
+def log_message_sent(recipient: str, message: str):
+    lines = message.split("\n")
+
+    print("SENDING")
+    print(f"    TO: {recipient}")
+    print(f"    AT: {datetime.now(timezone.utc)}")
+    print("    ```")
+    for line in lines:
+        print(f"    {line.strip()}")
+    print("    ```")
+
+
+def log_message_recieved(sender: str, message: str):
+    lines = message.split("\n")
+
+    print("RECIEVED")
+    print(f"    FROM: {sender.lstrip('!')}")
+    print(f"    AT: {datetime.now(timezone.utc)}")
+    print("    ```")
+    for line in lines:
+        print(f"    {line.strip()}")
+    print("    ```")
+
+
 def send_message(message: str) -> bool:
     """
     Sends an alert message.
@@ -70,7 +94,7 @@ def send_message(message: str) -> bool:
     is_one_message_sent: bool = False
 
     for recipient in CONFIGURATION.allowed_senders:
-        print(f"SENDING: {recipient}: `{message}`")  # LOGGER.info
+        log_message_sent(recipient, message)
         # Here you can add more logic to send the alert, e.g., via email or SMS.
         # For now, it just logs the message.
         try:
@@ -123,13 +147,15 @@ def process_messages(command_processor: CommandProcessor):
     messages = MESSAGING.get_message_queue()
 
     for message in messages:
+        sender: str = message["fromId"]
+
         if not is_for_this_node(message):
             continue
 
         if not is_from_known_sender(message):
             known_senders_text: str = ",".join(CONFIGURATION.allowed_senders)
             unknown_sender_message: str = (
-                f"Unknown sender `{message['fromId']}`, known: {known_senders_text}"
+                f"Unknown sender `{sender}`, known: {known_senders_text}"
             )
 
             send_message(unknown_sender_message)
@@ -137,6 +163,7 @@ def process_messages(command_processor: CommandProcessor):
             continue
 
         message_text = get_message_text(message)
+        log_message_recieved(sender, message_text)
         response = command_processor.process(message_text)
 
         if response is not None and len(response) > 0:
