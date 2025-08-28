@@ -2,8 +2,10 @@ import os
 import subprocess
 import sys
 
-# Ensure the parent directory is in sys.path so 'managers' can be imported
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+if __name__ == "__main__":
+    # Ensure the parent directory is in sys.path so 'managers' can be imported
+    # This is only needed if running the unit tests directly
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from datetime import datetime, timezone
 
@@ -222,13 +224,13 @@ if __name__ == "__main__":
     assert response == "Heater is already OFF.", "Heater should turn OFF."
 
     response = command_processor.process("STATUS")
-    assert response.startswith("Status:"), "Should return full status."  # type: ignore
+    assert response.startswith("-= Status =-"), "Should return full status."  # type: ignore
 
     response = command_processor.process("ON")
     assert response == "Heater turning ON.", "Heater should turn ON."
 
     response = command_processor.process("STATUS")
-    assert response.startswith("Status:"), "Should return full status."  # type: ignore
+    assert response.startswith("-= Status =-"), "Should return full status."  # type: ignore
 
     response = command_processor.process("HELP")
     assert response.startswith("Valid commands:"), "Should return help text."  # type: ignore
