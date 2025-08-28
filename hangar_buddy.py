@@ -110,7 +110,11 @@ def is_from_known_sender(message: dict) -> bool:
 
 
 def get_message_text(message: dict) -> str:
-    return message.get("decoded", {}).get("payload", b"").decode("utf-8")
+    try:
+        return message["decoded"]["payload"].decode("utf-8")
+    except Exception:
+        print("Error decoding message payload")
+        return ""
 
 
 def process_messages(command_processor: CommandProcessor):
@@ -148,6 +152,7 @@ if __name__ == "__main__":
     command_processor = CommandProcessor(SENSORS_MANAGER, heater, gas_safety_manager)
 
     send_message("Starting HangarBuddy...")
+    send_message(command_processor.get_full_status_text())
 
     print(f"Connected to {MESSAGING.long_name}/{MESSAGING.device_id}")
 
