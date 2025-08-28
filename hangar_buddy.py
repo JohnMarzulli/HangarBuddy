@@ -121,8 +121,6 @@ def process_messages(command_processor: CommandProcessor):
     messages = MESSAGING.get_message_queue()
 
     for message in messages:
-        LOGGER.info(f"Received message: {message}")
-
         if not is_for_this_node(message):
             continue
 
