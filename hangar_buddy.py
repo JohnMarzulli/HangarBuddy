@@ -36,6 +36,8 @@ Main entry code for HangarBuddy
 #    NOTE: if this should be below the optional auto-update line
 #    python /home/pi/HangarBuddy/hangar_buddy.py &
 
+import os
+import sys
 import logging
 import logging.handlers
 from time import sleep
@@ -142,7 +144,20 @@ def process_messages(command_processor: CommandProcessor):
             LOGGER.info(f"Response sent: {response}")
 
 
+def prevent_pc_from_sleeping():
+    if sys.platform == "win32":
+        import ctypes
+
+        ES_CONTINUOUS = 0x80000000
+        ES_SYSTEM_REQUIRED = 0x00000001
+        ctypes.windll.kernel32.SetThreadExecutionState(
+            ES_CONTINUOUS | ES_SYSTEM_REQUIRED
+        )
+
+
 if __name__ == "__main__":
+    prevent_pc_from_sleeping()
+
     heater = RelayManager(CONFIGURATION, LOGGER, send_message)
     gas_safety_manager: GasSafetyManager = GasSafetyManager(
         SENSORS_MANAGER, heater, send_message
