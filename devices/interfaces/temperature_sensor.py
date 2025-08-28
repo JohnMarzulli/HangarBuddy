@@ -1,4 +1,4 @@
-def celcius_to_farenheit(temp_in_celcius):
+def celcius_to_farenheit(temp_in_celcius: float) -> float:
     """
     converts celcius to F.
     Needs a float.
