@@ -22,3 +22,17 @@ class GasSensor(object):
 
     def update(self) -> GasSensorResult:
         return GasSensorResult(False, 0)
+
+    def __update_gas_detection__(self):
+        if self.current_value is None:
+            self.is_gas_detected = False
+            return
+
+        # For the warning to be removed, it must drop below an
+        # all clear level that is lower than the trigger level.
+        # This protects against the alarm triggering over and over
+        # again if the sensor is close to the detection level.
+        if not self.is_gas_detected:
+            self.is_gas_detected = self.current_value >= self.sensor_trigger_threshold
+        else:
+            self.is_gas_detected = self.current_value <= self.sensor_all_clear_threshold

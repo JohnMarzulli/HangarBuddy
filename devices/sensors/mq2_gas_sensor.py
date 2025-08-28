@@ -84,14 +84,7 @@ class Mq2GasSensor(GasSensor):
         if self.current_value is None or not self.enabled:
             return GasSensorResult(False, DEFAULT_ALL_CLEAR_THRESHOLD)
 
-        # For the warning to be removed, it must drop below an
-        # all clear level that is lower than the trigger level.
-        # This protects against the alarm triggering over and over
-        # again if the sensor is close to the detection level.
-        if self.is_gas_detected:
-            self.is_gas_detected = self.current_value > self.sensor_all_clear_threshold
-
-        self.is_gas_detected |= self.current_value >= self.sensor_trigger_threshold
+        self.__update_gas_detection__()
 
         return GasSensorResult(self.is_gas_detected, self.current_value)
 

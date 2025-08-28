@@ -38,10 +38,6 @@ class SimulatedGasSensor(GasSensor):
 
         self.current_value = int(self.__sensor_simulator__.read())
 
-        if not self.is_gas_detected:
-            self.is_gas_detected = self.current_value > self.sensor_trigger_threshold
-
-        if self.is_gas_detected:
-            self.is_gas_detected = self.current_value < self.sensor_all_clear_threshold
+        self.__update_gas_detection__()
 
         return GasSensorResult(self.is_gas_detected, self.current_value)
