@@ -68,7 +68,6 @@ class MeshtasticSerial:
         self.__meshastic_interface__: meshtastic.serial_interface.SerialInterface = (
             self.__connect_to_device__()
         )
-        self.__meshastic_interface__.onReceive = self.__on_receive__  # type: ignore
         self.short_name = str(self.__meshastic_interface__.getShortName())
         self.long_name = str(self.__meshastic_interface__.getLongName())
         self.device_id = f"!{hex(self.__meshastic_interface__.myInfo.my_node_num).replace('0x', '')}"  # type: ignore
@@ -108,13 +107,10 @@ class MeshtasticSerial:
         try:
             # Only queue messages intended for this device
             if (
-                "decoded" in packet
+                packet is not None
+                and "decoded" in packet
                 and packet["decoded"]["portnum"] == "TEXT_MESSAGE_APP"
             ):
-                message_bytes = packet["decoded"]["payload"]
-                message_string = message_bytes.decode("utf-8")
-                print(f"{message_string} \n> ", end="", flush=True)
-
                 self._message_queue.append(packet)
         except KeyError as e:
             print(f"Error processing packet: {e}")
