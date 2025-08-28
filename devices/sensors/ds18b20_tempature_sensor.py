@@ -1,8 +1,10 @@
 """Module to deal with the SunFounder temperature probe."""
 
 import os
-import platform
 import time
+
+from devices.interfaces.temperature_sensor import (TemperatureSensor,
+                                                   celcius_to_farenheit)
 
 # ---------------------------------------------------------------
 # Note:
@@ -21,20 +23,24 @@ import time
 # https://www.sunfounder.com/learn/Sensor-Kit-v1-0-for-Raspberry-Pi/lesson-17-ds18b20-temperature-sensor-sensor-kit-v1-0-for-pi.html
 
 
-def is_debug():
-    """
-    returns True if this should be run as a local debug (Mac or Windows).
-    """
+class Ds18b20TempatureSensor(TemperatureSensor):
+    def __init__(self):
+        super().__init__()
+        self.enabled: bool = True
+        self.current_value: int | None = None
 
-    return platform.system() in ["win32", "Windows", "darwin"]
+    def update(self) -> int | None:
+        if not self.enabled:
+            return None
 
+        temperature_values = read_sensors()
+        if temperature_values is not None and len(temperature_values) > 0:
+            self.current_value = int(temperature_values[0])
+        else:
+            self.current_value = None
+            self.enabled = False
 
-def celcius_to_farenheit(temp_in_celcius):
-    """
-    converts celcius to F.
-    Needs a float.
-    """
-    return ((temp_in_celcius * 9.0) / 5.0) + 32.0
+        return self.current_value
 
 
 def read_sensor(sensor_id):
@@ -73,9 +79,6 @@ def read_sensors():
     []
     """
     temperature_probe_values = []
-
-    if is_debug():
-        return temperature_probe_values
 
     try:
         for driver_file in os.listdir("/sys/bus/w1/devices/"):
