@@ -13,8 +13,14 @@ Taken from https://github.com/maxlklaxl/python-tsl2591/blob/master/tsl2591/read_
 """
 
 import time
-
 import smbus  # type: ignore - Only will be run on Raspberry Pi
+
+if __name__ == "__main__":
+    import sys
+    import os
+    # Ensure the parent directory is in sys.path so 'managers' can be imported
+    # This is only needed if running the unit tests directly
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 import lib.local_debug as local_debug
 from devices.interfaces.light_sensor import LightSensor
