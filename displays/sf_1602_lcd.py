@@ -7,6 +7,14 @@ Based on https://github.com/sunfounder/SunFounder_SensorKit_for_RPi2/blob/master
 #!/usr/bin/env python
 
 import time
+
+if __name__ == "__main__":
+    import sys
+    import os
+    # Ensure the parent directory is in sys.path so 'managers' can be imported
+    # This is only needed if running the unit tests directly
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import lib.local_debug as local_debug
 
 if not local_debug.is_debug():
@@ -16,7 +24,7 @@ DEFAULT_SMBUS = 1
 DEFAULT_1602_ADDRESS = 0x27
 
 
-class LcdDisplay(object):
+class Sf1602Display(object):
     """
     LCD OUTPUT
 
@@ -199,6 +207,6 @@ class LcdDisplay(object):
 
 
 if __name__ == "__main__":
-    LCD = LcdDisplay(1, DEFAULT_1602_ADDRESS, 1)  # Slave with background light
+    LCD = Sf1602Display(1, DEFAULT_1602_ADDRESS, 1)  # Slave with background light
     LCD.write(0, 0, "CSQ:9 MARGINAL")
     LCD.write(0, 1, "BAT:98% V:4.12")
