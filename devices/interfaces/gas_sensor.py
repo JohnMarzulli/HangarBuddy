@@ -35,4 +35,4 @@ class GasSensor(object):
         if not self.is_gas_detected:
             self.is_gas_detected = self.current_value >= self.sensor_trigger_threshold
         else:
-            self.is_gas_detected = self.current_value <= self.sensor_all_clear_threshold
+            self.is_gas_detected = self.current_value >= self.sensor_all_clear_threshold

@@ -19,7 +19,7 @@ from lib.intermittent_task import IntermittentTask
 
 if not IS_DEBUG:
     from devices.sensors.ds18b20_tempature_sensor import Ds18b20TempatureSensor
-    from devices.sensors.mq2_gas_sensor import Mq2GasSensor
+    from devices.sensors.mq2_gas_sensor_digital import Mq2GasSensorDigital
     from devices.sensors.tsl2591_light_sensor import Tsl2591LightSensor
 else:
     from devices.mocks.simulated_gas_sensor import SimulatedGasSensor
@@ -50,7 +50,7 @@ class SensorsManager:
         )
 
         self.__gas_sensor__: GasSensor = (
-            SimulatedGasSensor() if IS_DEBUG else Mq2GasSensor()
+            SimulatedGasSensor() if IS_DEBUG else Mq2GasSensorDigital()
         )
         self.__light_sensor__: LightSensor = (
             SimulatedLightSensor() if IS_DEBUG else Tsl2591LightSensor()

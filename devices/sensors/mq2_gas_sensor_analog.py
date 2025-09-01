@@ -5,6 +5,13 @@ import time
 # Only will be run on Raspberry Pi
 import smbus  # type: ignore
 
+if __name__ == "__main__":
+    import sys
+    import os
+    # Ensure the parent directory is in sys.path so 'managers' can be imported
+    # This is only needed if running the unit tests directly
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
 from devices.interfaces.gas_sensor import (
     DEFAULT_ALL_CLEAR_THRESHOLD,
     DEFAULT_TRIGGER_THRESHOLD,
@@ -19,7 +26,7 @@ DEFAULT_CHANNEL_READ_OFFSET = 0x40
 DEFAULT_DEVICE_CHANNEL = 0
 
 
-class Mq2GasSensor(GasSensor):
+class Mq2GasSensorAnalog(GasSensor):
     """
     Class to help with the gas sensor.
     """
@@ -90,7 +97,10 @@ class Mq2GasSensor(GasSensor):
 
 
 if __name__ == "__main__":
+
+    print("Attempting to connect to MQ2 gas sensor")
     SENSOR = GasSensor()
+    print("Connected" if SENSOR.enabled else "ERROR")
 
     while SENSOR.enabled:
         IS_GAS_DETECTED = SENSOR.update()
