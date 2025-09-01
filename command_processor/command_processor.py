@@ -150,6 +150,27 @@ class CommandProcessor:
         time_up = datetime.now(timezone.utc) - self.__system_start_time__
         return text_utils.get_time_text(time_up.total_seconds())
 
+    def get_short_status_text(self) -> list[str]:
+        status_text: list[str] = ['', '']
+
+        is_relay_on: bool = self.__relay_manager__.is_relay_on()
+
+        if (is_relay_on):
+            status_text[0] = "HEATER ON"
+            status_text[1] = self.__relay_manager__.get_time_remaining()
+
+            return status_text
+        
+        if self.__sensors_manager__.__temperature_sensor__.enabled:
+            status_text[0] = f"TEMP: {self.__sensors_manager__.current_temperature_sensor_reading}F"
+        else:
+            status_text[0] = "TEMP: UNAVAILABLE"
+
+
+        status_text[1] = f"UP: {self.__get_uptime_text__()}"
+
+        return status_text
+
     def get_full_status_text(self) -> str:
         # Example: return a summary of sensor states
         is_relay_on: bool = self.__relay_manager__.is_relay_on()
@@ -161,7 +182,7 @@ class CommandProcessor:
         gas_threshold = self.__sensors_manager__.__gas_sensor__.sensor_trigger_threshold
         temp_reading = str(temp) + "F" if temp is not None else "UNK"
         light_reading = (
-            f"{light.lux} LUX" if light is not None and light.lux is not None else "UNK"
+            f"{int(light.lux)} LUX" if light is not None and light.lux is not None else "UNK"
         )
 
         status_message: str = "-= Status =-\n"
