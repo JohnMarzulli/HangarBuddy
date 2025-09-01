@@ -159,7 +159,7 @@ class CommandProcessor:
 
         gas_reading = gas.current_value if gas is not None else "UNK"
         gas_threshold = self.__sensors_manager__.__gas_sensor__.sensor_trigger_threshold
-        temp_reading = str(temp) if temp is not None else "UNK"
+        temp_reading = str(temp) + "F" if temp is not None else "UNK"
         light_reading = (
             f"{light.lux} LUX" if light is not None and light.lux is not None else "UNK"
         )
@@ -167,7 +167,7 @@ class CommandProcessor:
         status_message: str = "-= Status =-\n"
         status_message += f"Uptime: {self.__get_uptime_text__()}\n"
         status_message += f"Relay: {'ON w/' if is_relay_on else 'OFF'} {self.__relay_manager__.get_time_remaining() if is_relay_on else ''}\n"
-        status_message += f"Temp: {temp_reading}F\n"
+        status_message += f"Temp: {temp_reading}\n"
         status_message += f"Gas: {gas_reading}/{gas_threshold}\n"
         status_message += f"Light: {light_reading}"
 
