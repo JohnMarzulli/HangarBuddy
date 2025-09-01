@@ -1,9 +1,13 @@
-# !python
+#!/usr/bin/python
 
 """
 Main entry code for HangarBuddy
 """
 
+
+# Make sure you run:
+# `source /home/pi/src/HangarBuddy/venv/bin/activate`
+# before attempting to install packages or run.
 
 #
 #

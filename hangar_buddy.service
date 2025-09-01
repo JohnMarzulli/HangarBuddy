@@ -4,14 +4,12 @@
 
 [Unit]
 Description=The Hangar Buddy Service
+After=multi-user.target
 
 [Service]
-ExecStart=/usr/bin/python /home/pi/src/HangarBuddy/hangar_buddy.py
-ExecStop=/usr/bin/pkill hangar_buddy
-Group=pi
+ExecStart=/home/pi/src/HangarBuddy/start_hangar_buddy.sh
 Restart=always
-User=pi
 WorkingDirectory=/home/pi/src/HangarBuddy
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target

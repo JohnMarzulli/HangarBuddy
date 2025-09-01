@@ -270,3 +270,5 @@ into the USB port.
 1. `sudo reboot`
 
 Once you reboot, the hangar_buddy service should be started automatically.  You can view any startup errors for the service in `/var/log/syslog`.
+
+Running a Python file as a service: https://gist.github.com/emxsys/a507f3cad928e66f6410e7ac28e2990f
