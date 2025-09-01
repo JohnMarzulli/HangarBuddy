@@ -90,11 +90,10 @@ You will also need to enable some system settings:
 * TTL Red to Fona "Vio"
 * USB to Pi USB
 
-#### Fona Status
+#### Meshtastic Device
 
-* ORANGE Fona PS to GPIO23
-* YELLOW Fona Key to GPIO GND
-* GREEN Fona RI to GPIO24
+USB C -> Meshtastic
+USB A -> Pi USB-A (Blue)
 
 #### Fona Power... Again
 
@@ -102,22 +101,13 @@ You will also need to enable some system settings:
 
 **Note**:GPIO23 is physical pin 16 **Note**:GPIO24 is physical pin 18
 
-### MQ2 Gas Sensor / ADC
+### MQ2 Gas Sensor
 
-#### ADC
-
-* Red F/M: VCC to GPIO 3V3
-* Black ADC GND to GPIO GND
-* White ADC SDA to GPIO SDAI
-* Gray ADC SCL to GPIO SCLI
-* White F/F ADC AIN0 to MQ2 White
-
-#### MQ2
-
-* Pigtail Connector into reciever
-* Red to GPIO 3V3
-* Black to GPIO GND
-* Brown NOT USED
+|Wire Color|MQ2 Pin | Pi Pin|
+|----------|--------|-------|
+|white| Vcc | 3V|
+|Black| GND | GND|
+|Gray| DO | GP26 / 31|
 
 ### Temp Sensor
 
