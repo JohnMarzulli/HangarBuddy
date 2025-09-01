@@ -232,5 +232,6 @@ if __name__ == "__main__":
     #    tsl.set_timing(INTEGRATIONTIME_100MS)
 
     result: LightSensorResult | None = tsl.update()
+    result_text:str = "ERROR" if result is None else result.lux
 
-    print(f"Lux={"ERROR" if result is None else result.lux}")
+    print(f"Lux={result_text}")
