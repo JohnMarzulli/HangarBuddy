@@ -3,6 +3,13 @@
 import os
 import pathlib
 
+if __name__ == "__main__":
+    import sys
+    import os
+    # Ensure the parent directory is in sys.path so 'managers' can be imported
+    # This is only needed if running the unit tests directly
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
 from devices.interfaces.temperature_sensor import (
     TemperatureSensor,
     celcius_to_farenheit,
@@ -12,13 +19,16 @@ from devices.interfaces.temperature_sensor import (
 # Note:
 # ds18b20's data pin must be connected to pin7.
 #
-# The following steps must be taken from the kernel to make sure
-# probe is ready for use.
+# You will need to enabled "1 wire" in raspi-config
+#
+# If you are still having problems:
+#
+# Verify /boot/firmware/config.txt to includes:
+# dtoverlay=w1-gpio
+#
 # sudo modprobe w1-gpio
 # sudo modprobe w1-therm
 #
-# You also must modify the /boot/config.txt to include:
-# dtoverlay=w1-gpio
 # ---------------------------------------------------------------
 
 # Modified from SunFounder's page at
@@ -30,8 +40,8 @@ def __read_sensor__(sensor_id: str) -> float | None:
     Reads temperature from sensor and prints to stdout
     id is the id of the sensor.
 
-    >>> read_sensor(None)
-    >>> read_sensor("1")
+    >>> __read_sensor__(None)
+    >>> __read_sensor__("1")
     """
 
     try:
@@ -52,11 +62,6 @@ def __read_sensors__() -> list[float]:
     """
     Reads temperature from all sensors found in /sys/bus/w1/devices/
     starting with "28-...
-
-    >>> read_sensors()
-    Drivers not available.
-    No sensors found! Check connection.
-    []
     """
     temperature_probe_values: list[float] = []
     driver_files: list[str] = []
@@ -111,5 +116,10 @@ if __name__ == "__main__":
     print("Starting tests.")
 
     doctest.testmod()
+
+    sensor: Ds18b20TempatureSensor = Ds18b20TempatureSensor()
+    temp:int = sensor.update()
+    
+    print(f"{temp}F")
 
     print("Tests finished")
