@@ -47,11 +47,12 @@ from datetime import datetime, timezone
 from time import sleep
 
 import configuration
-from lib import local_debug
-from displays.sf_1602_lcd import Sf1602Display
 from command_processor.command_processor import CommandProcessor
 from communication.meshtastic_serial import MeshtasticSerial
+from displays.sf_1602_lcd import Sf1602Display
+from lib import local_debug
 from managers.gas_safety_manager import GasSafetyManager
+from managers.light_manager import LightManager
 from managers.relay_manager import RelayManager
 from managers.sensors_manager import SensorsManager
 
@@ -187,7 +188,8 @@ def prevent_pc_from_sleeping():
             ES_CONTINUOUS | ES_SYSTEM_REQUIRED
         )
 
-def __get_display__() -> Sf1602Display | None:   
+
+def __get_display__() -> Sf1602Display | None:
     if local_debug.is_debug():
         return None
 
@@ -195,24 +197,27 @@ def __get_display__() -> Sf1602Display | None:
         return Sf1602Display()
     except Exception:
         return None
-    
+
+
 def __update_display__(
     display: Sf1602Display | None,
     command_processor: CommandProcessor,
 ):
     if display is None:
         return
-    
-    status:list[str] = command_processor.get_short_status_text()
+
+    status: list[str] = command_processor.get_short_status_text()
 
     display.write(0, 0, status[0])
     display.write(0, 1, status[1])
+
 
 if __name__ == "__main__":
     prevent_pc_from_sleeping()
 
     display = __get_display__()
     heater = RelayManager(CONFIGURATION, LOGGER, send_message)
+    light_manager: LightManager = LightManager(SENSORS_MANAGER, send_message)
     gas_safety_manager: GasSafetyManager = GasSafetyManager(
         SENSORS_MANAGER, heater, send_message
     )
@@ -226,6 +231,7 @@ if __name__ == "__main__":
     while True:
         SENSORS_MANAGER.update()
         MESSAGING.service()
+        light_manager.update()
         gas_safety_manager.update()
         heater.update()
         process_messages(command_processor)

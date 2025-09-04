@@ -24,7 +24,8 @@ if not IS_DEBUG:
 else:
     from devices.mocks.simulated_gas_sensor import SimulatedGasSensor
     from devices.mocks.simulated_light_sensor import SimulatedLightSensor
-    from devices.mocks.simulated_temperature_sensor import SimulatedTemperatureSensor
+    from devices.mocks.simulated_temperature_sensor import \
+        SimulatedTemperatureSensor
 
 DEFAULT_SENSOR_LOG = "sensors.log"
 DEFAULT_LIGHT_SENSOR_UPDATE_INTERVAL = 30
@@ -128,7 +129,9 @@ class SensorsManager:
         visible_reading: int = self.current_light_sensor_reading.full_spectrum
         ir_reading: int = self.current_light_sensor_reading.infrared
 
-        print(f"LIGHT: Lux={lux_reading}, VIS={visible_reading}, IR={ir_reading}")
+        print(
+            f"LIGHT: Level={self.current_light_sensor_reading.get_light_level().name}, Lux={lux_reading}, VIS={visible_reading}, IR={ir_reading}"
+        )
 
     def __update_gas_sensor__(self):
         """

@@ -134,7 +134,13 @@ class CommandProcessor:
             return f"Temperature: {temp}"
         elif self.__is_command__(LIGHTS_COMMAND, msg):
             light = self.__sensors_manager__.current_light_sensor_reading
-            return f"Light: {light}"
+            light_text: str = "UNAVAILABLE"
+
+            if light is not None:
+                light_text = (
+                    f"{light.get_light_level()} / {int(light.full_spectrum)}LUX"
+                )
+            return f"Light: {light_text}"
         elif self.__is_command__(HELP_COMMAND, msg):
             return self.__get_help_text__()
         else:
@@ -151,21 +157,22 @@ class CommandProcessor:
         return text_utils.get_time_text(time_up.total_seconds())
 
     def get_short_status_text(self) -> list[str]:
-        status_text: list[str] = ['', '']
+        status_text: list[str] = ["", ""]
 
         is_relay_on: bool = self.__relay_manager__.is_relay_on()
 
-        if (is_relay_on):
+        if is_relay_on:
             status_text[0] = "HEATER ON"
             status_text[1] = self.__relay_manager__.get_time_remaining()
 
             return status_text
-        
+
         if self.__sensors_manager__.__temperature_sensor__.enabled:
-            status_text[0] = f"TEMP: {self.__sensors_manager__.current_temperature_sensor_reading}F"
+            status_text[0] = (
+                f"TEMP: {self.__sensors_manager__.current_temperature_sensor_reading}F"
+            )
         else:
             status_text[0] = "TEMP: UNAVAILABLE"
-
 
         status_text[1] = f"UP: {self.__get_uptime_text__()}"
 
@@ -179,10 +186,14 @@ class CommandProcessor:
         light = self.__sensors_manager__.current_light_sensor_reading
 
         gas_reading = gas.current_value if gas is not None else "UNK"
-        gas_threshold = self.__sensors_manager__.__gas_sensor__.get_trigger_threshold_with_units()
+        gas_threshold = (
+            self.__sensors_manager__.__gas_sensor__.get_trigger_threshold_with_units()
+        )
         temp_reading = f"{str(temp)}F" if temp is not None else "UNK"
         light_reading = (
-            f"{int(light.full_spectrum)} LUX" if light is not None and light.full_spectrum is not None else "UNK"
+            f"{int(light.full_spectrum)} LUX"
+            if light is not None and light.full_spectrum is not None
+            else "UNK"
         )
 
         status_message: str = "-= Status =-\n"
