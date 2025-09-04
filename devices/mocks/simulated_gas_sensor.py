@@ -25,7 +25,7 @@ class SimulatedGasSensor(GasSensor):
         self.enabled = True
         self.is_gas_detected = False
         self.sensor_trigger_threshold = sensor_trigger_threshold
-        self.sensor_all_clear_threshold = sensor_all_clear_threshold
+        self.__sensor_all_clear_threshold__ = sensor_all_clear_threshold
         self.__sensor_simulator__: SensorSimulator = SensorSimulator(
             sensor_all_clear_threshold * 0.5, sensor_trigger_threshold * 1.1, 2.5
         )
@@ -40,4 +40,4 @@ class SimulatedGasSensor(GasSensor):
 
         self.__update_gas_detection__()
 
-        return GasSensorResult(self.is_gas_detected, self.current_value)
+        return GasSensorResult(self.is_gas_detected, self.get_current_measurement_with_units())

@@ -18,6 +18,7 @@ import smbus  # type: ignore - Only will be run on Raspberry Pi
 if __name__ == "__main__":
     import sys
     import os
+
     # Ensure the parent directory is in sys.path so 'managers' can be imported
     # This is only needed if running the unit tests directly
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
@@ -238,6 +239,6 @@ if __name__ == "__main__":
     #    tsl.set_timing(INTEGRATIONTIME_100MS)
 
     result: LightSensorResult | None = tsl.update()
-    result_text:str = "ERROR" if result is None else result.lux
+    result_text: str = "ERROR" if result is None else str(result.full_spectrum)
 
     print(f"Lux={result_text}")

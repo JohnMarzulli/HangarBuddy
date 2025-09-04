@@ -24,8 +24,7 @@ if not IS_DEBUG:
 else:
     from devices.mocks.simulated_gas_sensor import SimulatedGasSensor
     from devices.mocks.simulated_light_sensor import SimulatedLightSensor
-    from devices.mocks.simulated_temperature_sensor import \
-        SimulatedTemperatureSensor
+    from devices.mocks.simulated_temperature_sensor import SimulatedTemperatureSensor
 
 DEFAULT_SENSOR_LOG = "sensors.log"
 DEFAULT_LIGHT_SENSOR_UPDATE_INTERVAL = 30
@@ -143,7 +142,7 @@ class SensorsManager:
         self.current_gas_sensor_reading = self.__gas_sensor__.update()
 
         if self.current_gas_sensor_reading is not None:
-            current_level: int = self.current_gas_sensor_reading.current_value
+            current_level: str = self.current_gas_sensor_reading.current_value
             is_detected: bool = self.current_gas_sensor_reading.is_gas_detected
             threshold: int = self.__gas_sensor__.sensor_trigger_threshold
             print(

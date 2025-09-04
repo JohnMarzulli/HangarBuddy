@@ -48,7 +48,7 @@ class Mq2GasSensorAnalog(GasSensor):
 
         self.is_gas_detected = False
         self.sensor_trigger_threshold = sensor_trigger_threshold
-        self.sensor_all_clear_threshold = sensor_all_clear_threshold
+        self.__sensor_all_clear_threshold__ = sensor_all_clear_threshold
         self.current_value = DEFAULT_ALL_CLEAR_THRESHOLD
 
     def __read__(self, read_offset=DEFAULT_CHANNEL_READ_OFFSET):
@@ -89,11 +89,11 @@ class Mq2GasSensorAnalog(GasSensor):
         self.current_value = self.__read__(DEFAULT_CHANNEL_READ_OFFSET)
 
         if self.current_value is None or not self.enabled:
-            return GasSensorResult(False, DEFAULT_ALL_CLEAR_THRESHOLD)
+            return GasSensorResult(False, str(DEFAULT_ALL_CLEAR_THRESHOLD))
 
         self.__update_gas_detection__()
 
-        return GasSensorResult(self.is_gas_detected, self.current_value)
+        return GasSensorResult(self.is_gas_detected, self.get_current_measurement_with_units())
 
 
 if __name__ == "__main__":

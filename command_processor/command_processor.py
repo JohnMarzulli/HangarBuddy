@@ -179,10 +179,10 @@ class CommandProcessor:
         light = self.__sensors_manager__.current_light_sensor_reading
 
         gas_reading = gas.current_value if gas is not None else "UNK"
-        gas_threshold = self.__sensors_manager__.__gas_sensor__.sensor_trigger_threshold
-        temp_reading = str(temp) + "F" if temp is not None else "UNK"
+        gas_threshold = self.__sensors_manager__.__gas_sensor__.get_trigger_threshold_with_units()
+        temp_reading = f"{str(temp)}F" if temp is not None else "UNK"
         light_reading = (
-            f"{int(light.lux)} LUX" if light is not None and light.lux is not None else "UNK"
+            f"{int(light.full_spectrum)} LUX" if light is not None and light.full_spectrum is not None else "UNK"
         )
 
         status_message: str = "-= Status =-\n"

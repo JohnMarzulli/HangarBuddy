@@ -15,13 +15,45 @@ class GasSensor(object):
         sensor_all_clear_threshold: int = DEFAULT_ALL_CLEAR_THRESHOLD,
     ):
         self.current_value: int | None = DEFAULT_ALL_CLEAR_THRESHOLD
-        self.sensor_trigger_threshold: int = sensor_trigger_threshold
-        self.sensor_all_clear_threshold: int = sensor_all_clear_threshold
         self.enabled: bool = False
         self.is_gas_detected: bool = False
+        self.sensor_trigger_threshold: int = sensor_trigger_threshold
+        self.__sensor_all_clear_threshold__: int = sensor_all_clear_threshold
+
+    def get_trigger_threshold_with_units(self) -> str:
+        """
+        Get text for the trigger threshold with units.
+        Suitable for display or a message.
+
+        Returns:
+            str: The text to display.
+        """
+        return f"{self.sensor_trigger_threshold}PPM"
+
+    def get_current_measurement_with_units(self) -> str:
+        """
+        Get the current measurement with units.
+
+        Returns:
+            str: The current measurement with units. Suitable for display or a message.
+        """
+
+        return (
+            f"{self.current_value}PPM"
+            if self.current_value is not None
+            else "UNAVILABLE"
+        )
 
     def update(self) -> GasSensorResult:
-        return GasSensorResult(False, 0)
+        """
+        Update the gas sensor reading (if time to do so).
+
+        Returns the latest reading (if available).
+
+        Returns:
+            GasSensorResult: The most recent gas sensor reading.
+        """
+        return GasSensorResult(False, "UNAVILABLE")
 
     def __update_gas_detection__(self):
         if self.current_value is None:
@@ -33,6 +65,10 @@ class GasSensor(object):
         # This protects against the alarm triggering over and over
         # again if the sensor is close to the detection level.
         if not self.is_gas_detected:
-            self.is_gas_detected = self.current_value >= self.sensor_trigger_threshold
+            self.is_gas_detected = (
+                self.current_value >= self.sensor_trigger_threshold
+            )
         else:
-            self.is_gas_detected = self.current_value >= self.sensor_all_clear_threshold
+            self.is_gas_detected = (
+                self.current_value >= self.__sensor_all_clear_threshold__
+            )
