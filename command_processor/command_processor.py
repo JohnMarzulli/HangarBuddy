@@ -197,13 +197,18 @@ class CommandProcessor:
             if light is not None and light.full_spectrum is not None
             else "UNK"
         )
+        light_level = "UNKNOWN" if light is None else light.get_light_level().name
+
+        time = datetime.now(timezone.utc)
+        time_text: str = f"{time:%Y-%m-%d %H:%M:%S}UTC"
 
         status_message: str = "-= Status =-\n"
-        status_message += f"Uptime: {self.__get_uptime_text__()}\n"
+        status_message += f"Time: {time_text}\n"
         status_message += f"Relay: {'ON w/' if is_relay_on else 'OFF'} {self.__relay_manager__.get_time_remaining() if is_relay_on else ''}\n"
         status_message += f"Temp: {temp_reading}\n"
         status_message += f"Gas: {gas_reading}/{gas_threshold}\n"
-        status_message += f"Light: {light_reading}"
+        status_message += f"Light: {light_reading} ({light_level})\n"
+        status_message += f"Uptime: {self.__get_uptime_text__()}\n"
 
         return status_message
 
