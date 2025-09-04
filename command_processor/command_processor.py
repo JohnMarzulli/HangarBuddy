@@ -183,21 +183,6 @@ class CommandProcessor:
     def get_full_status_text(self) -> str:
         # Example: return a summary of sensor states
         is_relay_on: bool = self.__relay_manager__.is_relay_on()
-        temp: int | None = self.__sensors_manager__.current_temperature_sensor_reading
-        gas = self.__sensors_manager__.current_gas_sensor_reading
-        light = self.__sensors_manager__.current_light_sensor_reading
-
-        gas_reading = gas.current_value if gas is not None else "UNK"
-        gas_threshold = (
-            self.__sensors_manager__.__gas_sensor__.get_trigger_threshold_with_units()
-        )
-        temp_reading = f"{str(temp)}F" if temp is not None else "UNK"
-        light_reading = (
-            f"{int(light.full_spectrum)} LUX"
-            if light is not None and light.full_spectrum is not None
-            else "UNK"
-        )
-        light_level = "UNKNOWN" if light is None else light.get_light_level().name
 
         time = datetime.now(timezone.utc)
         time_text: str = f"{time:%Y-%m-%d %H:%M:%S}UTC"
@@ -205,10 +190,53 @@ class CommandProcessor:
         status_message: str = "-= Status =-\n"
         status_message += f"Time: {time_text}\n"
         status_message += f"Relay: {'ON w/' if is_relay_on else 'OFF'} {self.__relay_manager__.get_time_remaining() if is_relay_on else ''}\n"
+        status_message = self.__add_temperature_status__(status_message)
+        status_message = self.__add_gas_status__(status_message)
+        status_message = self.__add_light_status__(status_message)
+        status_message += f"Uptime: {self.__get_uptime_text__()}"
+
+        return status_message
+
+    def __add_temperature_status__(self, status_message: str) -> str:
+        temp: int | None = self.__sensors_manager__.current_temperature_sensor_reading
+
+        if temp is None:
+            return status_message
+
+        temp_reading = f"{str(temp)}F" if temp is not None else "UNK"
+
         status_message += f"Temp: {temp_reading}\n"
+
+        return status_message
+
+    def __add_gas_status__(self, status_message: str) -> str:
+        gas = self.__sensors_manager__.current_gas_sensor_reading
+
+        if gas is None:
+            return status_message
+
+        gas_reading = gas.current_value if gas is not None else "UNK"
+        gas_threshold = (
+            self.__sensors_manager__.__gas_sensor__.get_trigger_threshold_with_units()
+        )
+
         status_message += f"Gas: {gas_reading}/{gas_threshold}\n"
+
+        return status_message
+
+    def __add_light_status__(self, status_message: str) -> str:
+        light = self.__sensors_manager__.current_light_sensor_reading
+
+        if light is None:
+            return status_message
+
+        light_reading = (
+            f"{int(light.full_spectrum)} LUX"
+            if light is not None and light.full_spectrum is not None
+            else "UNK"
+        )
+        light_level = "UNKNOWN" if light is None else light.get_light_level().name
         status_message += f"Light: {light_reading} ({light_level})\n"
-        status_message += f"Uptime: {self.__get_uptime_text__()}\n"
 
         return status_message
 
