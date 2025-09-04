@@ -77,25 +77,29 @@ def __get_time_text__() -> str:
 def log_message_sent(recipient: str, message: str):
     lines = message.split("\n")
 
-    print("SENDING")
-    print(f"    TO: {recipient}")
-    print(f"    AT: {__get_time_text__()}")
-    print("    ```")
+    log_message: str = "SENDING\n"
+    log_message += f"    TO: {recipient}\n"
+    log_message += f"    AT: {__get_time_text__()}\n"
+    log_message += "    ```\n"
     for line in lines:
-        print(f"    {line.strip()}")
-    print("    ```")
+        log_message += f"    {line.strip()}\n"
+    log_message += "    ```"
+
+    LOGGER.info(log_message)
 
 
 def log_message_recieved(sender: str, message: str):
     lines = message.split("\n")
 
-    print("RECIEVED")
-    print(f"    FROM: {sender.lstrip('!')}")
-    print(f"    AT: {__get_time_text__()}")
-    print("    ```")
+    log_message: str = "RECIEVED\n"
+    log_message += f"    FROM: {sender.lstrip('!')}\n"
+    log_message += f"    AT: {__get_time_text__()}\n"
+    log_message += "    ```\n"
     for line in lines:
-        print(f"    {line.strip()}")
-    print("    ```")
+        log_message += f"    {line.strip()}\n"
+    log_message += "    ```"
+
+    LOGGER.info(log_message)
 
 
 def send_message(message: str) -> bool:
@@ -113,10 +117,10 @@ def send_message(message: str) -> bool:
             MESSAGING.send(recipient, message)
             is_one_message_sent = True
         except Exception as ex:
-            print(f"While sending to {recipient}, EX={ex}")
+            LOGGER.error(f"Error sending message to {recipient}, EX={ex}")
 
     if not is_one_message_sent:
-        print("ERROR trying to send message to any authorized recievers")
+        LOGGER.error("ERROR trying to send message to any authorized recievers")
 
     return is_one_message_sent
 
@@ -151,7 +155,8 @@ def get_message_text(message: dict) -> str:
     try:
         return message["decoded"]["payload"].decode("utf-8")
     except Exception:
-        print("Error decoding message payload")
+        LOGGER.error("Error decoding message payload")
+
         return ""
 
 
@@ -237,12 +242,13 @@ if __name__ == "__main__":
     )
     command_processor = CommandProcessor(SENSORS_MANAGER, heater, gas_safety_manager)
 
-    print(f"IP:{local_debug.get_ip_address()}")
+    LOGGER.info("Starting HangarBuddy...")
+    LOGGER.info(f"IP:{local_debug.get_ip_address()}")
 
     send_message("Starting HangarBuddy...")
     send_message(command_processor.get_full_status_text())
 
-    print(f"Connected to {MESSAGING.long_name}/{MESSAGING.device_id}")
+    LOGGER.info(f"Connected to {MESSAGING.long_name}/{MESSAGING.device_id}")
 
     while True:
         SENSORS_MANAGER.update()
