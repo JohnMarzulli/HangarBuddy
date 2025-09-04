@@ -20,15 +20,13 @@ This project started as a fork of piWarmer by Maria DeGrazia.
 
 I want to extend my many thanks to Maria for starting such an amazing project!
 
-The light sensor code is from "arenadorn" and
-[tsl2591](https://github.com/maxlklaxl/python-tsl2591/blob/master/tsl2591/read_tsl.py)
-
-The temperature, and gas sensor code is heavily based on the SunFounder sample code.
+The light sensor code is derived from Ada Fruit's samples.
+The temperature code is heavily based on the SunFounder sample code.
+The ANALOG gas sensor code is also derived from SunFounder sample code.
 
 ## Disclaimer
 
-**HangarBuddy is to be used at your own risk** This version of the code has
-been modified to increase the reliability and safety of the device, but it is an
+**HangarBuddy is to be used at your own risk.** It is an
 experimental device.
 
 ## Commands
