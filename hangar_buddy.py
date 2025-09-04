@@ -212,6 +212,15 @@ def __update_display__(
     display.write(0, 1, status[1])
 
 
+# TODO: Make display event & message driven
+# TODO: Send messages to cycle display
+# TODO: Make temp result have both F & C
+# TODO: See if there is a way to improve the accuracy of the temp sensor
+# TODO: Make message sending queued
+# TODO: Get message send result... and retry if there is a failure
+# TODO: Log the right things... validate logging
+# TODO: Command to return hop count & route
+
 if __name__ == "__main__":
     prevent_pc_from_sleeping()
 
@@ -222,6 +231,8 @@ if __name__ == "__main__":
         SENSORS_MANAGER, heater, send_message
     )
     command_processor = CommandProcessor(SENSORS_MANAGER, heater, gas_safety_manager)
+
+    print(f"IP:{local_debug.get_ip_address()}")
 
     send_message("Starting HangarBuddy...")
     send_message(command_processor.get_full_status_text())

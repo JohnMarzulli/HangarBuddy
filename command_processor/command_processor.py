@@ -125,6 +125,8 @@ class CommandProcessor:
             )
             self.__relay_manager__.turn_off()
             return response_message
+        elif self.__is_command__("IP", msg) or self.__is_command__("ADDRESS", msg):
+            return local_debug.get_ip_address()
         elif self.__is_command__(UPTIME_COMMAND, msg):
             return self.__get_uptime_text__()
         elif self.__is_command__(FULL_STATUS_COMMAND, msg):

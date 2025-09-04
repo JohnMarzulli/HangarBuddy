@@ -4,6 +4,7 @@ RaspberryPi specific code to enable for
 debugging on a Mac or Windows host.
 """
 
+import socket
 from sys import platform
 
 
@@ -13,3 +14,16 @@ def is_debug():
     """
 
     return platform in ["win32", "darwin"]
+
+
+def get_ip_address() -> str:
+    """
+    Get the current IP address of this host.
+
+    Returns:
+        str: The current IP address.
+    """
+
+    hostname = socket.gethostname()
+
+    return socket.gethostbyname(hostname)
