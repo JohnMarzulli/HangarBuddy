@@ -69,12 +69,17 @@ HANDLER.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(message)s"
 LOGGER.addHandler(HANDLER)
 
 
+def __get_time_text__() -> str:
+    time = datetime.now(timezone.utc)
+    return f"{time:%Y-%m-%d %H:%M:%S}UTC"
+
+
 def log_message_sent(recipient: str, message: str):
     lines = message.split("\n")
 
     print("SENDING")
     print(f"    TO: {recipient}")
-    print(f"    AT: {datetime.now(timezone.utc)}")
+    print(f"    AT: {__get_time_text__()}")
     print("    ```")
     for line in lines:
         print(f"    {line.strip()}")
@@ -86,7 +91,7 @@ def log_message_recieved(sender: str, message: str):
 
     print("RECIEVED")
     print(f"    FROM: {sender.lstrip('!')}")
-    print(f"    AT: {datetime.now(timezone.utc)}")
+    print(f"    AT: {__get_time_text__()}")
     print("    ```")
     for line in lines:
         print(f"    {line.strip()}")
