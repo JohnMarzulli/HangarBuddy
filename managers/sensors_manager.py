@@ -24,12 +24,11 @@ if not IS_DEBUG:
 else:
     from devices.mocks.simulated_gas_sensor import SimulatedGasSensor
     from devices.mocks.simulated_light_sensor import SimulatedLightSensor
-    from devices.mocks.simulated_temperature_sensor import \
-        SimulatedTemperatureSensor
+    from devices.mocks.simulated_temperature_sensor import SimulatedTemperatureSensor
 
 DEFAULT_SENSOR_LOG = "sensors.log"
-DEFAULT_LIGHT_SENSOR_UPDATE_INTERVAL = 30
-DEFAULT_GAS_SENSOR_UPDATE_INTERVAL = 60
+DEFAULT_LIGHT_SENSOR_UPDATE_INTERVAL = 1
+DEFAULT_GAS_SENSOR_UPDATE_INTERVAL = 15
 DEFAULT_TEMPERATURE_SENSOR_UPDATE_INTEVAL = 120
 
 
@@ -68,6 +67,11 @@ class SensorsManager:
                 else self.__noop__
             ),
         )
+        self.__log_light_sensor_task__: IntermittentTask = IntermittentTask(
+            "__log_light_sensor__",
+            30,
+            self.__log_light_sensor__,
+        )
         self.__gas_sensor_task__: IntermittentTask = IntermittentTask(
             "__update_gas_sensor__",
             DEFAULT_GAS_SENSOR_UPDATE_INTERVAL,
@@ -101,6 +105,7 @@ class SensorsManager:
 
         self.__gas_sensor_task__.run()
         self.__light_sensor_task__.run()
+        self.__log_light_sensor_task__.run()
         self.__temperature_sensor_task__.run()
 
     def __noop__(self):
@@ -123,6 +128,8 @@ class SensorsManager:
         if self.current_light_sensor_reading is None:
             print("LIGHT: No reading")
 
+    def __log_light_sensor__(self):
+        if self.current_light_sensor_reading is None:
             return
 
         lux_reading: int = int(self.current_light_sensor_reading.lux)
