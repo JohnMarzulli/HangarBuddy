@@ -53,7 +53,7 @@ class GasSensor(object):
         Returns:
             GasSensorResult: The most recent gas sensor reading.
         """
-        return GasSensorResult(False, "UNAVILABLE")
+        return GasSensorResult(False, "UNAVILABLE", self.get_trigger_threshold_with_units())
 
     def __update_gas_detection__(self):
         if self.current_value is None:

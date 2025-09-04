@@ -215,12 +215,7 @@ class CommandProcessor:
         if gas is None:
             return status_message
 
-        gas_reading = gas.current_value if gas is not None else "UNK"
-        gas_threshold = (
-            self.__sensors_manager__.__gas_sensor__.get_trigger_threshold_with_units()
-        )
-
-        status_message += f"Gas: {gas_reading}/{gas_threshold}\n"
+        status_message += f"Gas: {gas.get_status_text()}\n"
 
         return status_message
 

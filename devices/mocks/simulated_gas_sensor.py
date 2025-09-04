@@ -40,4 +40,8 @@ class SimulatedGasSensor(GasSensor):
 
         self.__update_gas_detection__()
 
-        return GasSensorResult(self.is_gas_detected, self.get_current_measurement_with_units())
+        return GasSensorResult(
+            self.is_gas_detected,
+            self.get_current_measurement_with_units(),
+            self.get_trigger_threshold_with_units(),
+        )

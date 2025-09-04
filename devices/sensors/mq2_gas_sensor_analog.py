@@ -8,6 +8,7 @@ import smbus  # type: ignore
 if __name__ == "__main__":
     import sys
     import os
+
     # Ensure the parent directory is in sys.path so 'managers' can be imported
     # This is only needed if running the unit tests directly
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
@@ -89,11 +90,17 @@ class Mq2GasSensorAnalog(GasSensor):
         self.current_value = self.__read__(DEFAULT_CHANNEL_READ_OFFSET)
 
         if self.current_value is None or not self.enabled:
-            return GasSensorResult(False, str(DEFAULT_ALL_CLEAR_THRESHOLD))
+            return GasSensorResult(
+                False, "UNK", self.get_trigger_threshold_with_units()
+            )
 
         self.__update_gas_detection__()
 
-        return GasSensorResult(self.is_gas_detected, self.get_current_measurement_with_units())
+        return GasSensorResult(
+            self.is_gas_detected,
+            self.get_current_measurement_with_units(),
+            self.get_trigger_threshold_with_units(),
+        )
 
 
 if __name__ == "__main__":

@@ -64,7 +64,7 @@ class Mq2GasSensorDigital(GasSensor):
             return "UNAVAILABLE"
 
         return "DETECTED" if self.is_gas_detected else "CLEAR"
-    
+
     def get_trigger_threshold_with_units(self) -> str:
         """
         Get text for the trigger threshold with units.
@@ -80,7 +80,7 @@ class Mq2GasSensorDigital(GasSensor):
         Attempts to look for gas.
         """
         if not self.enabled:
-            return GasSensorResult(False, "UNAVAILABLE")
+            return GasSensorResult(False, "UNK", None)
 
         # Make sure this is normalized so "bigger number bad"
         self.is_gas_detected = self.__read__()
@@ -89,7 +89,7 @@ class Mq2GasSensorDigital(GasSensor):
         self.__update_gas_detection__()
 
         return GasSensorResult(
-            self.is_gas_detected, self.get_current_measurement_with_units()
+            self.is_gas_detected, self.get_current_measurement_with_units(), None
         )
 
     def __read__(self) -> bool:
