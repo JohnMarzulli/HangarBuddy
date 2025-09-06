@@ -5,8 +5,9 @@ from managers.sensors_manager import SensorsManager
 
 
 class LightManager:
-    def __init__(self, sensors: SensorsManager, alert_callback):
+    def __init__(self, location_name: str, sensors: SensorsManager, alert_callback):
         self.__sensors_ = sensors
+        self.__location_name__ = location_name.strip().lower()
         self.__alert_callback__ = alert_callback
         self.__last_brightness__: LightLevel = LightLevel.UNKNOWN
 
@@ -27,7 +28,7 @@ class LightManager:
 
         # Triggering state
         alert_message: str = (
-            f"WARNING: {datetime.now(timezone.utc)} The hangar is now {new_light_level.name}, was {self.__last_brightness__.name}."
+            f"LIGHTS: {datetime.now(timezone.utc)} The {self.__location_name__} is now {new_light_level.name}, was {self.__last_brightness__.name}."
         )
         self.__last_brightness__ = new_light_level
         self.__alert_callback__(alert_message)

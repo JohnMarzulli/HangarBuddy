@@ -136,12 +136,9 @@ class CommandProcessor:
             return f"Temperature: {temp}"
         elif self.__is_command__(LIGHTS_COMMAND, msg):
             light = self.__sensors_manager__.current_light_sensor_reading
-            light_text: str = "UNAVAILABLE"
-
-            if light is not None:
-                light_text = (
-                    f"{light.get_light_level()} / {int(light.full_spectrum)}LUX"
-                )
+            light_text = (
+                "UNAVAILABLE" if light is None else light.get_light_level().name
+            )
             return f"Light: {light_text}"
         elif self.__is_command__(HELP_COMMAND, msg):
             return self.__get_help_text__()
@@ -226,12 +223,11 @@ class CommandProcessor:
             return status_message
 
         light_reading = (
-            f"{int(light.full_spectrum)} LUX"
+            light.get_light_level().name
             if light is not None and light.full_spectrum is not None
             else "UNK"
         )
-        light_level = "UNKNOWN" if light is None else light.get_light_level().name
-        status_message += f"Light: {light_reading} ({light_level})\n"
+        status_message += f"Light: {light_reading}\n"
 
         return status_message
 

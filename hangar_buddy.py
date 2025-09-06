@@ -236,7 +236,7 @@ if __name__ == "__main__":
 
     display = __get_display__()
     heater = RelayManager(CONFIGURATION, LOGGER, send_message)
-    light_manager: LightManager = LightManager(SENSORS_MANAGER, send_message)
+    light_manager: LightManager = LightManager("Hangar", SENSORS_MANAGER, send_message)
     gas_safety_manager: GasSafetyManager = GasSafetyManager(
         SENSORS_MANAGER, heater, send_message
     )
