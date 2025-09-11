@@ -48,7 +48,9 @@ from time import sleep
 
 import configuration
 from command_processor.command_processor import CommandProcessor
+from communication.meshcore_serial import MeshcoreSerial
 from communication.meshtastic_serial import MeshtasticSerial
+from communication.MessageSendRequest import MessageSendRequest
 from displays.sf_1602_lcd import Sf1602Display
 from lib import local_debug
 from managers.gas_safety_manager import GasSafetyManager
@@ -60,7 +62,8 @@ CONFIGURATION = configuration.Configuration()
 
 LOGGER = logging.getLogger("heater")
 LOGGER.setLevel(logging.INFO)
-MESSAGING: MeshtasticSerial = MeshtasticSerial()
+# MESSAGING: MeshtasticSerial = MeshtasticSerial()
+MESSAGING: MeshcoreSerial = MeshcoreSerial()
 SENSORS_MANAGER = SensorsManager(CONFIGURATION)
 HANDLER = logging.handlers.RotatingFileHandler(
     CONFIGURATION.log_filename, maxBytes=1048576, backupCount=3
@@ -114,7 +117,7 @@ def send_message(message: str) -> bool:
         # Here you can add more logic to send the alert, e.g., via email or SMS.
         # For now, it just logs the message.
         try:
-            MESSAGING.send(recipient, message)
+            MESSAGING.send(MessageSendRequest(recipient, message))
             is_one_message_sent = True
         except Exception as ex:
             LOGGER.error(f"Error sending message to {recipient}, EX={ex}")
@@ -161,7 +164,7 @@ def get_message_text(message: dict) -> str:
 
 
 def process_messages(command_processor: CommandProcessor):
-    messages = MESSAGING.get_message_queue()
+    messages = MESSAGING.get_incoming_messages()
 
     for message in messages:
         sender: str = message["fromId"]
@@ -231,7 +234,8 @@ def __update_display__(
 # TODO: Log the right things... validate logging
 # TODO: Command to return hop count & route
 
-if __name__ == "__main__":
+
+async def main():
     prevent_pc_from_sleeping()
 
     display = __get_display__()
@@ -252,7 +256,7 @@ if __name__ == "__main__":
 
     while True:
         SENSORS_MANAGER.update()
-        MESSAGING.service()
+        await MESSAGING.service()
         light_manager.update()
         gas_safety_manager.update()
         heater.update()
@@ -260,3 +264,9 @@ if __name__ == "__main__":
         __update_display__(display, command_processor)
 
         sleep(1)
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    asyncio.run(main())

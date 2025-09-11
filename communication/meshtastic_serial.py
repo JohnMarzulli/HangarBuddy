@@ -5,14 +5,24 @@ import meshtastic.serial_interface
 import serial.tools.list_ports
 from pubsub import pub
 
+if __name__ == "__main__":
+    import os
+    import sys
+
+    # Ensure the parent directory is in sys.path so 'managers' can be imported
+    # This is only needed if running the unit tests directly
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from communication.MessageSendRequest import MessageSendRequest
+
 
 class MeshtasticSerial:
     def __init__(self):
-        self._message_queue = []
         self.id: int = 0
         self.short_name: str = "Unknown"
         self.long_name: str = "Unknown"
         self.device_id: str = "Unknown"
+        self.__message_queue__ = []
         self.__meshastic_interface__: meshtastic.serial_interface.SerialInterface = (
             self.__reconnect__()
         )
@@ -31,17 +41,17 @@ class MeshtasticSerial:
                 time.sleep(5)
                 continue
 
-    def send(self, recipient, text):
+    def send(self, request: MessageSendRequest):
         if not self.__meshastic_interface__:
             raise ConnectionError("Not connected to a Meshtastic device.")
         try:
-            self.__meshastic_interface__.sendText(text, destinationId=recipient)
+            self.__meshastic_interface__.sendText(request.text, destinationId=request.recipient)
         except Exception as e:
             raise ConnectionError(f"Failed to send message: {e}") from e
 
-    def get_message_queue(self):
-        messages = self._message_queue.copy()
-        self._message_queue.clear()
+    def get_incoming_messages(self):
+        messages = self.__message_queue__.copy()
+        self.__message_queue__.clear()
         return messages
 
     def __is_connected__(self) -> bool:
@@ -111,7 +121,7 @@ class MeshtasticSerial:
                 and "decoded" in packet
                 and packet["decoded"]["portnum"] == "TEXT_MESSAGE_APP"
             ):
-                self._message_queue.append(packet)
+                self.__message_queue__.append(packet)
         except KeyError as e:
             print(f"Error processing packet: {e}")
 
@@ -125,11 +135,11 @@ if __name__ == "__main__":
         )
 
         # Example usage
-        meshtastic_device.send(recipient, "Test Message!")
+        meshtastic_device.send(MessageSendRequest(recipient, "Test Message!"))
         print("Message sent successfully.")
 
         while True:
-            messages = meshtastic_device.get_message_queue()
+            messages = meshtastic_device.get_incoming_messages()
             for msg in messages:
                 print(f"Received message: {msg}")
             time.sleep(1)
