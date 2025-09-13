@@ -48,7 +48,11 @@ from time import sleep
 
 import configuration
 from command_processor.command_processor import CommandProcessor
+from communication.meshcore_serial import MeshcoreSerial
 from communication.meshtastic_serial import MeshtasticSerial
+from communication.message_send_request import MessageSendRequest
+from communication.recieved_message import RecievedMessage
+from devices.interfaces.messaging_device import MessagingDevice
 from displays.sf_1602_lcd import Sf1602Display
 from lib import local_debug
 from managers.gas_safety_manager import GasSafetyManager
@@ -56,14 +60,26 @@ from managers.light_manager import LightManager
 from managers.relay_manager import RelayManager
 from managers.sensors_manager import SensorsManager
 
-CONFIGURATION = configuration.Configuration()
-
 LOGGER = logging.getLogger("heater")
 LOGGER.setLevel(logging.INFO)
-MESSAGING: MeshtasticSerial = MeshtasticSerial()
+
+
+def __get_messaging_device__(
+    config: configuration.Configuration,
+) -> MessagingDevice:
+    if config.device_type.lower() == "meshtastic":
+        return MeshtasticSerial()
+    elif config.device_type.lower() == "meshcore":
+        return MeshcoreSerial()
+
+    raise RuntimeError(f"Unknown device type: {config.device_type}")
+
+
+CONFIGURATION = configuration.Configuration()
+MESSAGING: MessagingDevice = __get_messaging_device__(CONFIGURATION)
 SENSORS_MANAGER = SensorsManager(CONFIGURATION)
 HANDLER = logging.handlers.RotatingFileHandler(
-    CONFIGURATION.log_filename, maxBytes=1048576, backupCount=3
+    CONFIGURATION.log_filename, maxBytes=1048576, backupCount=3, encoding="utf-8"
 )
 HANDLER.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(message)s"))
 LOGGER.addHandler(HANDLER)
@@ -88,11 +104,11 @@ def log_message_sent(recipient: str, message: str):
     LOGGER.info(log_message)
 
 
-def log_message_recieved(sender: str, message: str):
-    lines = message.split("\n")
+def log_message_recieved(message: RecievedMessage):
+    lines = message.text.split("\n")
 
     log_message: str = "RECIEVED\n"
-    log_message += f"    FROM: {sender.lstrip('!')}\n"
+    log_message += f"    FROM: {message.sender}\n"
     log_message += f"    AT: {__get_time_text__()}\n"
     log_message += "    ```\n"
     for line in lines:
@@ -114,7 +130,7 @@ def send_message(message: str) -> bool:
         # Here you can add more logic to send the alert, e.g., via email or SMS.
         # For now, it just logs the message.
         try:
-            MESSAGING.send(recipient, message)
+            MESSAGING.send(MessageSendRequest(recipient, message))
             is_one_message_sent = True
         except Exception as ex:
             LOGGER.error(f"Error sending message to {recipient}, EX={ex}")
@@ -137,18 +153,14 @@ def is_radio_connected() -> bool:
         return False
 
 
-def is_for_this_node(message: dict) -> bool:
-    message_to: str = message["toId"]
-    message_to = message_to.strip()
+def is_for_this_node(recipient: str) -> bool:
+    message_to = recipient.strip()
 
     return message_to == MESSAGING.device_id
 
 
-def is_from_known_sender(message: dict) -> bool:
-    message_from: str = message["fromId"]
-    message_from = message_from.lstrip("!")
-
-    return message_from in CONFIGURATION.allowed_senders
+def is_from_known_sender(sender: str) -> bool:
+    return sender in CONFIGURATION.allowed_senders
 
 
 def get_message_text(message: dict) -> str:
@@ -161,27 +173,24 @@ def get_message_text(message: dict) -> str:
 
 
 def process_messages(command_processor: CommandProcessor):
-    messages = MESSAGING.get_message_queue()
+    messages = MESSAGING.get_incoming_messages()
 
     for message in messages:
-        sender: str = message["fromId"]
-
-        if not is_for_this_node(message):
+        if not is_for_this_node(message.recipient):
             continue
 
-        if not is_from_known_sender(message):
+        if not is_from_known_sender(message.sender):
             known_senders_text: str = ",".join(CONFIGURATION.allowed_senders)
             unknown_sender_message: str = (
-                f"Unknown sender `{sender}`, known: {known_senders_text}"
+                f"Unknown sender `{message.sender}`, known: {known_senders_text}"
             )
 
             send_message(unknown_sender_message)
 
             continue
 
-        message_text = get_message_text(message)
-        log_message_recieved(sender, message_text)
-        response = command_processor.process(message_text)
+        log_message_recieved(message)
+        response = command_processor.process(message.text)
 
         if response is not None and len(response) > 0:
             send_message(response)
@@ -226,13 +235,21 @@ def __update_display__(
 # TODO: Send messages to cycle display
 # TODO: Make temp result have both F & C
 # TODO: See if there is a way to improve the accuracy of the temp sensor
-# TODO: Make message sending queued
-# TODO: Get message send result... and retry if there is a failure
 # TODO: Log the right things... validate logging
 # TODO: Command to return hop count & route
 
-if __name__ == "__main__":
+
+async def __connect_messaging_device__():
+    while not MESSAGING.__is_connected__():
+        sleep(1)
+        print("Connecting to device...")
+        await MESSAGING.service()
+
+
+async def main():
     prevent_pc_from_sleeping()
+
+    await __connect_messaging_device__()
 
     display = __get_display__()
     heater = RelayManager(CONFIGURATION, LOGGER, send_message)
@@ -248,11 +265,11 @@ if __name__ == "__main__":
     send_message("Starting HangarBuddy...")
     send_message(command_processor.get_full_status_text())
 
-    LOGGER.info(f"Connected to {MESSAGING.long_name}/{MESSAGING.device_id}")
+    LOGGER.info(f"Connected to {MESSAGING.device_name}/{MESSAGING.device_id}")
 
     while True:
         SENSORS_MANAGER.update()
-        MESSAGING.service()
+        await MESSAGING.service()
         light_manager.update()
         gas_safety_manager.update()
         heater.update()
@@ -260,3 +277,9 @@ if __name__ == "__main__":
         __update_display__(display, command_processor)
 
         sleep(1)
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    asyncio.run(main())

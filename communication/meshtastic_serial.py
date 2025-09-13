@@ -5,44 +5,52 @@ import meshtastic.serial_interface
 import serial.tools.list_ports
 from pubsub import pub
 
+if __name__ == "__main__":
+    import os
+    import sys
 
-class MeshtasticSerial:
+    # Ensure the parent directory is in sys.path so 'managers' can be imported
+    # This is only needed if running the unit tests directly
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from communication.recieved_message import RecievedMessage
+from devices.interfaces.messaging_device import MessagingDevice
+
+if __name__ == "__main__":
+    import os
+    import sys
+
+    # Ensure the parent directory is in sys.path so 'managers' can be imported
+    # This is only needed if running the unit tests directly
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from communication.message_send_request import MessageSendRequest
+
+
+class MeshtasticSerial(MessagingDevice):
     def __init__(self):
-        self._message_queue = []
-        self.id: int = 0
-        self.short_name: str = "Unknown"
-        self.long_name: str = "Unknown"
-        self.device_id: str = "Unknown"
+        super().__init__()
         self.__meshastic_interface__: meshtastic.serial_interface.SerialInterface = (
             self.__reconnect__()
         )
 
-    def service(self):
-        """
-        Process incoming messages and handle them.
-        """
-        while not self.__is_connected__():
-            print(f"Lost connection to `{self.long_name}`. Reconnecting...")
+    def __is_device_allocated__(self) -> bool:
+        return self.__meshastic_interface__ is not None
 
-            try:
-                self.__reconnect__()
-            except Exception:
-                print("Failed to reconnect. Retrying in 5 seconds...")
-                time.sleep(5)
-                continue
+    async def __recieve_message__(self) -> bool:
+        return False
 
-    def send(self, recipient, text):
+    async def __send_single_message__(self, request: MessageSendRequest):
         if not self.__meshastic_interface__:
-            raise ConnectionError("Not connected to a Meshtastic device.")
+            return False
         try:
-            self.__meshastic_interface__.sendText(text, destinationId=recipient)
-        except Exception as e:
-            raise ConnectionError(f"Failed to send message: {e}") from e
+            self.__meshastic_interface__.sendText(
+                request.text, destinationId=request.recipient
+            )
 
-    def get_message_queue(self):
-        messages = self._message_queue.copy()
-        self._message_queue.clear()
-        return messages
+            return True
+        except Exception as e:
+            return False
 
     def __is_connected__(self) -> bool:
         """
@@ -68,14 +76,8 @@ class MeshtasticSerial:
         self.__meshastic_interface__: meshtastic.serial_interface.SerialInterface = (
             self.__connect_to_device__()
         )
-        self.short_name = str(self.__meshastic_interface__.getShortName())
-        self.long_name = str(self.__meshastic_interface__.getLongName())
+        self.device_name = str(self.__meshastic_interface__.getShortName())
         self.device_id = f"!{hex(self.__meshastic_interface__.myInfo.my_node_num).replace('0x', '')}"  # type: ignore
-        self.id = (
-            self.__meshastic_interface__.configId
-            if self.__meshastic_interface__.configId is not None
-            else 0
-        )
         pub.subscribe(self.__on_receive__, "meshtastic.receive")
 
         return self.__meshastic_interface__
@@ -83,6 +85,7 @@ class MeshtasticSerial:
     def __connect_to_device__(self) -> meshtastic.serial_interface.SerialInterface:
         all_ports = serial.tools.list_ports.comports()
         ports = [port.device for port in all_ports]
+
         for port in ports:
             print(f"Trying to connect to Meshtastic device on {port}...")
 
@@ -111,27 +114,23 @@ class MeshtasticSerial:
                 and "decoded" in packet
                 and packet["decoded"]["portnum"] == "TEXT_MESSAGE_APP"
             ):
-                self._message_queue.append(packet)
+                sender: str = packet["fromId"]
+                recipient: str = packet["toId"]
+                test: str = packet["decoded"]["payload"].decode("utf-8")
+                incoming_message: RecievedMessage = RecievedMessage(
+                    sender, recipient, test
+                )
+                self.__recieving_queue__.append(incoming_message)
         except KeyError as e:
             print(f"Error processing packet: {e}")
 
 
 if __name__ == "__main__":
-    try:
-        recipient: str = "db2b5a40"
-        meshtastic_device: MeshtasticSerial = MeshtasticSerial()
-        print(
-            f"Connected to {meshtastic_device.short_name}/{meshtastic_device.long_name}/{meshtastic_device.device_id}."
-        )
+    import asyncio
 
-        # Example usage
-        meshtastic_device.send(recipient, "Test Message!")
-        print("Message sent successfully.")
+    from devices.interfaces.messaging_device import test_loop
 
-        while True:
-            messages = meshtastic_device.get_message_queue()
-            for msg in messages:
-                print(f"Received message: {msg}")
-            time.sleep(1)
-    except ConnectionError as e:
-        print(f"Error: {e}")
+    meshtastic_device: MeshtasticSerial = MeshtasticSerial()
+    recipient = "!ba66ffe4"
+
+    asyncio.run(test_loop(meshtastic_device, recipient))
