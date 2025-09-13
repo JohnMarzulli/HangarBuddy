@@ -41,9 +41,11 @@ class SensorSimulator:
         Returns:
             float: The new "value" that was "read" by the sensor simulator.
         """
+        new_update_time: datetime = datetime.now()
         seconds_since_last_update: float = (
-            datetime.now() - self.last_update_time
+            new_update_time - self.last_update_time
         ).total_seconds()
+        self.last_update_time = new_update_time
         change_amount: float = (
             self.units_per_minute / 60.0
         ) * seconds_since_last_update
