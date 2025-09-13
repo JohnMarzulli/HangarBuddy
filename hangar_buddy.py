@@ -60,12 +60,23 @@ from managers.light_manager import LightManager
 from managers.relay_manager import RelayManager
 from managers.sensors_manager import SensorsManager
 
-CONFIGURATION = configuration.Configuration()
-
 LOGGER = logging.getLogger("heater")
 LOGGER.setLevel(logging.INFO)
-# MESSAGING: MessagingDevice = MeshtasticSerial()
-MESSAGING: MessagingDevice = MeshcoreSerial()
+
+
+def __get_messaging_device__(
+    config: configuration.Configuration,
+) -> MessagingDevice:
+    if config.device_type.lower() == "meshtastic":
+        return MeshtasticSerial()
+    elif config.device_type.lower() == "meshcore":
+        return MeshcoreSerial()
+
+    raise RuntimeError(f"Unknown device type: {config.device_type}")
+
+
+CONFIGURATION = configuration.Configuration()
+MESSAGING: MessagingDevice = __get_messaging_device__(CONFIGURATION)
 SENSORS_MANAGER = SensorsManager(CONFIGURATION)
 HANDLER = logging.handlers.RotatingFileHandler(
     CONFIGURATION.log_filename, maxBytes=1048576, backupCount=3, encoding="utf-8"

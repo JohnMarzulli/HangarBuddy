@@ -38,6 +38,7 @@ class Configuration(object):
 
         self.__config_parser__: ConfigParser = ConfigParser()
         self.__config_parser__.read(get_config_file_location(), encoding="utf-8")
+        self.device_type: str = self.__config_parser__.get("SETTINGS", "DEVICE_TYPE")
         self.relay_pin: int = self.__config_parser__.getint("SETTINGS", "HEATER_PIN")
         self.is_mq2_enabled: bool = self.__config_parser__.getboolean("SETTINGS", "MQ2")
         self.is_temp_probe_enabled: bool = self.__config_parser__.getboolean(
