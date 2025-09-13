@@ -1,27 +1,32 @@
 import time
 from multiprocessing import Queue
 
-# https://github.com/meshcore-dev/meshcore_py
-
-
 from communication.message_send_request import MessageSendRequest
-from communication.recieved_message import RecievedMessage
-
-# https://pypi.org/project/meshcore/
+from communication.received_message import ReceivedMessage
 
 
 class MessagingDevice:
+    """
+    Interface for a messaging device. This could be a Meshcore, Meshtastic, or cell modem.
+
+    Should not be created directly.
+    """
+
     def __init__(self):
+        """
+        Initialize the core service queues.
+        """
         self.id: int = 0
         self.device_name: str = "Unknown"
         self.device_id: str = "Unknown"
         self.contacts = []
-        self.__recieving_queue__: list[RecievedMessage] = []
+        self.__receiving_queue__: list[ReceivedMessage] = []
         self.__sending_queue__: Queue = Queue()
 
     async def service(self):
         """
         Process incoming messages and handle them.
+        Processes the outgoing message queue to handle sending them and any associated retries.
         """
         while not self.__is_connected__():
             print(f"Lost connection to `{self.device_name}`. Reconnecting...")
@@ -33,29 +38,46 @@ class MessagingDevice:
                 time.sleep(5)
                 continue
 
-        await self.__service_recieving_messages__()
+        await self.__service_receiving_messages__()
         await self.__service_send_messages__()
 
     def send(self, request: MessageSendRequest):
+        """
+        Add a message to the sending queue. Does not immediately send the message.
+
+        Args:
+            request (MessageSendRequest): The message to send.
+
+        Raises:
+            ConnectionError: Raised if no device is connected.
+        """
         if not self.__is_device_allocated__():
-            raise ConnectionError("Not connected to a Meshtastic device.")
+            raise ConnectionError("Not connected to a messaging device.")
 
         self.__sending_queue__.put(request)
 
-    def get_incoming_messages(self) -> list[RecievedMessage]:
-        messages:list[RecievedMessage] = self.__recieving_queue__.copy()
-        self.__recieving_queue__.clear()
+    def get_incoming_messages(self) -> list[ReceivedMessage]:
+        """
+        Returns a list of the incoming messages. Clears the reception queue.
+        Once these messages are captured, they need to be handled by the calling code
+        or they are lost.
+
+        Returns:
+            list[ReceivedMessage]: The set of incoming messages.
+        """
+        messages: list[ReceivedMessage] = self.__receiving_queue__.copy()
+        self.__receiving_queue__.clear()
 
         return messages
 
-    async def __service_recieving_messages__(self):
-        while await self.__recieve_message__():
+    async def __service_receiving_messages__(self):
+        while await self.__receive_message__():
             pass
 
     def __is_device_allocated__(self) -> bool:
         raise NotImplementedError("This method should be implemented by subclasses.")
 
-    async def __recieve_message__(self) -> bool:
+    async def __receive_message__(self) -> bool:
         raise NotImplementedError("This method should be implemented by subclasses.")
 
     async def __send_single_message__(
@@ -105,6 +127,14 @@ class MessagingDevice:
 
 
 async def test_loop(device: MessagingDevice, recipient):
+    """
+    Provides a way to test a messaging device by using the interface.
+    Useful for testing connectivity or debugging with spinning up the entire HangarBuddy
+
+    Args:
+        device (MessagingDevice): The device to send and receive messages with.
+        recipient (_type_): The recipient of any test messages that are sent.
+    """
     try:
         while not device.__is_connected__():
             time.sleep(1)
@@ -113,7 +143,6 @@ async def test_loop(device: MessagingDevice, recipient):
 
         print(f"Connected to {device.device_name}")
 
-        # Example usage
         device.send(MessageSendRequest(recipient, "Test Message!"))
         print("Message sent successfully.")
 
@@ -121,7 +150,9 @@ async def test_loop(device: MessagingDevice, recipient):
             await device.service()
             messages = device.get_incoming_messages()
             for msg in messages:
-                print(f"Received message:\n\tTO:{msg.recipient}\n\tFROM:{msg.sender}\n\tTEXT:{msg.text}")
+                print(
+                    f"Received message:\n\tTO:{msg.recipient}\n\tFROM:{msg.sender}\n\tTEXT:{msg.text}"
+                )
             time.sleep(1)
     except ConnectionError as e:
         print(f"Error: {e}")

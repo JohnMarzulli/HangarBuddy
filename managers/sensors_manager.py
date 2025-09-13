@@ -18,13 +18,13 @@ from devices.results.light_sensor_result import LightSensorResult
 from lib.intermittent_task import IntermittentTask
 
 if not IS_DEBUG:
-    from devices.sensors.ds18b20_tempature_sensor import Ds18b20TempatureSensor
+    from devices.sensors.ds18b20_temperature_sensor import Ds18b20TemperatureSensor
     from devices.sensors.mq2_gas_sensor_digital import Mq2GasSensorDigital
     from devices.sensors.tsl2591_light_sensor import Tsl2591LightSensor
-else:
-    from devices.mocks.simulated_gas_sensor import SimulatedGasSensor
-    from devices.mocks.simulated_light_sensor import SimulatedLightSensor
-    from devices.mocks.simulated_temperature_sensor import SimulatedTemperatureSensor
+
+from devices.mocks.simulated_gas_sensor import SimulatedGasSensor
+from devices.mocks.simulated_light_sensor import SimulatedLightSensor
+from devices.mocks.simulated_temperature_sensor import SimulatedTemperatureSensor
 
 DEFAULT_SENSOR_LOG = "sensors.log"
 DEFAULT_LIGHT_SENSOR_UPDATE_INTERVAL = 1
@@ -39,6 +39,13 @@ class SensorsManager:
     """
 
     def __init__(self, configuration: Configuration):
+        """
+        Manager to handle and control servicing any attached sensors.
+        Handles initialization.
+
+        Args:
+            configuration (Configuration): The configuration that would contain pin and bus settings.
+        """
         self.__handler__ = logging.handlers.RotatingFileHandler(
             configuration.get_log_directory() + DEFAULT_SENSOR_LOG,
             maxBytes=1048576,
@@ -55,7 +62,7 @@ class SensorsManager:
             SimulatedLightSensor() if IS_DEBUG else Tsl2591LightSensor()
         )
         self.__temperature_sensor__: TemperatureSensor = (
-            SimulatedTemperatureSensor() if IS_DEBUG else Ds18b20TempatureSensor()
+            SimulatedTemperatureSensor() if IS_DEBUG else Ds18b20TemperatureSensor()
         )
 
         self.__light_sensor_task__: IntermittentTask = IntermittentTask(

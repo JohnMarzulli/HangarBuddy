@@ -51,7 +51,7 @@ from command_processor.command_processor import CommandProcessor
 from communication.meshcore_serial import MeshcoreSerial
 from communication.meshtastic_serial import MeshtasticSerial
 from communication.message_send_request import MessageSendRequest
-from communication.recieved_message import RecievedMessage
+from communication.received_message import ReceivedMessage
 from devices.interfaces.messaging_device import MessagingDevice
 from displays.sf_1602_lcd import Sf1602Display
 from lib import local_debug
@@ -104,7 +104,7 @@ def log_message_sent(recipient: str, message: str):
     LOGGER.info(log_message)
 
 
-def log_message_recieved(message: RecievedMessage):
+def log_message_recieved(message: ReceivedMessage):
     lines = message.text.split("\n")
 
     log_message: str = "RECIEVED\n"

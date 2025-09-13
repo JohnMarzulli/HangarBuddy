@@ -20,13 +20,18 @@ class PowerRelay:
 
     Attributes:
     name: Relay name (IE - Heater, Light, etc.
-    GPIO_PIN: (BOARD) GPIO PIN on rasperry pi that
+    GPIO_PIN: (BOARD) GPIO PIN on Raspberry Pi that
     the AC/D control relay is plugged into
     """
 
     def __init__(self, name, GPIO_PIN, relay_type=DEFAULT_RELAY_TYPE):
         """
         Creates a relay controller.
+
+        Args:
+            name (_type_): The name of the relay or what the relay is controlling.
+            GPIO_PIN (_type_): The pin (using board numbering) that sends the signal to the relay.
+            relay_type (_type_, optional): Ignored. Defaults to DEFAULT_RELAY_TYPE.
         """
         self.name = name
         self.gpio_pin = GPIO_PIN
@@ -44,7 +49,8 @@ class PowerRelay:
 
     def switch_high(self):
         """
-        Sets the GPIO pin to HIGH
+        Sets the GPIO pin to HIGH.
+        This will cause the controlled device to turn on.
         """
 
         if IS_DEBUG:
@@ -62,7 +68,9 @@ class PowerRelay:
 
     def switch_low(self):
         """
-        Sets the GPIO pin to LOW
+        Sets the GPIO pin to LOW.
+
+        This will cause the device to turn off.
         """
 
         if IS_DEBUG:

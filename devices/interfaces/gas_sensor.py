@@ -6,7 +6,10 @@ DEFAULT_ALL_CLEAR_THRESHOLD: int = 235
 
 class GasSensor(object):
     """
-    Class to help with the gas sensor.
+    Interface for a gas sensor.
+    Provides basic functionality to all sensors, and allows for simulators/mocks.
+
+    Should not be created directly.
     """
 
     def __init__(
@@ -14,6 +17,13 @@ class GasSensor(object):
         sensor_trigger_threshold: int = DEFAULT_TRIGGER_THRESHOLD,
         sensor_all_clear_threshold: int = DEFAULT_ALL_CLEAR_THRESHOLD,
     ):
+        """
+        Initial the base functionality of the gas sensor.
+
+        Args:
+            sensor_trigger_threshold (int, optional): If a reading is equal, or greater than, this value then gas is detected . Defaults to DEFAULT_TRIGGER_THRESHOLD.
+            sensor_all_clear_threshold (int, optional): If gas is detected, then the value must be equal or less than this value for the alert to clear. Defaults to DEFAULT_ALL_CLEAR_THRESHOLD.
+        """
         self.current_value: int | None = DEFAULT_ALL_CLEAR_THRESHOLD
         self.enabled: bool = False
         self.is_gas_detected: bool = False
@@ -53,7 +63,9 @@ class GasSensor(object):
         Returns:
             GasSensorResult: The most recent gas sensor reading.
         """
-        return GasSensorResult(False, "UNAVILABLE", self.get_trigger_threshold_with_units())
+        return GasSensorResult(
+            False, "UNAVILABLE", self.get_trigger_threshold_with_units()
+        )
 
     def __update_gas_detection__(self):
         if self.current_value is None:
@@ -65,9 +77,7 @@ class GasSensor(object):
         # This protects against the alarm triggering over and over
         # again if the sensor is close to the detection level.
         if not self.is_gas_detected:
-            self.is_gas_detected = (
-                self.current_value >= self.sensor_trigger_threshold
-            )
+            self.is_gas_detected = self.current_value >= self.sensor_trigger_threshold
         else:
             self.is_gas_detected = (
                 self.current_value >= self.__sensor_all_clear_threshold__

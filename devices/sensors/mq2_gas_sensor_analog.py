@@ -30,6 +30,9 @@ DEFAULT_DEVICE_CHANNEL = 0
 class Mq2GasSensorAnalog(GasSensor):
     """
     Class to help with the gas sensor.
+
+    This is for an analog MQ2, which needs to go through
+    extra hardware to get the actual sensor reading.
     """
 
     def __init__(
@@ -37,6 +40,13 @@ class Mq2GasSensorAnalog(GasSensor):
         sensor_trigger_threshold=DEFAULT_TRIGGER_THRESHOLD,
         sensor_all_clear_threshold=DEFAULT_ALL_CLEAR_THRESHOLD,
     ):
+        """
+        Attempt to connect to the sensor. Initial the thresholds.
+
+        Args:
+            sensor_trigger_threshold (int, optional): If a reading is equal, or greater than, this value then gas is detected . Defaults to DEFAULT_TRIGGER_THRESHOLD.
+            sensor_all_clear_threshold (int, optional): If gas is detected, then the value must be equal or less than this value for the alert to clear. Defaults to DEFAULT_ALL_CLEAR_THRESHOLD.
+        """
         super().__init__(sensor_trigger_threshold, sensor_all_clear_threshold)
 
         print("Starting init")

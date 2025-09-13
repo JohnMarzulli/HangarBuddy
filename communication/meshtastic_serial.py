@@ -13,7 +13,7 @@ if __name__ == "__main__":
     # This is only needed if running the unit tests directly
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from communication.recieved_message import RecievedMessage
+from communication.received_message import ReceivedMessage
 from devices.interfaces.messaging_device import MessagingDevice
 
 if __name__ == "__main__":
@@ -37,7 +37,7 @@ class MeshtasticSerial(MessagingDevice):
     def __is_device_allocated__(self) -> bool:
         return self.__meshastic_interface__ is not None
 
-    async def __recieve_message__(self) -> bool:
+    async def __receive_message__(self) -> bool:
         return False
 
     async def __send_single_message__(self, request: MessageSendRequest):
@@ -117,10 +117,10 @@ class MeshtasticSerial(MessagingDevice):
                 sender: str = packet["fromId"]
                 recipient: str = packet["toId"]
                 test: str = packet["decoded"]["payload"].decode("utf-8")
-                incoming_message: RecievedMessage = RecievedMessage(
+                incoming_message: ReceivedMessage = ReceivedMessage(
                     sender, recipient, test
                 )
-                self.__recieving_queue__.append(incoming_message)
+                self.__receiving_queue__.append(incoming_message)
         except KeyError as e:
             print(f"Error processing packet: {e}")
 

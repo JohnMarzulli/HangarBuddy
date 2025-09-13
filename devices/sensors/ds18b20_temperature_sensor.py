@@ -6,13 +6,14 @@ import pathlib
 if __name__ == "__main__":
     import sys
     import os
+
     # Ensure the parent directory is in sys.path so 'managers' can be imported
     # This is only needed if running the unit tests directly
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from devices.interfaces.temperature_sensor import (
     TemperatureSensor,
-    celcius_to_farenheit,
+    celsius_to_fahrenheit,
 )
 
 # ---------------------------------------------------------------
@@ -51,9 +52,11 @@ def __read_sensor__(sensor_id: str) -> float | None:
         temperature = float(temperaturedata[2:])
         temperature /= 1000
         print(f"Sensor: {sensor_id}" + " : %0.3f C" % temperature)
-        print(f"Sensor: {sensor_id}" + " : %0.3f F" % celcius_to_farenheit(temperature))
+        print(
+            f"Sensor: {sensor_id}" + " : %0.3f F" % celsius_to_fahrenheit(temperature)
+        )
 
-        return celcius_to_farenheit(temperature)
+        return celsius_to_fahrenheit(temperature)
     except Exception:
         return None
 
@@ -87,13 +90,32 @@ def __read_sensors__() -> list[float]:
     return temperature_probe_values
 
 
-class Ds18b20TempatureSensor(TemperatureSensor):
+class Ds18b20TemperatureSensor(TemperatureSensor):
+    """
+    Attempts to connect to a DS18B20 sensor.
+
+    If the sensor is not present, then `enabled` will be set to
+    false causing all sensor interactions to be bypassed.
+
+    Args:
+        TemperatureSensor (_type_): _description_
+    """
+
     def __init__(self):
+        """
+        Attempt to connect to the temperature sensor.
+        """
         super().__init__()
         self.enabled: bool = True
         self.current_value: int | None = None
 
     def update(self) -> int | None:
+        """
+        Services the sensor. May cause a new reading to be taken.
+
+        Returns:
+            int | None: The latest temperature reading in Fahrenheit.
+        """
         if not self.enabled:
             return None
 
@@ -117,9 +139,9 @@ if __name__ == "__main__":
 
     doctest.testmod()
 
-    sensor: Ds18b20TempatureSensor = Ds18b20TempatureSensor()
-    temp:int = sensor.update()
-    
+    sensor: Ds18b20TemperatureSensor = Ds18b20TemperatureSensor()
+    temp: int = sensor.update()
+
     print(f"{temp}F")
 
     print("Tests finished")

@@ -5,7 +5,21 @@ from managers.sensors_manager import SensorsManager
 
 
 class GasSafetyManager:
+    """
+    Handles readings from a gas sensor.
+    Handles determining if alerts should be sent or cleared.
+    Handles queuing the alerts.
+    """
+
     def __init__(self, sensors: SensorsManager, relay: RelayManager, alert_callback):
+        """
+        Initialize the safety manager with the connections needed.
+
+        Args:
+            sensors (SensorsManager): The manager for all of the sensors. This enables the safety manager to get the current version.
+            relay (RelayManager): The manager for the relay. This allows for the safety manager to turn off the relay.
+            alert_callback (_type_): Function to call when an alert needs to be sent.
+        """
         self.__sensors_ = sensors
         self.__relay__ = relay
         self.__alert_callback__ = alert_callback
@@ -45,7 +59,19 @@ class GasSafetyManager:
         return self.__is_gas_detected__
 
     def is_gas_detected(self) -> bool:
+        """
+        Is gas currently detected?
+
+        Returns:
+            bool: Is gas currently detected?
+        """
         return self.__is_gas_detected__
 
-    def can_turn_on_heater(self):
+    def can_turn_on_relay(self):
+        """
+        Is it safe to turn the relay on?
+
+        Returns:
+            _type_: True if it is safe for the relay to be turned on.
+        """
         return not self.__is_gas_detected__
