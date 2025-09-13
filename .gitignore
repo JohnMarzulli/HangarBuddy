@@ -48,5 +48,6 @@ Temporary Items
 .vscode/
 *.pyc
 *.log
+*.log.*
 *.swp
 venv/**
