@@ -1,10 +1,14 @@
 import time
-from multiprocessing import Queue
+
+import serial.tools.list_ports
+
+# https://github.com/meshcore-dev/meshcore_py
+
+# TODO: Make generic class for contact information
 
 # Current version of Meshcore (2.0) requires firmware 1.7.4
 # Any newer version of the meshcore firmware will not work
 
-import serial.tools.list_ports
 
 if __name__ == "__main__":
     import os
@@ -14,63 +18,29 @@ if __name__ == "__main__":
     # This is only needed if running the unit tests directly
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import asyncio
-
 from meshcore import EventType, MeshCore
 
-from communication.MessageSendRequest import MessageSendRequest
+from communication.message_send_request import MessageSendRequest
+from communication.recieved_message import RecievedMessage
+from devices.interfaces.messaging_device import MessagingDevice
 
 # https://pypi.org/project/meshcore/
 
 
-class MeshcoreSerial:
+class MeshcoreSerial(MessagingDevice):
     def __init__(self):
-        self.id: int = 0
-        self.short_name: str = "Unknown"
-        self.long_name: str = "Unknown"
-        self.device_id: str = "Unknown"
-        self.contacts = []
-        self.__recieving_queue__ = []
+        super().__init__()
+
         self.__meshcore_interface__: MeshCore | None = None
-        self.__sending_queue__: Queue = Queue()
 
-    async def service(self):
-        """
-        Process incoming messages and handle them.
-        """
-        while not self.__is_connected__():
-            print(f"Lost connection to `{self.long_name}`. Reconnecting...")
-
-            try:
-                await self.__reconnect__()
-            except Exception:
-                print("Failed to reconnect. Retrying in 5 seconds...")
-                time.sleep(5)
-                continue
-
-        await self.__service_recieving_messages__()
-        await self.__service_send_messages__()
-
-    def send(self, request: MessageSendRequest):
-        if not self.__meshcore_interface__:
-            raise ConnectionError("Not connected to a Meshtastic device.")
-
-        self.__sending_queue__.put(request)
-
-    def get_incoming_messages(self):
-        messages = self.__recieving_queue__.copy()
-        self.__recieving_queue__.clear()
-        return messages
-
-    async def __service_recieving_messages__(self):
-        while await self.__recieve_message__():
-            pass
+    def __is_device_allocated__(self) -> bool:
+        return self.__meshcore_interface__ is not None
 
     async def __recieve_message__(self) -> bool:
-        is_received: bool = False
-
         if not self.__meshcore_interface__:
             return False
+
+        is_received: bool = False
 
         try:
             result = await self.__meshcore_interface__.commands.get_msg(0.5)
@@ -80,44 +50,66 @@ class MeshcoreSerial:
             ]
 
             if is_received:
-                self.__recieving_queue__.append(result.payload)
+                sender: str = self.__get_matching_contact_by_partial_key__(
+                    result.payload["pubkey_prefix"]
+                )
+                recipient: str = (
+                    self.device_id if result.payload["type"] == "PRIV" else "ALL"
+                )
+                incoming_message: RecievedMessage = RecievedMessage(
+                    sender, recipient, result.payload["text"]
+                )
+                self.__recieving_queue__.append(incoming_message)
         except Exception as e:
             print(f"Error while receiving messages: {e}")
 
         return is_received
 
-    async def __service_send_messages__(self):
+    def __get_key_by_contact_name__(self, contact_name: str) -> str:
+        return next(
+            (
+                contact.get("public_key", "")
+                for contact in self.contacts
+                if contact.get("adv_name", "").lower() == contact_name.lower()
+            ),
+            "",
+        )
 
+    def __get_matching_contact_by_partial_key__(self, pubkey_prefix: str) -> str:
+        return next(
+            (
+                contact.get("adv_name", "Unknown")
+                for contact in self.contacts
+                if contact.get("public_key", "").startswith(pubkey_prefix)
+            ),
+            "Unknown",
+        )
+
+    async def __send_single_message__(
+        self, message_to_send: MessageSendRequest
+    ) -> bool:
         if not self.__meshcore_interface__:
-            return
+            return False
 
-        messages_to_attempt: list[MessageSendRequest] = []
+        is_successful: bool = False
 
-        while not self.__sending_queue__.empty():
-            messages_to_attempt.append(self.__sending_queue__.get())
+        try:
+            public_key: str = self.__get_key_by_contact_name__(
+                message_to_send.recipient
+            )
+            recipient = {
+                "public_key": public_key,
+                "adv_name": message_to_send.recipient,
+            }
+            result = await self.__meshcore_interface__.commands.send_msg(
+                recipient, message_to_send.text
+            )
 
-        while messages_to_attempt:
-            message_to_send: MessageSendRequest = messages_to_attempt.pop(0)
+            is_successful = (result is not None) and (result.type == EventType.MSG_SENT)
+        except Exception as e:
+            is_successful = False
 
-            if not message_to_send.is_sendable():
-                continue
-
-            is_successful: bool = False
-
-            try:
-                result = await self.__meshcore_interface__.commands.send_msg(
-                    message_to_send.recipient, message_to_send.text
-                )
-
-                is_successful = (result is not None) and (
-                    result.type == EventType.MSG_SENT
-                )
-            except Exception as e:
-                is_successful = False
-
-            if not is_successful:
-                message_to_send.decrement_retries()
-                self.__sending_queue__.put(message_to_send)
+        return is_successful
 
     def __is_connected__(self) -> bool:
         """
@@ -136,9 +128,8 @@ class MeshcoreSerial:
         self.__meshcore_interface__ = await self.__connect_to_device__()
         self.contacts = await self.__get_contacts__()
 
-        self.short_name = str(self.__meshcore_interface__.self_info["name"])
-        self.long_name = str(self.__meshcore_interface__.self_info["name"])
-        self.device_id = str(self.__meshcore_interface__.self_info["name"])
+        self.device_name = str(self.__meshcore_interface__.self_info["name"])
+        self.device_id = self.device_name
 
         return self.__meshcore_interface__
 
@@ -155,12 +146,10 @@ class MeshcoreSerial:
 
         return list(contacts.values()) if contacts else []
 
-    def __get_available_serial_ports__(self) -> list[str]:
-        all_ports = serial.tools.list_ports.comports()
-        return [port.device for port in all_ports]
-
     async def __connect_to_device__(self) -> MeshCore:
-        ports = self.__get_available_serial_ports__()
+        all_ports = serial.tools.list_ports.comports()
+        ports = [port.device for port in all_ports]
+
         for port in ports:
             print(f"Trying to connect to Meshcore device on {port}...")
 
@@ -198,7 +187,7 @@ async def main():
             print("Connecting to Meshcore device...")
             await meshcore_device.service()
 
-        print(f"Connected to {meshcore_device.short_name}")
+        print(f"Connected to {meshcore_device.device_name}")
 
         # Example usage
         meshcore_device.send(
@@ -217,4 +206,9 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    import asyncio
+
+    from devices.interfaces.messaging_device import test_loop
+
+    meshcore_device: MeshcoreSerial = MeshcoreSerial()
+    asyncio.run(test_loop(meshcore_device, "👑Crown Hill"))
