@@ -13,7 +13,7 @@ if __name__ == "__main__":
     # This is only needed if running the unit tests directly
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from communication.recieved_message import RecievedMessage
+from communication.received_message import ReceivedMessage
 from devices.interfaces.messaging_device import MessagingDevice
 
 if __name__ == "__main__":
@@ -30,14 +30,14 @@ from communication.message_send_request import MessageSendRequest
 class MeshtasticSerial(MessagingDevice):
     def __init__(self):
         super().__init__()
-        self.__meshastic_interface__: meshtastic.serial_interface.SerialInterface = (
-            self.__reconnect__()
-        )
+        self.__meshastic_interface__: (
+            meshtastic.serial_interface.SerialInterface | None
+        ) = None
 
     def __is_device_allocated__(self) -> bool:
         return self.__meshastic_interface__ is not None
 
-    async def __recieve_message__(self) -> bool:
+    async def __receive_message__(self) -> bool:
         return False
 
     async def __send_single_message__(self, request: MessageSendRequest):
@@ -56,14 +56,14 @@ class MeshtasticSerial(MessagingDevice):
         """
         Check if the Meshtastic device is connected.
         """
-        is_interface_present: bool = self.__meshastic_interface__ is not None
         is_connected: bool = (
-            is_interface_present and self.__meshastic_interface__.isConnected.is_set()
+            self.__meshastic_interface__ is not None
+            and self.__meshastic_interface__.isConnected.is_set()
         )
 
         return is_connected
 
-    def __reconnect__(self) -> meshtastic.serial_interface.SerialInterface:
+    async def __reconnect__(self):
         """
         Close the connection to the Meshtastic device.
         """
@@ -73,14 +73,10 @@ class MeshtasticSerial(MessagingDevice):
         ):
             self.__meshastic_interface__.close()
 
-        self.__meshastic_interface__: meshtastic.serial_interface.SerialInterface = (
-            self.__connect_to_device__()
-        )
+        self.__meshastic_interface__ = self.__connect_to_device__()
         self.device_name = str(self.__meshastic_interface__.getShortName())
         self.device_id = f"!{hex(self.__meshastic_interface__.myInfo.my_node_num).replace('0x', '')}"  # type: ignore
         pub.subscribe(self.__on_receive__, "meshtastic.receive")
-
-        return self.__meshastic_interface__
 
     def __connect_to_device__(self) -> meshtastic.serial_interface.SerialInterface:
         all_ports = serial.tools.list_ports.comports()
@@ -116,11 +112,11 @@ class MeshtasticSerial(MessagingDevice):
             ):
                 sender: str = packet["fromId"]
                 recipient: str = packet["toId"]
-                test: str = packet["decoded"]["payload"].decode("utf-8")
-                incoming_message: RecievedMessage = RecievedMessage(
-                    sender, recipient, test
+                text: str = packet["decoded"]["payload"].decode("utf-8")
+                incoming_message: ReceivedMessage = ReceivedMessage(
+                    sender, recipient, text
                 )
-                self.__recieving_queue__.append(incoming_message)
+                self.__receiving_queue__.append(incoming_message)
         except KeyError as e:
             print(f"Error processing packet: {e}")
 

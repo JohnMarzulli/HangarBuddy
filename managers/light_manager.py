@@ -5,14 +5,30 @@ from managers.sensors_manager import SensorsManager
 
 
 class LightManager:
+    """
+    Manages the light sensor. Causes readings to be taken, saves the latest measurements.
+    """
+
     def __init__(self, location_name: str, sensors: SensorsManager, alert_callback):
-        self.__sensors_ = sensors
+        """
+        Initialize the sensor manager.
+
+        Args:
+            location_name (str): A friendly name of where the sensor is.
+            sensors (SensorsManager): The manager for all of the sensors.
+            alert_callback (_type_): A function to call if the light status changes.
+        """
+        self.__sensors__ = sensors
         self.__location_name__ = location_name.strip().lower()
         self.__alert_callback__ = alert_callback
         self.__last_brightness__: LightLevel = LightLevel.UNKNOWN
 
     def update(self) -> None:
-        light_sensor_reading = self.__sensors_.current_light_sensor_reading
+        """
+        Services the manager so it is working with the latest measurements.
+        Will cause an alert to be changed if the lighting changes.
+        """
+        light_sensor_reading = self.__sensors__.current_light_sensor_reading
 
         if light_sensor_reading is None:
             return

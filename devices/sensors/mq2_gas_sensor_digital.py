@@ -27,6 +27,12 @@ MQ2_DIGITAL_INPUT_PIN: int = 26
 class Mq2GasSensorDigital(GasSensor):
     """
     Class to help with the gas sensor.
+
+    This is for the "digital" version of the sensor that sets the pin
+    low if it's internal threshold is met.
+
+    If the sensor fails, is disconnected, or other issue then the alert
+    will be met since current is no longer being sent to the input pin.
     """
 
     def __init__(

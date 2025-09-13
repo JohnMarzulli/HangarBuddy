@@ -3,8 +3,7 @@ import time
 import serial.tools.list_ports
 
 # https://github.com/meshcore-dev/meshcore_py
-
-# TODO: Make generic class for contact information
+# https://pypi.org/project/meshcore/
 
 # Current version of Meshcore (2.0) requires firmware 1.7.4
 # Any newer version of the meshcore firmware will not work
@@ -21,22 +20,21 @@ if __name__ == "__main__":
 from meshcore import EventType, MeshCore
 
 from communication.message_send_request import MessageSendRequest
-from communication.recieved_message import RecievedMessage
+from communication.received_message import ReceivedMessage
 from devices.interfaces.messaging_device import MessagingDevice
-
-# https://pypi.org/project/meshcore/
 
 
 class MeshcoreSerial(MessagingDevice):
     def __init__(self):
         super().__init__()
 
+        self.contacts: list[dict] = []
         self.__meshcore_interface__: MeshCore | None = None
 
     def __is_device_allocated__(self) -> bool:
         return self.__meshcore_interface__ is not None
 
-    async def __recieve_message__(self) -> bool:
+    async def __receive_message__(self) -> bool:
         if not self.__meshcore_interface__:
             return False
 
@@ -56,10 +54,10 @@ class MeshcoreSerial(MessagingDevice):
                 recipient: str = (
                     self.device_id if result.payload["type"] == "PRIV" else "ALL"
                 )
-                incoming_message: RecievedMessage = RecievedMessage(
+                incoming_message: ReceivedMessage = ReceivedMessage(
                     sender, recipient, result.payload["text"]
                 )
-                self.__recieving_queue__.append(incoming_message)
+                self.__receiving_queue__.append(incoming_message)
         except Exception as e:
             print(f"Error while receiving messages: {e}")
 
@@ -121,7 +119,7 @@ class MeshcoreSerial(MessagingDevice):
 
         return self.__meshcore_interface__.connection_manager.is_connected
 
-    async def __reconnect__(self) -> MeshCore:
+    async def __reconnect__(self):
         """
         Close the connection to the Meshtastic device.
         """
@@ -130,8 +128,6 @@ class MeshcoreSerial(MessagingDevice):
 
         self.device_name = str(self.__meshcore_interface__.self_info["name"])
         self.device_id = self.device_name
-
-        return self.__meshcore_interface__
 
     async def __get_contacts__(self):
         if not self.__meshcore_interface__:
@@ -176,33 +172,6 @@ class MeshcoreSerial(MessagingDevice):
         raise ConnectionError(
             "No Meshcore device found on any serial port, or all the devices is already connected."
         )
-
-
-async def main():
-    try:
-        meshcore_device: MeshcoreSerial = MeshcoreSerial()
-
-        while not meshcore_device.__is_connected__():
-            time.sleep(1)
-            print("Connecting to Meshcore device...")
-            await meshcore_device.service()
-
-        print(f"Connected to {meshcore_device.device_name}")
-
-        # Example usage
-        meshcore_device.send(
-            MessageSendRequest(meshcore_device.contacts[0], "Test Message!")
-        )
-        print("Message sent successfully.")
-
-        while True:
-            await meshcore_device.service()
-            messages = meshcore_device.get_incoming_messages()
-            for msg in messages:
-                print(f"Received message: {msg}")
-            time.sleep(1)
-    except ConnectionError as e:
-        print(f"Error: {e}")
 
 
 if __name__ == "__main__":

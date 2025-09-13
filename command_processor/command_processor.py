@@ -84,6 +84,15 @@ class CommandProcessor:
         relay_manager: RelayManager,
         gas_safety_manager: GasSafetyManager,
     ):
+        """
+        Initializes the command processor. This takes authenticated and authorized
+        incoming messages and then turns them into actions.
+
+        Args:
+            sensor_manager (SensorsManager): The code managing sensor reading.
+            relay_manager (RelayManager): The code that manages the electrical relay.
+            gas_safety_manager (GasSafetyManager): The code that manages alerts from the gas sensor.
+        """
         self.__system_start_time__ = datetime.now(timezone.utc)
         self.__sensors_manager__: SensorsManager = sensor_manager
         self.__relay_manager__: RelayManager = relay_manager
@@ -108,7 +117,7 @@ class CommandProcessor:
             __restart__()
             return "System restarting."
         elif self.__is_command__(HEATER_ON_COMMAND, msg):
-            if not self.__gas_safety_manager__.can_turn_on_heater():
+            if not self.__gas_safety_manager__.can_turn_on_relay():
                 return "Cannot turn on heater: Gas detected!"
             response_message: str = (
                 "Heater turning ON."
@@ -156,6 +165,12 @@ class CommandProcessor:
         return text_utils.get_time_text(time_up.total_seconds())
 
     def get_short_status_text(self) -> list[str]:
+        """
+        Returns a short form version of the status.
+
+        Returns:
+            list[str]: A set of lines of status.
+        """
         status_text: list[str] = ["", ""]
 
         is_relay_on: bool = self.__relay_manager__.is_relay_on()
@@ -178,6 +193,12 @@ class CommandProcessor:
         return status_text
 
     def get_full_status_text(self) -> str:
+        """
+        Returns the full status as a single string.
+
+        Returns:
+            str: The current status, as a single string.
+        """
         # Example: return a summary of sensor states
         is_relay_on: bool = self.__relay_manager__.is_relay_on()
 

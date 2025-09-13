@@ -5,7 +5,7 @@ Module to hold common utilities.
 
 def get_singular_or_plural(value, unit):
     """
-    Returns the value with a singuar
+    Returns the value with a singular
     or plural form.
     """
 

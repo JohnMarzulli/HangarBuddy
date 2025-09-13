@@ -51,7 +51,7 @@ from command_processor.command_processor import CommandProcessor
 from communication.meshcore_serial import MeshcoreSerial
 from communication.meshtastic_serial import MeshtasticSerial
 from communication.message_send_request import MessageSendRequest
-from communication.recieved_message import RecievedMessage
+from communication.received_message import ReceivedMessage
 from devices.interfaces.messaging_device import MessagingDevice
 from displays.sf_1602_lcd import Sf1602Display
 from lib import local_debug
@@ -104,10 +104,10 @@ def log_message_sent(recipient: str, message: str):
     LOGGER.info(log_message)
 
 
-def log_message_recieved(message: RecievedMessage):
+def log_message_received(message: ReceivedMessage):
     lines = message.text.split("\n")
 
-    log_message: str = "RECIEVED\n"
+    log_message: str = "RECEIVED\n"
     log_message += f"    FROM: {message.sender}\n"
     log_message += f"    AT: {__get_time_text__()}\n"
     log_message += "    ```\n"
@@ -136,7 +136,7 @@ def send_message(message: str) -> bool:
             LOGGER.error(f"Error sending message to {recipient}, EX={ex}")
 
     if not is_one_message_sent:
-        LOGGER.error("ERROR trying to send message to any authorized recievers")
+        LOGGER.error("ERROR trying to send message to any authorized receivers")
 
     return is_one_message_sent
 
@@ -189,7 +189,7 @@ def process_messages(command_processor: CommandProcessor):
 
             continue
 
-        log_message_recieved(message)
+        log_message_received(message)
         response = command_processor.process(message.text)
 
         if response is not None and len(response) > 0:
