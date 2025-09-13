@@ -130,7 +130,7 @@ def test_off():
     power_relay = PowerRelay("Heater", DEFAULT_PIN)
     power_relay.switch_high()
     power_relay.switch_low()
-    assert power_relay.get_io_pin_status() == 1
+    assert power_relay.get_io_pin_status() == 0
 
 
 if __name__ == "__main__":

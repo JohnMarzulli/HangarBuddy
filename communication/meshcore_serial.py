@@ -119,7 +119,7 @@ class MeshcoreSerial(MessagingDevice):
 
         return self.__meshcore_interface__.connection_manager.is_connected
 
-    async def __reconnect__(self) -> MeshCore:
+    async def __reconnect__(self):
         """
         Close the connection to the Meshtastic device.
         """
@@ -128,8 +128,6 @@ class MeshcoreSerial(MessagingDevice):
 
         self.device_name = str(self.__meshcore_interface__.self_info["name"])
         self.device_id = self.device_name
-
-        return self.__meshcore_interface__
 
     async def __get_contacts__(self):
         if not self.__meshcore_interface__:

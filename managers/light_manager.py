@@ -18,7 +18,7 @@ class LightManager:
             sensors (SensorsManager): The manager for all of the sensors.
             alert_callback (_type_): A function to call if the light status changes.
         """
-        self.__sensors_ = sensors
+        self.__sensors__ = sensors
         self.__location_name__ = location_name.strip().lower()
         self.__alert_callback__ = alert_callback
         self.__last_brightness__: LightLevel = LightLevel.UNKNOWN
@@ -28,7 +28,7 @@ class LightManager:
         Services the manager so it is working with the latest measurements.
         Will cause an alert to be changed if the lighting changes.
         """
-        light_sensor_reading = self.__sensors_.current_light_sensor_reading
+        light_sensor_reading = self.__sensors__.current_light_sensor_reading
 
         if light_sensor_reading is None:
             return

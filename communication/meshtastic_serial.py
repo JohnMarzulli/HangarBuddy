@@ -30,9 +30,9 @@ from communication.message_send_request import MessageSendRequest
 class MeshtasticSerial(MessagingDevice):
     def __init__(self):
         super().__init__()
-        self.__meshastic_interface__: meshtastic.serial_interface.SerialInterface = (
-            self.__reconnect__()
-        )
+        self.__meshastic_interface__: (
+            meshtastic.serial_interface.SerialInterface | None
+        ) = None
 
     def __is_device_allocated__(self) -> bool:
         return self.__meshastic_interface__ is not None
@@ -56,14 +56,14 @@ class MeshtasticSerial(MessagingDevice):
         """
         Check if the Meshtastic device is connected.
         """
-        is_interface_present: bool = self.__meshastic_interface__ is not None
         is_connected: bool = (
-            is_interface_present and self.__meshastic_interface__.isConnected.is_set()
+            self.__meshastic_interface__ is not None
+            and self.__meshastic_interface__.isConnected.is_set()
         )
 
         return is_connected
 
-    def __reconnect__(self) -> meshtastic.serial_interface.SerialInterface:
+    async def __reconnect__(self):
         """
         Close the connection to the Meshtastic device.
         """
@@ -73,14 +73,10 @@ class MeshtasticSerial(MessagingDevice):
         ):
             self.__meshastic_interface__.close()
 
-        self.__meshastic_interface__: meshtastic.serial_interface.SerialInterface = (
-            self.__connect_to_device__()
-        )
+        self.__meshastic_interface__ = self.__connect_to_device__()
         self.device_name = str(self.__meshastic_interface__.getShortName())
         self.device_id = f"!{hex(self.__meshastic_interface__.myInfo.my_node_num).replace('0x', '')}"  # type: ignore
         pub.subscribe(self.__on_receive__, "meshtastic.receive")
-
-        return self.__meshastic_interface__
 
     def __connect_to_device__(self) -> meshtastic.serial_interface.SerialInterface:
         all_ports = serial.tools.list_ports.comports()
@@ -116,9 +112,9 @@ class MeshtasticSerial(MessagingDevice):
             ):
                 sender: str = packet["fromId"]
                 recipient: str = packet["toId"]
-                test: str = packet["decoded"]["payload"].decode("utf-8")
+                text: str = packet["decoded"]["payload"].decode("utf-8")
                 incoming_message: ReceivedMessage = ReceivedMessage(
-                    sender, recipient, test
+                    sender, recipient, text
                 )
                 self.__receiving_queue__.append(incoming_message)
         except KeyError as e:

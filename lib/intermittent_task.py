@@ -22,15 +22,15 @@ class IntermittentTask(object):
                 self.__last_run__ = datetime.datetime.now(datetime.timezone.utc)
             except Exception as e:
                 # + sys.exc_info()[0]
-                error_mesage = f"EX({self.__task_name__}):{e}"
+                error_message = f"EX({self.__task_name__}):{e}"
 
-                print(error_mesage)
+                print(error_message)
 
     def __init__(
         self, task_name: str, task_interval: float, task_callback, logger=None
     ):
         """
-        Creates a new reccurring task.
+        Creates a new recurring task.
         The call back is called at the given time schedule.
         """
 

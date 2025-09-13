@@ -20,7 +20,7 @@ class GasSafetyManager:
             relay (RelayManager): The manager for the relay. This allows for the safety manager to turn off the relay.
             alert_callback (_type_): Function to call when an alert needs to be sent.
         """
-        self.__sensors_ = sensors
+        self.__sensors__ = sensors
         self.__relay__ = relay
         self.__alert_callback__ = alert_callback
         self.__is_gas_detected__ = False
@@ -28,7 +28,7 @@ class GasSafetyManager:
 
     def update(self) -> bool:
         now = time.time()
-        gas_sensor_reading = self.__sensors_.current_gas_sensor_reading
+        gas_sensor_reading = self.__sensors__.current_gas_sensor_reading
         is_relay_on: bool = self.__relay__.is_relay_on()
 
         if gas_sensor_reading is None:
