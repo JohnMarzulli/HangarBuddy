@@ -51,7 +51,7 @@ class GasSensor(object):
         return (
             f"{self.current_value}PPM"
             if self.current_value is not None
-            else "UNAVILABLE"
+            else "UNAVAILABLE"
         )
 
     def update(self) -> GasSensorResult:

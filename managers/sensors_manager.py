@@ -29,7 +29,7 @@ from devices.mocks.simulated_temperature_sensor import SimulatedTemperatureSenso
 DEFAULT_SENSOR_LOG = "sensors.log"
 DEFAULT_LIGHT_SENSOR_UPDATE_INTERVAL = 1
 DEFAULT_GAS_SENSOR_UPDATE_INTERVAL = 15
-DEFAULT_TEMPERATURE_SENSOR_UPDATE_INTEVAL = 120
+DEFAULT_TEMPERATURE_SENSOR_UPDATE_INTERVAL = 120
 
 
 class SensorsManager:
@@ -91,7 +91,7 @@ class SensorsManager:
 
         self.__temperature_sensor_task__: IntermittentTask = IntermittentTask(
             "__update_temperature_sensor__",
-            DEFAULT_TEMPERATURE_SENSOR_UPDATE_INTEVAL,
+            DEFAULT_TEMPERATURE_SENSOR_UPDATE_INTERVAL,
             (
                 self.__update_temperature_sensor__
                 if configuration.is_temp_probe_enabled
@@ -168,7 +168,7 @@ class SensorsManager:
 
     def __update_temperature_sensor__(self):
         """
-        Reads the temperature senso and keep the results.
+        Reads the temperature sensor and keep the results.
         """
 
         if not self.__temperature_sensor__.enabled:
