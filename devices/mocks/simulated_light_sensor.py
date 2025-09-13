@@ -13,7 +13,7 @@ class SimulatedLightSensor(LightSensor):
         self.enabled: bool = True
         self.current_value: LightSensorResult | None = None
 
-        self.__simulated_lux__: SensorSimulator = SensorSimulator(0, 100, 0.1)
+        self.__simulated_lux__: SensorSimulator = SensorSimulator(0, 100, 1)
 
     def update(self) -> LightSensorResult | None:
         current_value: float = self.__simulated_lux__.read()
