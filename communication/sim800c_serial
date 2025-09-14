@@ -1,0 +1,185 @@
+import time
+
+import serial
+import serial.tools.list_ports
+
+if __name__ == "__main__":
+    import os
+    import sys
+
+    # Ensure the parent directory is in sys.path so 'managers' can be imported
+    # This is only needed if running the unit tests directly
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from communication.message_send_request import MessageSendRequest
+from communication.received_message import ReceivedMessage
+from devices.interfaces.messaging_device import MessagingDevice
+from lib.system_level_logging import SystemLevelLogger
+
+
+class Sim800cSerial(MessagingDevice):
+    def __init__(self, logger: SystemLevelLogger):
+        super().__init__(logger)
+
+        self.__connection__: serial.Serial | None = None
+
+    def __is_device_allocated__(self) -> bool:
+        return self.__connection__ is not None
+
+    async def __receive_message__(self) -> bool:
+        if self.__connection__ is None:
+            return False
+
+        # put into SMS mode
+
+        self.__set_sms_mode__()
+        # get all text messages currently on SIM Card
+        self.__send_command__(self.__connection__, 'AT+CMGL="ALL"\r')
+        time.sleep(3)
+        is_message_added: bool = False
+
+        while message_header := self.__readline_serial__(self.__connection__):
+            if "+CMGL:" in message_header:
+                message_text = self.__readline_serial__(self.__connection__) or ""
+                incoming_message: ReceivedMessage = ReceivedMessage(message_header, message_header, message_text)
+                self.__receiving_queue__.append(incoming_message)
+
+                time.sleep(1)
+
+                is_message_added = True
+
+        return is_message_added
+
+    async def __send_single_message__(self, message_to_send: MessageSendRequest) -> bool:
+        if self.__connection__ is None:
+            return False
+
+        self.__set_sms_mode__()
+        self.__connection__.write("\r\r\n".encode("utf-8"))
+        if self.__wait_for_command_response__():
+            self.__logger__.info(self.__readline_serial__(self.__connection__) or "")
+        self.__send_command__(self.__connection__, f'AT+CMGS="{message_to_send.recipient}"')
+        self.__wait_for_command_response__()
+        self.__logger__.info(self.__readline_serial__(self.__connection__) or "")
+        self.__connection__.write("\r".encode("utf-8"))
+        self.__wait_for_command_response__()
+        self.__logger__.info(self.__readline_serial__(self.__connection__) or "")
+        self.__connection__.write("\r".encode("utf-8"))
+        self.__wait_for_command_response__()
+        self.__logger__.info(self.__readline_serial__(self.__connection__) or "")
+        self.__connection__.write(f"{message_to_send.text}\x1a".encode("utf-8"))
+        self.__wait_for_command_response__()
+        self.__logger__.info(self.__readline_serial__(self.__connection__) or "")
+
+        return True
+
+    def __is_connected__(self) -> bool:
+        """
+        Check if the device is connected.
+        """
+
+        return self.__is_device_allocated__()
+
+    async def __reconnect__(self):
+        """
+        Close the connection to the Meshtastic device.
+        """
+        all_ports = serial.tools.list_ports.comports()
+        ports = [port.device for port in all_ports]
+
+        for port in ports:
+            try:
+                connection: serial.Serial = serial.Serial(port, 9600)
+                if response := self.__send_command__(connection, "AT+COPS?"):
+                    self.__connection__ = connection
+
+                    return
+            except Exception as ex:
+                self.__logger__.error(f"Attempted to connect to {port}, got EX={ex}")
+
+        raise ConnectionError("Unable to connect to a USB/Cell Modem")
+
+    def get_carrier(self):
+        """
+        Returns the carrier.
+        """
+        return self.__send_command__(self.__connection__, "AT+COPS?")
+
+    def __set_sms_mode__(self):
+        """
+        Puts the card into SMS mode.
+        """
+        return self.__send_command__(self.__connection__, "AT+CMGF=1")
+
+    def __send_command__(self, connection: serial.Serial | None, command: str, add_eol: bool = True) -> list[str]:
+        """send a command to the modem"""
+
+        if connection is None:
+            return []
+
+        try:
+            command = command
+            if add_eol:
+                command += "\r\r\n "
+
+            connection.write(command.encode("utf-8"))
+            connection.flush()
+            time.sleep(2)
+
+            ret = []
+
+            # "Starting read/wait"
+            while msg := self.__readline_serial__(connection):
+                msg = msg.replace("\r", "")
+                msg = msg.replace("\n", "")
+                if msg != "":
+                    self.__logger__.info(msg)
+                    ret.append(msg)
+
+            return ret
+        except Exception as ex:
+            self.__logger__.error("__send_command__ => EX={ex}")
+
+        return []
+
+    def __wait_for_command_response__(self):
+        """
+        Waits until the command has a response
+        """
+
+        if self.__connection__ is None:
+            return False
+
+        start_time = time.time()
+        while time.time() - start_time < 2 and self.__connection__.in_waiting < 1:
+            time.sleep(0.5)
+
+        return self.__connection__.in_waiting > 0
+
+    def __readline_serial__(self, connection: serial.Serial) -> str | None:
+        if connection is None:
+            return None
+
+        time.sleep(0.2)
+
+        if connection.in_waiting <= 0:
+            return None
+
+        return str(connection.readline()).strip()
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    from configuration import Configuration
+    from devices.interfaces.messaging_device import test_loop
+
+    logger: SystemLevelLogger = SystemLevelLogger(Configuration(), "CellPhoneModemTester")
+
+    cellphone_device: Sim800cSerial = Sim800cSerial(logger)
+    # Make sure that we get a connection
+    asyncio.run(cellphone_device.service())
+    carrier_response: list[str] = cellphone_device.get_carrier()
+    for resp in carrier_response:
+        logger.info(resp)
+    asyncio.run(test_loop(cellphone_device, "206-679-5094"))
