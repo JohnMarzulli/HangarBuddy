@@ -143,7 +143,7 @@ class CommandProcessor:
             return self.get_full_status_text()
         elif self.__is_command__(TEMPERATURE_COMMAND, msg):
             temp = self.__sensors_manager__.current_temperature_sensor_reading
-            return f"Temperature: {temp.get_fahrenheit() if temp is not None else "UNKNOWN"}"
+            return f"Temperature: {temp.get_fahrenheit() if temp is not None else 'UNKNOWN'}"
         elif self.__is_command__(LIGHTS_COMMAND, msg):
             light = self.__sensors_manager__.current_light_sensor_reading
             light_text = "UNAVAILABLE" if light is None else light.get_light_level().name

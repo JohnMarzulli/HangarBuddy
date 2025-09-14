@@ -32,6 +32,6 @@ class TemperatureSensor:
         Services the sensor. May cause a new reading to be taken.
 
         Returns:
-            int | None: The latest temperature reading in Fahrenheit.
+            TemperatureResult | None: The latest temperature reading result, or None if unavailable.
         """
         return None

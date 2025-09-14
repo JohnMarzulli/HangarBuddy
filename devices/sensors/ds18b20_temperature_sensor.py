@@ -110,7 +110,7 @@ class Ds18b20TemperatureSensor(TemperatureSensor):
         Services the sensor. May cause a new reading to be taken.
 
         Returns:
-            int | None: The latest temperature reading in Fahrenheit.
+            TemperatureResult | None: The latest temperature reading, which contains both Celsius and Fahrenheit values.
         """
         if not self.enabled:
             return None
