@@ -230,7 +230,6 @@ def __update_display__(
 
 # TODO: Make display event & message driven
 # TODO: Send messages to cycle display
-# TODO: Make temp result have both F & C
 # TODO: See if there is a way to improve the accuracy of the temp sensor
 # TODO: Command to return hop count & route
 

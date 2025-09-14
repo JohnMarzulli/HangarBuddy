@@ -21,6 +21,7 @@ from devices.interfaces.light_sensor import LightSensor
 from devices.interfaces.temperature_sensor import TemperatureSensor
 from devices.results.gas_sensor_result import GasSensorResult
 from devices.results.light_sensor_result import LightSensorResult
+from devices.results.temperature_result import TemperatureResult
 from lib.intermittent_task import IntermittentTask
 from lib.system_level_logging import SystemLevelLogger
 
@@ -88,7 +89,7 @@ class SensorsManager:
 
         self.current_gas_sensor_reading: GasSensorResult | None = None
         self.current_light_sensor_reading: LightSensorResult | None = None
-        self.current_temperature_sensor_reading: int | None = None
+        self.current_temperature_sensor_reading: TemperatureResult | None = None
 
         self.update()
 
@@ -162,6 +163,6 @@ class SensorsManager:
         self.current_temperature_sensor_reading = self.__temperature_sensor__.update()
 
         if self.current_temperature_sensor_reading is not None:
-            self.__logger__.info(f"TEMP: Current={self.current_temperature_sensor_reading}F")
+            self.__logger__.info(f"TEMP: Current={self.current_temperature_sensor_reading.get_fahrenheit()}")
         else:
             self.__logger__.warning("TEMP: ERROR READING SENSOR")

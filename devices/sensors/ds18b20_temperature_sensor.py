@@ -11,10 +11,8 @@ if __name__ == "__main__":
     # This is only needed if running the unit tests directly
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from devices.interfaces.temperature_sensor import (
-    TemperatureSensor,
-    celsius_to_fahrenheit,
-)
+from devices.interfaces.temperature_sensor import TemperatureSensor
+from devices.results.temperature_result import TemperatureResult
 from lib.system_level_logging import SystemLevelLogger
 
 # ---------------------------------------------------------------
@@ -37,7 +35,7 @@ from lib.system_level_logging import SystemLevelLogger
 # https://www.sunfounder.com/learn/Sensor-Kit-v1-0-for-Raspberry-Pi/lesson-17-ds18b20-temperature-sensor-sensor-kit-v1-0-for-pi.html
 
 
-def __read_sensor__(sensor_id: str) -> float | None:
+def __read_sensor__(sensor_id: str) -> TemperatureResult | None:
     """
     Reads temperature from sensor and prints to stdout
     id is the id of the sensor.
@@ -53,19 +51,18 @@ def __read_sensor__(sensor_id: str) -> float | None:
         temperature = float(temperaturedata[2:])
         temperature /= 1000
         print(f"Sensor: {sensor_id}" + " : %0.3f C" % temperature)
-        print(f"Sensor: {sensor_id}" + " : %0.3f F" % celsius_to_fahrenheit(temperature))
 
-        return celsius_to_fahrenheit(temperature)
+        return TemperatureResult(temperature)
     except Exception:
         return None
 
 
-def __read_sensors__() -> list[float]:
+def __read_sensors__() -> list[TemperatureResult]:
     """
     Reads temperature from all sensors found in /sys/bus/w1/devices/
     starting with "28-...
     """
-    temperature_probe_values: list[float] = []
+    temperature_probe_values: list[TemperatureResult] = []
     driver_files: list[str] = []
 
     try:
@@ -106,21 +103,21 @@ class Ds18b20TemperatureSensor(TemperatureSensor):
         """
         super().__init__(logger)
         self.enabled: bool = True
-        self.current_value: int | None = None
+        self.current_value: TemperatureResult | None = None
 
-    def update(self) -> int | None:
+    def update(self) -> TemperatureResult | None:
         """
         Services the sensor. May cause a new reading to be taken.
 
         Returns:
-            int | None: The latest temperature reading in Fahrenheit.
+            TemperatureResult | None: The latest temperature reading, which contains both Celsius and Fahrenheit values.
         """
         if not self.enabled:
             return None
 
         temperature_values = __read_sensors__()
         if temperature_values is not None and len(temperature_values) > 0:
-            self.current_value = int(temperature_values[0])
+            self.current_value = temperature_values[0]
         else:
             self.current_value = None
             self.enabled = False
@@ -141,8 +138,11 @@ if __name__ == "__main__":
     doctest.testmod()
 
     sensor: Ds18b20TemperatureSensor = Ds18b20TemperatureSensor(SystemLevelLogger(Configuration(), "TempSensorTest"))
-    temp: int | None = sensor.update()
+    temp: TemperatureResult | None = sensor.update()
 
-    print(f"{temp}F")
+    if temp is not None:
+        print(f"{temp.get_celsius()}/{temp.get_fahrenheit()}")
+    else:
+        raise RuntimeError("Unable to get a reading from the sensor")
 
     print("Tests finished")

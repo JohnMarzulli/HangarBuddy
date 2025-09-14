@@ -9,6 +9,7 @@ if __name__ == "__main__":
 
 from datetime import datetime, timezone
 
+from devices.results.temperature_result import TemperatureResult
 from lib import local_debug, text_utils
 from managers.gas_safety_manager import GasSafetyManager
 from managers.relay_manager import RelayManager
@@ -142,7 +143,7 @@ class CommandProcessor:
             return self.get_full_status_text()
         elif self.__is_command__(TEMPERATURE_COMMAND, msg):
             temp = self.__sensors_manager__.current_temperature_sensor_reading
-            return f"Temperature: {temp}"
+            return f"Temperature: {temp.get_fahrenheit() if temp is not None else 'UNKNOWN'}"
         elif self.__is_command__(LIGHTS_COMMAND, msg):
             light = self.__sensors_manager__.current_light_sensor_reading
             light_text = "UNAVAILABLE" if light is None else light.get_light_level().name
@@ -179,8 +180,11 @@ class CommandProcessor:
 
             return status_text
 
-        if self.__sensors_manager__.__temperature_sensor__.enabled:
-            status_text[0] = f"TEMP: {self.__sensors_manager__.current_temperature_sensor_reading}F"
+        if (
+            self.__sensors_manager__.__temperature_sensor__.enabled
+            and self.__sensors_manager__.current_temperature_sensor_reading is not None
+        ):
+            status_text[0] = f"TEMP: {self.__sensors_manager__.current_temperature_sensor_reading.get_fahrenheit()}"
         else:
             status_text[0] = "TEMP: UNAVAILABLE"
 
@@ -212,12 +216,12 @@ class CommandProcessor:
         return status_message
 
     def __add_temperature_status__(self, status_message: str) -> str:
-        temp: int | None = self.__sensors_manager__.current_temperature_sensor_reading
+        temp: TemperatureResult | None = self.__sensors_manager__.current_temperature_sensor_reading
 
         if temp is None:
             return status_message
 
-        temp_reading = f"{str(temp)}F" if temp is not None else "UNK"
+        temp_reading = f"{str(temp.get_fahrenheit())}" if temp is not None else "UNK"
 
         status_message += f"Temp: {temp_reading}\n"
 
