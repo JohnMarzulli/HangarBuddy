@@ -145,9 +145,7 @@ class CommandProcessor:
             return f"Temperature: {temp}"
         elif self.__is_command__(LIGHTS_COMMAND, msg):
             light = self.__sensors_manager__.current_light_sensor_reading
-            light_text = (
-                "UNAVAILABLE" if light is None else light.get_light_level().name
-            )
+            light_text = "UNAVAILABLE" if light is None else light.get_light_level().name
             return f"Light: {light_text}"
         elif self.__is_command__(HELP_COMMAND, msg):
             return self.__get_help_text__()
@@ -182,9 +180,7 @@ class CommandProcessor:
             return status_text
 
         if self.__sensors_manager__.__temperature_sensor__.enabled:
-            status_text[0] = (
-                f"TEMP: {self.__sensors_manager__.current_temperature_sensor_reading}F"
-            )
+            status_text[0] = f"TEMP: {self.__sensors_manager__.current_temperature_sensor_reading}F"
         else:
             status_text[0] = "TEMP: UNAVAILABLE"
 
@@ -243,11 +239,7 @@ class CommandProcessor:
         if light is None:
             return status_message
 
-        light_reading = (
-            light.get_light_level().name
-            if light is not None and light.full_spectrum is not None
-            else "UNK"
-        )
+        light_reading = light.get_light_level().name if light is not None and light.full_spectrum is not None else "UNK"
         status_message += f"Light: {light_reading}\n"
 
         return status_message
@@ -272,23 +264,19 @@ if __name__ == "__main__":
         print(f"Alert: {message}")
 
     import doctest
-    from logging import Logger
 
     import configuration
+    from lib.system_level_logging import SystemLevelLogger
 
     print("Starting tests.")
 
     doctest.testmod()
     configuration = configuration.Configuration()
-    logger: Logger = Logger("CommandProcessorTest")
-    sensors_manager: SensorsManager = SensorsManager(configuration)
+    logger: SystemLevelLogger = SystemLevelLogger(configuration, "CommandProcessorTest")
+    sensors_manager: SensorsManager = SensorsManager(configuration, logger)
     relay_manager: RelayManager = RelayManager(configuration, logger, __send_message__)
-    gas_safety_manager: GasSafetyManager = GasSafetyManager(
-        sensors_manager, relay_manager, __send_message__
-    )
-    command_processor: CommandProcessor = CommandProcessor(
-        sensors_manager, relay_manager, gas_safety_manager
-    )
+    gas_safety_manager: GasSafetyManager = GasSafetyManager(sensors_manager, relay_manager, __send_message__)
+    command_processor: CommandProcessor = CommandProcessor(sensors_manager, relay_manager, gas_safety_manager)
 
     assert command_processor is not None, "CommandProcessor should be initialized."
 

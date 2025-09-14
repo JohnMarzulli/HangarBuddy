@@ -22,11 +22,12 @@ from meshcore import EventType, MeshCore
 from communication.message_send_request import MessageSendRequest
 from communication.received_message import ReceivedMessage
 from devices.interfaces.messaging_device import MessagingDevice
+from lib.system_level_logging import SystemLevelLogger
 
 
 class MeshcoreSerial(MessagingDevice):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, logger: SystemLevelLogger):
+        super().__init__(logger)
 
         self.contacts: list[dict] = []
         self.__meshcore_interface__: MeshCore | None = None
@@ -48,18 +49,33 @@ class MeshcoreSerial(MessagingDevice):
             ]
 
             if is_received:
-                sender: str = self.__get_matching_contact_by_partial_key__(
-                    result.payload["pubkey_prefix"]
-                )
-                recipient: str = (
-                    self.device_id if result.payload["type"] == "PRIV" else "ALL"
-                )
-                incoming_message: ReceivedMessage = ReceivedMessage(
-                    sender, recipient, result.payload["text"]
-                )
+                if result is None or result.payload is None:
+                    self.__logger__.warning("Received message event without payload.")
+
+                    return False
+
+                public_key_prefix: str = result.payload.get("pubkey_prefix", "")
+                message_text: str = result.payload.get("text", "")
+                message_type = result.payload.get("type", "")
+                recipient: str = self.device_id if message_type == "PRIV" else "ALL"
+
+                if message_type != "PRIV":
+                    self.__logger__.warning(
+                        f"Received message event with unsupported type: {message_type}, TEXT='{message_text}'."
+                    )
+
+                    return False
+
+                if not public_key_prefix:
+                    self.__logger__.warning("Received message event without public key prefix.")
+
+                    return False
+
+                sender: str = self.__get_matching_contact_by_partial_key__(public_key_prefix)
+                incoming_message: ReceivedMessage = ReceivedMessage(sender, recipient, message_text)
                 self.__receiving_queue__.append(incoming_message)
         except Exception as e:
-            print(f"Error while receiving messages: {e}")
+            self.__logger__.error(f"Error while receiving messages: {e}")
 
         return is_received
 
@@ -83,28 +99,27 @@ class MeshcoreSerial(MessagingDevice):
             "Unknown",
         )
 
-    async def __send_single_message__(
-        self, message_to_send: MessageSendRequest
-    ) -> bool:
+    async def __send_single_message__(self, message_to_send: MessageSendRequest) -> bool:
         if not self.__meshcore_interface__:
             return False
 
         is_successful: bool = False
 
         try:
-            public_key: str = self.__get_key_by_contact_name__(
-                message_to_send.recipient
-            )
-            recipient = {
-                "public_key": public_key,
-                "adv_name": message_to_send.recipient,
-            }
-            result = await self.__meshcore_interface__.commands.send_msg(
-                recipient, message_to_send.text
-            )
+            if public_key := self.__get_key_by_contact_name__(message_to_send.recipient):
+                recipient = {
+                    "public_key": public_key,
+                    "adv_name": message_to_send.recipient,
+                }
+                result = await self.__meshcore_interface__.commands.send_msg(recipient, message_to_send.text)
 
-            is_successful = (result is not None) and (result.type == EventType.MSG_SENT)
+                is_successful = (result is not None) and (result.type == EventType.MSG_SENT)
+            else:
+                self.__logger__.error(f"Cannot send message, no contact found with name '{message_to_send.recipient}'.")
+
+                is_successful = False
         except Exception as e:
+            self.__logger__.error(f"Error while sending message: {e}")
             is_successful = False
 
         return is_successful
@@ -147,12 +162,10 @@ class MeshcoreSerial(MessagingDevice):
         ports = [port.device for port in all_ports]
 
         for port in ports:
-            print(f"Trying to connect to Meshcore device on {port}...")
+            self.__logger__.info(f"Trying to connect to Meshcore device on {port}...")
 
             try:
-                potential_meshcore_interface: MeshCore = await MeshCore.create_serial(
-                    port
-                )
+                potential_meshcore_interface: MeshCore = await MeshCore.create_serial(port)
 
                 if potential_meshcore_interface is None:
                     continue
@@ -165,19 +178,20 @@ class MeshcoreSerial(MessagingDevice):
                 if result.type == EventType.ERROR:
                     continue
 
+                self.__logger__.info(f"CONNECTED to Meshcore device on {port}...")
+
                 return potential_meshcore_interface
             except Exception as ex:
-                print(f"While attempting connection to Meshcore on {port}, EX={ex}")
+                self.__logger__.error(f"While attempting connection to Meshcore on {port}, EX={ex}")
                 continue
-        raise ConnectionError(
-            "No Meshcore device found on any serial port, or all the devices is already connected."
-        )
+        raise ConnectionError("No Meshcore device found on any serial port, or all the devices is already connected.")
 
 
 if __name__ == "__main__":
     import asyncio
 
+    from configuration import Configuration
     from devices.interfaces.messaging_device import test_loop
 
-    meshcore_device: MeshcoreSerial = MeshcoreSerial()
+    meshcore_device: MeshcoreSerial = MeshcoreSerial(SystemLevelLogger(Configuration(), "MeshcoreSerialTester"))
     asyncio.run(test_loop(meshcore_device, "👑Crown Hill"))

@@ -2,18 +2,48 @@
 
 import contextlib
 import time
-from logging import Logger
 from queue import Queue
+
+if __name__ == "__main__":
+    import os
+    import sys
+
+    # Ensure the parent directory is in sys.path so 'managers' can be imported
+    # This is only needed if running the unit tests directly
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import lib.text_utils as text_utils
 from configuration import Configuration
 from devices.relay import PowerRelay
+from lib.system_level_logging import SystemLevelLogger
 
 
-class RelayManager(object):
+class RelayManager:
     """
     Class to command and control the power relay.
     """
+
+    def __init__(
+        self,
+        configuration: Configuration,
+        logger: SystemLevelLogger,
+        send_message_callback,
+    ):
+        """Initialize the object."""
+
+        self.__configuration__: Configuration = configuration
+        self.__logger__: SystemLevelLogger = logger
+        self.__send_message_callback__ = send_message_callback
+
+        # create relay instance
+        self.__relay__ = PowerRelay(logger, "relay", configuration.relay_pin)
+        self.__message_queue__: Queue = Queue()
+
+        # create queue to hold relay timer.
+        self.__shutoff_timer__ = None
+
+        # make sure and turn relay off
+        self.__relay__.switch_low()
 
     def turn_on(self):
         """
@@ -86,29 +116,10 @@ class RelayManager(object):
             with contextlib.suppress(Exception):
                 status_queue = self.__message_queue__.get()
 
-                if status_queue:
+                if status_queue is not None and status_queue:
                     self.__turn_on_immediate__()
                 else:
                     self.__turn_off_immediate__()
-
-    def __init__(
-        self, configuration: Configuration, logger: Logger, send_message_callback
-    ):
-        """Initialize the object."""
-
-        self.__configuration__: Configuration = configuration
-        self.__logger__: Logger = logger
-        self.__send_message_callback__ = send_message_callback
-
-        # create relay instance
-        self.__relay__ = PowerRelay("relay", configuration.relay_pin)
-        self.__message_queue__: Queue = Queue()
-
-        # create queue to hold relay timer.
-        self.__shutoff_timer__ = None
-
-        # make sure and turn relay off
-        self.__relay__.switch_low()
 
     def __turn_off_immediate__(self):
         """
@@ -122,9 +133,7 @@ class RelayManager(object):
         """
         Turn on the relay RIGHT NOW.
         """
-        self.__send_message__(
-            f"Turning relay ON for {self.__configuration__.max_minutes_to_run} minutes."
-        )
+        self.__send_message__(f"Turning relay ON for {self.__configuration__.max_minutes_to_run} minutes.")
         self.__turn_on_relay__()
 
     def __send_message__(self, message: str):
@@ -167,9 +176,7 @@ class RelayManager(object):
         Starts the automatic shutdown timer for the device.
         """
         self.__logger__.info("Starting the auto-off timer.")
-        self.__shutoff_timer__ = time.time() + (
-            self.__configuration__.max_minutes_to_run * 60
-        )
+        self.__shutoff_timer__ = time.time() + (self.__configuration__.max_minutes_to_run * 60)
 
         return True
 
@@ -186,7 +193,5 @@ class RelayManager(object):
             self.__send_message__(expired_message)
             self.turn_off()
         elif self.__shutoff_timer__ is None and self.is_relay_on():
-            self.__logger__.warning(
-                "The relay should not be on, but the PIN is still active... turning pin off again."
-            )
+            self.__logger__.warning("The relay should not be on, but the PIN is still active... turning pin off again.")
             self.turn_off()

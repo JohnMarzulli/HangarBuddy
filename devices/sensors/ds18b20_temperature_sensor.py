@@ -4,8 +4,8 @@ import os
 import pathlib
 
 if __name__ == "__main__":
-    import sys
     import os
+    import sys
 
     # Ensure the parent directory is in sys.path so 'managers' can be imported
     # This is only needed if running the unit tests directly
@@ -15,6 +15,7 @@ from devices.interfaces.temperature_sensor import (
     TemperatureSensor,
     celsius_to_fahrenheit,
 )
+from lib.system_level_logging import SystemLevelLogger
 
 # ---------------------------------------------------------------
 # Note:
@@ -52,9 +53,7 @@ def __read_sensor__(sensor_id: str) -> float | None:
         temperature = float(temperaturedata[2:])
         temperature /= 1000
         print(f"Sensor: {sensor_id}" + " : %0.3f C" % temperature)
-        print(
-            f"Sensor: {sensor_id}" + " : %0.3f F" % celsius_to_fahrenheit(temperature)
-        )
+        print(f"Sensor: {sensor_id}" + " : %0.3f F" % celsius_to_fahrenheit(temperature))
 
         return celsius_to_fahrenheit(temperature)
     except Exception:
@@ -101,11 +100,11 @@ class Ds18b20TemperatureSensor(TemperatureSensor):
         TemperatureSensor (_type_): _description_
     """
 
-    def __init__(self):
+    def __init__(self, logger: SystemLevelLogger):
         """
         Attempt to connect to the temperature sensor.
         """
-        super().__init__()
+        super().__init__(logger)
         self.enabled: bool = True
         self.current_value: int | None = None
 
@@ -135,12 +134,14 @@ class Ds18b20TemperatureSensor(TemperatureSensor):
 if __name__ == "__main__":
     import doctest
 
+    from configuration import Configuration
+
     print("Starting tests.")
 
     doctest.testmod()
 
-    sensor: Ds18b20TemperatureSensor = Ds18b20TemperatureSensor()
-    temp: int = sensor.update()
+    sensor: Ds18b20TemperatureSensor = Ds18b20TemperatureSensor(SystemLevelLogger(Configuration(), "TempSensorTest"))
+    temp: int | None = sensor.update()
 
     print(f"{temp}F")
 

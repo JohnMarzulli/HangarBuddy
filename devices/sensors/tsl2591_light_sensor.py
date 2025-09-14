@@ -13,11 +13,12 @@ Taken from https://github.com/maxlklaxl/python-tsl2591/blob/master/tsl2591/read_
 """
 
 import time
+
 import smbus  # type: ignore - Only will be run on Raspberry Pi
 
 if __name__ == "__main__":
-    import sys
     import os
+    import sys
 
     # Ensure the parent directory is in sys.path so 'managers' can be imported
     # This is only needed if running the unit tests directly
@@ -26,6 +27,7 @@ if __name__ == "__main__":
 import lib.local_debug as local_debug
 from devices.interfaces.light_sensor import LightSensor
 from devices.results.light_sensor_result import LightSensorResult
+from lib.system_level_logging import SystemLevelLogger
 
 VISIBLE = 2  # channel 0 - channel 1
 INFRARED = 1  # channel 1
@@ -80,16 +82,17 @@ class Tsl2591LightSensor(LightSensor):
 
     def __init__(
         self,
+        logger: SystemLevelLogger,
         i2c_bus=1,
         sensor_address=0x29,
         integration=INTEGRATIONTIME_100MS,
         gain=GAIN_LOW,
     ):
-        super().__init__()
+        super().__init__(logger)
 
         try:
             if not local_debug.is_debug():
-                print("Initializing i2c bus")
+                self.__logger__.info("Initializing i2c bus")
                 self.bus = smbus.SMBus(i2c_bus)
 
             self.sensor_address = sensor_address
@@ -97,13 +100,13 @@ class Tsl2591LightSensor(LightSensor):
             self.gain = gain
             self.enabled = True
 
-            print("Setting timing")
+            self.__logger__.debug("Setting  light sensor timing")
             self.__set_timing__(self.integration_time)
             self.__set_gain__(self.gain)
             self.__disable__()  # to be sure
-            print("Enabled")
-        except:
-            print("Failed to initialize")
+            self.__logger__.info("Light sensor enabled")
+        except Exception as ex:
+            self.__logger__.error(f"Failed to initialize: {ex}")
             self.enabled = False
 
     def update(self) -> LightSensorResult | None:
@@ -117,7 +120,7 @@ class Tsl2591LightSensor(LightSensor):
 
             self.current_value = LightSensorResult(full, ir, lux)
         except Exception as ex:
-            print(f"Failed to read light sensor: {ex}")
+            self.__logger__.error(f"Failed to read light sensor: {ex}")
             self.current_value = None
 
         return self.current_value
@@ -129,7 +132,7 @@ class Tsl2591LightSensor(LightSensor):
         self.__is_enable__()
         self.integration_time = integration
         if not local_debug.is_debug():
-            print("set_timing:Writing data byte")
+            self.__logger__.debug("set_timing:Writing data byte")
             self.bus.write_byte_data(
                 self.sensor_address,
                 COMMAND_BIT | REGISTER_CONTROL,
@@ -197,21 +200,19 @@ class Tsl2591LightSensor(LightSensor):
         if not self.enabled:
             return
 
-        print("enable:writing to data bus.")
+        self.__logger__.debug("enable:writing to data bus.")
         self.bus.write_byte_data(
             self.sensor_address,
             COMMAND_BIT | REGISTER_ENABLE,
             ENABLE_POWERON | ENABLE_AEN | ENABLE_AIEN,
         )  # Enable
-        print("Done enabling")
+        self.__logger__.debug("Done enabling")
 
     def __disable__(self):
         if not self.enabled or local_debug.is_debug():
             return
 
-        self.bus.write_byte_data(
-            self.sensor_address, COMMAND_BIT | REGISTER_ENABLE, ENABLE_POWEROFF
-        )
+        self.bus.write_byte_data(self.sensor_address, COMMAND_BIT | REGISTER_ENABLE, ENABLE_POWEROFF)
 
     def __get_full_luminosity__(self):
         self.__is_enable__()
@@ -221,19 +222,17 @@ class Tsl2591LightSensor(LightSensor):
         if not self.enabled or local_debug.is_debug():
             return 0, 0
 
-        full = self.bus.read_word_data(
-            self.sensor_address, COMMAND_BIT | REGISTER_CHAN0_LOW
-        )
-        ir = self.bus.read_word_data(
-            self.sensor_address, COMMAND_BIT | REGISTER_CHAN1_LOW
-        )
+        full = self.bus.read_word_data(self.sensor_address, COMMAND_BIT | REGISTER_CHAN0_LOW)
+        ir = self.bus.read_word_data(self.sensor_address, COMMAND_BIT | REGISTER_CHAN1_LOW)
         self.__disable__()
         return full, ir
 
 
 if __name__ == "__main__":
 
-    tsl = Tsl2591LightSensor()  # initialize
+    from configuration import Configuration
+
+    tsl = Tsl2591LightSensor(SystemLevelLogger(Configuration(), "LightSensorTest"))  # initialize
 
     #    tsl.set_gain(GAIN_MED)
     #    tsl.set_timing(INTEGRATIONTIME_100MS)

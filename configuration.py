@@ -28,9 +28,6 @@ class Configuration(object):
     def get_log_directory(self):
         """returns the location of the logfile to use."""
 
-        if local_debug.is_debug():
-            return self.__config_parser__.get("SETTINGS", "DEBUGGING_LOGFILE_DIRECTORY")
-
         return self.__config_parser__.get("SETTINGS", "LOGFILE_DIRECTORY")
 
     def __init__(self):

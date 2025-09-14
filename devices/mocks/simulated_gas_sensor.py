@@ -3,6 +3,7 @@
 from devices.interfaces.gas_sensor import GasSensor
 from devices.mocks.sensor_simulator import SensorSimulator
 from devices.results.gas_sensor_result import GasSensorResult
+from lib.system_level_logging import SystemLevelLogger
 
 DEFAULT_TRIGGER_THRESHOLD = 245
 DEFAULT_ALL_CLEAR_THRESHOLD = 235
@@ -15,12 +16,13 @@ class SimulatedGasSensor(GasSensor):
 
     def __init__(
         self,
+        logger: SystemLevelLogger,
         sensor_trigger_threshold=DEFAULT_TRIGGER_THRESHOLD,
         sensor_all_clear_threshold=DEFAULT_ALL_CLEAR_THRESHOLD,
     ):
-        super().__init__(sensor_trigger_threshold, sensor_all_clear_threshold)
+        super().__init__(logger, sensor_trigger_threshold, sensor_all_clear_threshold)
 
-        print("Starting init")
+        self.__logger__.info("Starting init")
 
         self.enabled = True
         self.is_gas_detected = False

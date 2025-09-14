@@ -1,0 +1,4 @@
+[tool.black]
+line-length = 120  # or whatever length you prefer
+target-version = ['py39']
+include = '\.pyi?$'
