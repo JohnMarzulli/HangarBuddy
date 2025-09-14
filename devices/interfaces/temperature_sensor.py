@@ -10,15 +10,8 @@ if __name__ == "__main__":
     # This is only needed if running the unit tests directly
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from devices.results.temperature_result import TemperatureResult
 from lib.system_level_logging import SystemLevelLogger
-
-
-def celsius_to_fahrenheit(temp_in_celsius: float) -> float:
-    """
-    converts celsius to F.
-    Needs a float.
-    """
-    return ((temp_in_celsius * 9.0) / 5.0) + 32.0
 
 
 class TemperatureSensor:
@@ -34,11 +27,11 @@ class TemperatureSensor:
 
         self.__logger__: SystemLevelLogger = logger
 
-    def update(self) -> int | None:
+    def update(self) -> TemperatureResult | None:
         """
         Services the sensor. May cause a new reading to be taken.
 
         Returns:
             int | None: The latest temperature reading in Fahrenheit.
         """
-        pass
+        return None

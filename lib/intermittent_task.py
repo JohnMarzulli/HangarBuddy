@@ -21,7 +21,6 @@ class IntermittentTask(object):
                 self.__task_callback__()
                 self.__last_run__ = datetime.datetime.now(datetime.timezone.utc)
             except Exception as e:
-                # + sys.exc_info()[0]
                 error_message = f"EX({self.__task_name__}):{e}"
 
                 print(error_message)
