@@ -1,5 +1,3 @@
-import time
-
 import serial.tools.list_ports
 
 # https://github.com/meshcore-dev/meshcore_py
