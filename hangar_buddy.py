@@ -40,8 +40,6 @@ Main entry code for HangarBuddy
 #    NOTE: if this should be below the optional auto-update line
 #    python /home/pi/HangarBuddy/hangar_buddy.py &
 
-import logging
-import logging.handlers
 import sys
 from datetime import datetime, timezone
 from time import sleep
@@ -55,34 +53,37 @@ from communication.received_message import ReceivedMessage
 from devices.interfaces.messaging_device import MessagingDevice
 from displays.sf_1602_lcd import Sf1602Display
 from lib import local_debug
+from lib.system_level_logging import SystemLevelLogger
 from managers.gas_safety_manager import GasSafetyManager
 from managers.light_manager import LightManager
 from managers.relay_manager import RelayManager
 from managers.sensors_manager import SensorsManager
 
-LOGGER = logging.getLogger("heater")
-LOGGER.setLevel(logging.INFO)
+CONFIGURATION = configuration.Configuration()
+
+HANGAR_BUDDY_LOGGER: SystemLevelLogger = SystemLevelLogger(CONFIGURATION, "HangarBuddy")
+MESSAGE_LOGGER: SystemLevelLogger = SystemLevelLogger(CONFIGURATION, "Messages")
+MESSAGING_DEVICE_LOGGER: SystemLevelLogger = SystemLevelLogger(
+    CONFIGURATION,
+    "MessagingDevice",
+)
+RELAY_LOGGER: SystemLevelLogger = SystemLevelLogger(CONFIGURATION, "Relay")
+SENSORS_LOGGER: SystemLevelLogger = SystemLevelLogger(CONFIGURATION, "Sensors")
+SENSORS_MANAGER = SensorsManager(CONFIGURATION, SENSORS_LOGGER)
 
 
 def __get_messaging_device__(
     config: configuration.Configuration,
 ) -> MessagingDevice:
     if config.device_type.lower() == "meshtastic":
-        return MeshtasticSerial()
+        return MeshtasticSerial(MESSAGING_DEVICE_LOGGER)
     elif config.device_type.lower() == "meshcore":
-        return MeshcoreSerial()
+        return MeshcoreSerial(MESSAGING_DEVICE_LOGGER)
 
     raise RuntimeError(f"Unknown device type: {config.device_type}")
 
 
-CONFIGURATION = configuration.Configuration()
 MESSAGING: MessagingDevice = __get_messaging_device__(CONFIGURATION)
-SENSORS_MANAGER = SensorsManager(CONFIGURATION)
-HANDLER = logging.handlers.RotatingFileHandler(
-    CONFIGURATION.log_filename, maxBytes=1048576, backupCount=3, encoding="utf-8"
-)
-HANDLER.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(message)s"))
-LOGGER.addHandler(HANDLER)
 
 
 def __get_time_text__() -> str:
@@ -101,7 +102,7 @@ def log_message_sent(recipient: str, message: str):
         log_message += f"    {line.strip()}\n"
     log_message += "    ```"
 
-    LOGGER.info(log_message)
+    MESSAGE_LOGGER.info(log_message)
 
 
 def log_message_received(message: ReceivedMessage):
@@ -115,7 +116,7 @@ def log_message_received(message: ReceivedMessage):
         log_message += f"    {line.strip()}\n"
     log_message += "    ```"
 
-    LOGGER.info(log_message)
+    MESSAGE_LOGGER.info(log_message)
 
 
 def send_message(message: str) -> bool:
@@ -133,10 +134,10 @@ def send_message(message: str) -> bool:
             MESSAGING.send(MessageSendRequest(recipient, message))
             is_one_message_sent = True
         except Exception as ex:
-            LOGGER.error(f"Error sending message to {recipient}, EX={ex}")
+            HANGAR_BUDDY_LOGGER.error(f"Error sending message to {recipient}, EX={ex}")
 
     if not is_one_message_sent:
-        LOGGER.error("ERROR trying to send message to any authorized receivers")
+        HANGAR_BUDDY_LOGGER.error("ERROR trying to send message to any authorized receivers")
 
     return is_one_message_sent
 
@@ -149,7 +150,7 @@ def is_radio_connected() -> bool:
     try:
         return MESSAGING.__is_connected__()
     except Exception as e:
-        LOGGER.error(f"Error checking radio connection: {e}")
+        HANGAR_BUDDY_LOGGER.error(f"Error checking radio connection: {e}")
         return False
 
 
@@ -167,7 +168,7 @@ def get_message_text(message: dict) -> str:
     try:
         return message["decoded"]["payload"].decode("utf-8")
     except Exception:
-        LOGGER.error("Error decoding message payload")
+        HANGAR_BUDDY_LOGGER.error("Error decoding message payload")
 
         return ""
 
@@ -181,9 +182,7 @@ def process_messages(command_processor: CommandProcessor):
 
         if not is_from_known_sender(message.sender):
             known_senders_text: str = ",".join(CONFIGURATION.allowed_senders)
-            unknown_sender_message: str = (
-                f"Unknown sender `{message.sender}`, known: {known_senders_text}"
-            )
+            unknown_sender_message: str = f"Unknown sender `{message.sender}`, known: {known_senders_text}"
 
             send_message(unknown_sender_message)
 
@@ -194,7 +193,7 @@ def process_messages(command_processor: CommandProcessor):
 
         if response is not None and len(response) > 0:
             send_message(response)
-            LOGGER.info(f"Response sent: {response}")
+            HANGAR_BUDDY_LOGGER.info(f"Response sent: {response}")
 
 
 def prevent_pc_from_sleeping():
@@ -203,9 +202,7 @@ def prevent_pc_from_sleeping():
 
         ES_CONTINUOUS = 0x80000000
         ES_SYSTEM_REQUIRED = 0x00000001
-        ctypes.windll.kernel32.SetThreadExecutionState(
-            ES_CONTINUOUS | ES_SYSTEM_REQUIRED
-        )
+        ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)
 
 
 def __get_display__() -> Sf1602Display | None:
@@ -235,14 +232,13 @@ def __update_display__(
 # TODO: Send messages to cycle display
 # TODO: Make temp result have both F & C
 # TODO: See if there is a way to improve the accuracy of the temp sensor
-# TODO: Log the right things... validate logging
 # TODO: Command to return hop count & route
 
 
 async def __connect_messaging_device__():
     while not MESSAGING.__is_connected__():
         sleep(1)
-        print("Connecting to device...")
+        HANGAR_BUDDY_LOGGER.info("Connecting to device...")
         await MESSAGING.service()
 
 
@@ -252,20 +248,18 @@ async def main():
     await __connect_messaging_device__()
 
     display = __get_display__()
-    heater = RelayManager(CONFIGURATION, LOGGER, send_message)
+    heater = RelayManager(CONFIGURATION, RELAY_LOGGER, send_message)
     light_manager: LightManager = LightManager("Hangar", SENSORS_MANAGER, send_message)
-    gas_safety_manager: GasSafetyManager = GasSafetyManager(
-        SENSORS_MANAGER, heater, send_message
-    )
+    gas_safety_manager: GasSafetyManager = GasSafetyManager(SENSORS_MANAGER, heater, send_message)
     command_processor = CommandProcessor(SENSORS_MANAGER, heater, gas_safety_manager)
 
-    LOGGER.info("Starting HangarBuddy...")
-    LOGGER.info(f"IP:{local_debug.get_ip_address()}")
+    HANGAR_BUDDY_LOGGER.info("Starting HangarBuddy...")
+    HANGAR_BUDDY_LOGGER.info(f"IP:{local_debug.get_ip_address()}")
 
     send_message("Starting HangarBuddy...")
     send_message(command_processor.get_full_status_text())
 
-    LOGGER.info(f"Connected to {MESSAGING.device_name}/{MESSAGING.device_id}")
+    HANGAR_BUDDY_LOGGER.info(f"Connected to {MESSAGING.device_name}/{MESSAGING.device_id}")
 
     while True:
         SENSORS_MANAGER.update()

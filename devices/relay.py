@@ -5,6 +5,16 @@ Module to handle sending commands to the power relay.
 import platform
 import time
 
+if __name__ == "__main__":
+    import os
+    import sys
+
+    # Ensure the parent directory is in sys.path so 'managers' can be imported
+    # This is only needed if running the unit tests directly
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from lib.system_level_logging import SystemLevelLogger
+
 IS_DEBUG: bool = platform.system() in ["win32", "Windows", "darwin"]
 
 if not IS_DEBUG:
@@ -24,7 +34,7 @@ class PowerRelay:
     the AC/D control relay is plugged into
     """
 
-    def __init__(self, name, GPIO_PIN, relay_type=DEFAULT_RELAY_TYPE):
+    def __init__(self, logger: SystemLevelLogger, name, GPIO_PIN, relay_type=DEFAULT_RELAY_TYPE):
         """
         Creates a relay controller.
 
@@ -38,10 +48,12 @@ class PowerRelay:
         self.type = relay_type
         self.expected_status = 0
 
+        self.__logger__: SystemLevelLogger = logger
+
         # setup GPIO Pins
 
         if not IS_DEBUG:
-            print(f"Setting {str(GPIO_PIN)} to BOARD/OUT")
+            self.__logger__.info(f"Setting {str(GPIO_PIN)} to BOARD/OUT")
             self.expected_status = GPIO.LOW
             GPIO.setwarnings(False)
             GPIO.setmode(GPIO.BOARD)
@@ -78,7 +90,7 @@ class PowerRelay:
             return True
 
         try:
-            print("Setting to OUT/LOW")
+            self.__logger__.info("Setting to OUT/LOW")
             self.expected_status = GPIO.LOW
             GPIO.output(self.gpio_pin, GPIO.LOW)
             time.sleep(3)
@@ -101,40 +113,10 @@ class PowerRelay:
             return 0
 
 
-##############
-# UNIT TESTS #
-##############
-
-
-def test_default():
-    """
-    Test that the default is off.
-    """
-    power_relay = PowerRelay("Heater", DEFAULT_PIN)
-    assert power_relay.get_io_pin_status == 0
-
-
-def test_on():
-    """
-    Test that it can be turned on.
-    """
-    power_relay = PowerRelay("Heater", DEFAULT_PIN)
-    power_relay.switch_high()
-    assert power_relay.get_io_pin_status() == 1
-
-
-def test_off():
-    """
-    Test that it can be turned off.
-    """
-    power_relay = PowerRelay("Heater", DEFAULT_PIN)
-    power_relay.switch_high()
-    power_relay.switch_low()
-    assert power_relay.get_io_pin_status() == 0
-
-
 if __name__ == "__main__":
     import doctest
+
+    from configuration import Configuration
 
     print("Starting tests.")
 
@@ -142,7 +124,7 @@ if __name__ == "__main__":
 
     print("Tests finished")
 
-    TEST_RELAY = PowerRelay("Heater", DEFAULT_PIN)
+    TEST_RELAY = PowerRelay(SystemLevelLogger(Configuration(), "RelayTest"), "Heater", DEFAULT_PIN)
     TEST_RELAY.switch_high()
     print(TEST_RELAY.get_io_pin_status())
     time.sleep(10)

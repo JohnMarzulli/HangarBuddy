@@ -13,26 +13,16 @@ if __name__ == "__main__":
     # This is only needed if running the unit tests directly
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from communication.message_send_request import MessageSendRequest
 from communication.received_message import ReceivedMessage
 from devices.interfaces.messaging_device import MessagingDevice
-
-if __name__ == "__main__":
-    import os
-    import sys
-
-    # Ensure the parent directory is in sys.path so 'managers' can be imported
-    # This is only needed if running the unit tests directly
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-from communication.message_send_request import MessageSendRequest
+from lib.system_level_logging import SystemLevelLogger
 
 
 class MeshtasticSerial(MessagingDevice):
-    def __init__(self):
-        super().__init__()
-        self.__meshastic_interface__: (
-            meshtastic.serial_interface.SerialInterface | None
-        ) = None
+    def __init__(self, logger: SystemLevelLogger):
+        super().__init__(logger)
+        self.__meshastic_interface__: meshtastic.serial_interface.SerialInterface | None = None
 
     def __is_device_allocated__(self) -> bool:
         return self.__meshastic_interface__ is not None
@@ -44,9 +34,7 @@ class MeshtasticSerial(MessagingDevice):
         if not self.__meshastic_interface__:
             return False
         try:
-            self.__meshastic_interface__.sendText(
-                request.text, destinationId=request.recipient
-            )
+            self.__meshastic_interface__.sendText(request.text, destinationId=request.recipient)
 
             return True
         except Exception as e:
@@ -57,8 +45,7 @@ class MeshtasticSerial(MessagingDevice):
         Check if the Meshtastic device is connected.
         """
         is_connected: bool = (
-            self.__meshastic_interface__ is not None
-            and self.__meshastic_interface__.isConnected.is_set()
+            self.__meshastic_interface__ is not None and self.__meshastic_interface__.isConnected.is_set()
         )
 
         return is_connected
@@ -67,10 +54,7 @@ class MeshtasticSerial(MessagingDevice):
         """
         Close the connection to the Meshtastic device.
         """
-        if (
-            hasattr(self, "meshastic_interface")
-            and self.__meshastic_interface__ is not None
-        ):
+        if hasattr(self, "meshastic_interface") and self.__meshastic_interface__ is not None:
             self.__meshastic_interface__.close()
 
         self.__meshastic_interface__ = self.__connect_to_device__()
@@ -83,50 +67,42 @@ class MeshtasticSerial(MessagingDevice):
         ports = [port.device for port in all_ports]
 
         for port in ports:
-            print(f"Trying to connect to Meshtastic device on {port}...")
+            self.__logger__.info(f"Trying to connect to Meshtastic device on {port}...")
 
             try:
-                potential_meshastic_interface = (
-                    meshtastic.serial_interface.SerialInterface(devPath=port)
-                )
+                potential_meshastic_interface = meshtastic.serial_interface.SerialInterface(devPath=port)
                 # Wait for node info to confirm connection
                 time.sleep(2)
                 if potential_meshastic_interface.myInfo:
-                    print(f"Connected to Meshtastic device on {port}.")
+                    self.__logger__.info(f"Connected to Meshtastic device on {port}.")
 
                     return potential_meshastic_interface
             except Exception as ex:
-                print(f"While attempting connection to Meshtastic on {port}, EX={ex}")
+                self.__logger__.error(f"While attempting connection to Meshtastic on {port}, EX={ex}")
                 continue
-        raise ConnectionError(
-            "No Meshtastic device found on any serial port, or all the devices is already connected."
-        )
+        raise ConnectionError("No Meshtastic device found on any serial port, or all the devices is already connected.")
 
     def __on_receive__(self, packet, interface):
         try:
             # Only queue messages intended for this device
-            if (
-                packet is not None
-                and "decoded" in packet
-                and packet["decoded"]["portnum"] == "TEXT_MESSAGE_APP"
-            ):
+            if packet is not None and "decoded" in packet and packet["decoded"]["portnum"] == "TEXT_MESSAGE_APP":
                 sender: str = packet["fromId"]
                 recipient: str = packet["toId"]
                 text: str = packet["decoded"]["payload"].decode("utf-8")
-                incoming_message: ReceivedMessage = ReceivedMessage(
-                    sender, recipient, text
-                )
+                incoming_message: ReceivedMessage = ReceivedMessage(sender, recipient, text)
                 self.__receiving_queue__.append(incoming_message)
         except KeyError as e:
-            print(f"Error processing packet: {e}")
+            self.__logger__.error(f"Error processing packet: {e}")
 
 
 if __name__ == "__main__":
     import asyncio
 
+    from configuration import Configuration
     from devices.interfaces.messaging_device import test_loop
+    from lib.system_level_logging import SystemLevelLogger
 
-    meshtastic_device: MeshtasticSerial = MeshtasticSerial()
+    meshtastic_device: MeshtasticSerial = MeshtasticSerial(SystemLevelLogger(Configuration(), "MeshtasticSerialTester"))
     recipient = "!ba66ffe4"
 
     asyncio.run(test_loop(meshtastic_device, recipient))

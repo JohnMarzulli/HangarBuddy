@@ -3,6 +3,7 @@ from multiprocessing import Queue
 
 from communication.message_send_request import MessageSendRequest
 from communication.received_message import ReceivedMessage
+from lib.system_level_logging import SystemLevelLogger
 
 
 class MessagingDevice:
@@ -12,7 +13,7 @@ class MessagingDevice:
     Should not be created directly.
     """
 
-    def __init__(self):
+    def __init__(self, logger: SystemLevelLogger):
         """
         Initialize the core service queues.
         """
@@ -22,6 +23,7 @@ class MessagingDevice:
         self.contacts = []
         self.__receiving_queue__: list[ReceivedMessage] = []
         self.__sending_queue__: Queue = Queue()
+        self.__logger__: SystemLevelLogger = logger
 
     async def service(self):
         """
@@ -29,12 +31,12 @@ class MessagingDevice:
         Processes the outgoing message queue to handle sending them and any associated retries.
         """
         while not self.__is_connected__():
-            print(f"Lost connection to `{self.device_name}`. Reconnecting...")
+            self.__logger__.error(f"Lost connection to `{self.device_name}`. Reconnecting...")
 
             try:
                 await self.__reconnect__()
             except Exception:
-                print("Failed to reconnect. Retrying in 5 seconds...")
+                self.__logger__.error("Failed to reconnect. Retrying in 5 seconds...")
                 time.sleep(5)
                 continue
 
@@ -80,9 +82,7 @@ class MessagingDevice:
     async def __receive_message__(self) -> bool:
         raise NotImplementedError("This method should be implemented by subclasses.")
 
-    async def __send_single_message__(
-        self, message_to_send: MessageSendRequest
-    ) -> bool:
+    async def __send_single_message__(self, message_to_send: MessageSendRequest) -> bool:
         raise NotImplementedError("This method should be implemented by subclasses.")
 
     async def __service_send_messages__(self):
@@ -106,6 +106,8 @@ class MessagingDevice:
             try:
                 is_successful = await self.__send_single_message__(message_to_send)
             except Exception as e:
+                self.__logger__.error(f"Error while sending message: {e}")
+
                 is_successful = False
 
             if not is_successful:
@@ -150,9 +152,7 @@ async def test_loop(device: MessagingDevice, recipient):
             await device.service()
             messages = device.get_incoming_messages()
             for msg in messages:
-                print(
-                    f"Received message:\n\tTO:{msg.recipient}\n\tFROM:{msg.sender}\n\tTEXT:{msg.text}"
-                )
+                print(f"Received message:\n\tTO:{msg.recipient}\n\tFROM:{msg.sender}\n\tTEXT:{msg.text}")
             time.sleep(1)
     except ConnectionError as e:
         print(f"Error: {e}")

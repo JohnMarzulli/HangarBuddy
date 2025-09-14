@@ -3,11 +3,17 @@ Module to abstract and help with keeping our sensors and
 configuration in order
 """
 
-import logging
-import logging.handlers
 import platform
 
 IS_DEBUG: bool = platform.system() in ["win32", "Windows", "darwin"]
+
+if __name__ == "__main__":
+    import os
+    import sys
+
+    # Ensure the parent directory is in sys.path so 'managers' can be imported
+    # This is only needed if running the unit tests directly
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from configuration import Configuration
 from devices.interfaces.gas_sensor import GasSensor
@@ -16,6 +22,7 @@ from devices.interfaces.temperature_sensor import TemperatureSensor
 from devices.results.gas_sensor_result import GasSensorResult
 from devices.results.light_sensor_result import LightSensorResult
 from lib.intermittent_task import IntermittentTask
+from lib.system_level_logging import SystemLevelLogger
 
 if not IS_DEBUG:
     from devices.sensors.ds18b20_temperature_sensor import Ds18b20TemperatureSensor
@@ -26,7 +33,6 @@ from devices.mocks.simulated_gas_sensor import SimulatedGasSensor
 from devices.mocks.simulated_light_sensor import SimulatedLightSensor
 from devices.mocks.simulated_temperature_sensor import SimulatedTemperatureSensor
 
-DEFAULT_SENSOR_LOG = "sensors.log"
 DEFAULT_LIGHT_SENSOR_UPDATE_INTERVAL = 1
 DEFAULT_GAS_SENSOR_UPDATE_INTERVAL = 15
 DEFAULT_TEMPERATURE_SENSOR_UPDATE_INTERVAL = 120
@@ -38,7 +44,11 @@ class SensorsManager:
     of the sensors we could have or use.
     """
 
-    def __init__(self, configuration: Configuration):
+    def __init__(
+        self,
+        configuration: Configuration,
+        logger: SystemLevelLogger,
+    ):
         """
         Manager to handle and control servicing any attached sensors.
         Handles initialization.
@@ -46,33 +56,18 @@ class SensorsManager:
         Args:
             configuration (Configuration): The configuration that would contain pin and bus settings.
         """
-        self.__handler__ = logging.handlers.RotatingFileHandler(
-            configuration.get_log_directory() + DEFAULT_SENSOR_LOG,
-            maxBytes=1048576,
-            backupCount=3,
-        )
-        self.__handler__.setFormatter(
-            logging.Formatter("%(asctime)s %(levelname)-8s %(message)s")
-        )
+        self.__logger__: SystemLevelLogger = logger
 
-        self.__gas_sensor__: GasSensor = (
-            SimulatedGasSensor() if IS_DEBUG else Mq2GasSensorDigital()
-        )
-        self.__light_sensor__: LightSensor = (
-            SimulatedLightSensor() if IS_DEBUG else Tsl2591LightSensor()
-        )
+        self.__gas_sensor__: GasSensor = SimulatedGasSensor(logger) if IS_DEBUG else Mq2GasSensorDigital(logger)
+        self.__light_sensor__: LightSensor = SimulatedLightSensor(logger) if IS_DEBUG else Tsl2591LightSensor(logger)
         self.__temperature_sensor__: TemperatureSensor = (
-            SimulatedTemperatureSensor() if IS_DEBUG else Ds18b20TemperatureSensor()
+            SimulatedTemperatureSensor(logger) if IS_DEBUG else Ds18b20TemperatureSensor(logger)
         )
 
         self.__light_sensor_task__: IntermittentTask = IntermittentTask(
             "__update_light_sensor__",
             DEFAULT_LIGHT_SENSOR_UPDATE_INTERVAL,
-            (
-                self.__update_light_sensor__
-                if configuration.is_light_sensor_enabled
-                else self.__noop__
-            ),
+            (self.__update_light_sensor__ if configuration.is_light_sensor_enabled else self.__noop__),
         )
         self.__log_light_sensor_task__: IntermittentTask = IntermittentTask(
             "__log_light_sensor__",
@@ -82,21 +77,13 @@ class SensorsManager:
         self.__gas_sensor_task__: IntermittentTask = IntermittentTask(
             "__update_gas_sensor__",
             DEFAULT_GAS_SENSOR_UPDATE_INTERVAL,
-            (
-                self.__update_gas_sensor__
-                if configuration.is_mq2_enabled
-                else self.__noop__
-            ),
+            (self.__update_gas_sensor__ if configuration.is_mq2_enabled else self.__noop__),
         )
 
         self.__temperature_sensor_task__: IntermittentTask = IntermittentTask(
             "__update_temperature_sensor__",
             DEFAULT_TEMPERATURE_SENSOR_UPDATE_INTERVAL,
-            (
-                self.__update_temperature_sensor__
-                if configuration.is_temp_probe_enabled
-                else self.__noop__
-            ),
+            (self.__update_temperature_sensor__ if configuration.is_temp_probe_enabled else self.__noop__),
         )
 
         self.current_gas_sensor_reading: GasSensorResult | None = None
@@ -124,16 +111,14 @@ class SensorsManager:
         """
 
         if not self.__light_sensor__.enabled:
-            print("LIGHT: Sensor not enabled")
+            self.__logger__.warning("LIGHT: Sensor not enabled")
 
             return
 
-        self.current_light_sensor_reading: LightSensorResult | None = (
-            self.__light_sensor__.update()
-        )
+        self.current_light_sensor_reading: LightSensorResult | None = self.__light_sensor__.update()
 
         if self.current_light_sensor_reading is None:
-            print("LIGHT: No reading")
+            self.__logger__.warning("LIGHT: No reading")
 
     def __log_light_sensor__(self):
         if self.current_light_sensor_reading is None:
@@ -143,7 +128,7 @@ class SensorsManager:
         visible_reading: int = self.current_light_sensor_reading.full_spectrum
         ir_reading: int = self.current_light_sensor_reading.infrared
 
-        print(
+        self.__logger__.info(
             f"LIGHT: Level={self.current_light_sensor_reading.get_light_level().name}, Lux={lux_reading}, VIS={visible_reading}, IR={ir_reading}"
         )
 
@@ -162,9 +147,7 @@ class SensorsManager:
             current_level: str = self.current_gas_sensor_reading.current_value
             is_detected: bool = self.current_gas_sensor_reading.is_gas_detected
             threshold: int = self.__gas_sensor__.sensor_trigger_threshold
-            print(
-                f"GAS: Level={current_level}, Detected={is_detected}, Threshold={threshold}"
-            )
+            self.__logger__.info(f"GAS: Level={current_level}, Detected={is_detected}, Threshold={threshold}")
 
     def __update_temperature_sensor__(self):
         """
@@ -173,12 +156,12 @@ class SensorsManager:
 
         if not self.__temperature_sensor__.enabled:
             self.current_temperature_sensor_reading = None
-            print("TEMP: Sensor not enabled")
+            self.__logger__.warning("TEMP: Sensor not enabled")
             return
 
         self.current_temperature_sensor_reading = self.__temperature_sensor__.update()
 
         if self.current_temperature_sensor_reading is not None:
-            print(f"TEMP: Current={self.current_temperature_sensor_reading}F")
+            self.__logger__.info(f"TEMP: Current={self.current_temperature_sensor_reading}F")
         else:
-            print("TEMP: ERROR READING SENSOR")
+            self.__logger__.warning("TEMP: ERROR READING SENSOR")

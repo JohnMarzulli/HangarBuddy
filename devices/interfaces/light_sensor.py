@@ -1,4 +1,5 @@
 from devices.results.light_sensor_result import LightSensorResult
+from lib.system_level_logging import SystemLevelLogger
 
 
 class LightSensor:
@@ -9,12 +10,14 @@ class LightSensor:
     Should not be created directly.
     """
 
-    def __init__(self):
+    def __init__(self, logger: SystemLevelLogger):
         """
         Initialize the base functionality of a light sensor.
         """
         self.enabled: bool = False
         self.current_value: LightSensorResult | None = None
+
+        self.__logger__: SystemLevelLogger = logger
 
     def update(self) -> LightSensorResult | None:
         """

@@ -1,5 +1,6 @@
 from devices.interfaces.temperature_sensor import TemperatureSensor
 from devices.mocks.sensor_simulator import SensorSimulator
+from lib.system_level_logging import SystemLevelLogger
 
 
 class SimulatedTemperatureSensor(TemperatureSensor):
@@ -7,8 +8,8 @@ class SimulatedTemperatureSensor(TemperatureSensor):
     Simulates a light sensor for testing purposes.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, logger: SystemLevelLogger):
+        super().__init__(logger)
         self.enabled: bool = True
         self.current_value: int | None = None
 

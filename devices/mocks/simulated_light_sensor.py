@@ -1,6 +1,7 @@
 from devices.interfaces.light_sensor import LightSensor
 from devices.mocks.sensor_simulator import SensorSimulator
 from devices.results.light_sensor_result import LightSensorResult
+from lib.system_level_logging import SystemLevelLogger
 
 
 class SimulatedLightSensor(LightSensor):
@@ -8,8 +9,8 @@ class SimulatedLightSensor(LightSensor):
     Simulates a light sensor for testing purposes.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, logger: SystemLevelLogger):
+        super().__init__(logger)
         self.enabled: bool = True
         self.current_value: LightSensorResult | None = None
 
