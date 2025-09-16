@@ -47,7 +47,7 @@ def get_command_response(connection: serial.Serial, command: str) -> str:
     response_lines: list[str] = []
     print(f"COMMAND:{command}")
     connection.write(command.encode("utf-8"))
-    #connection.flush()
+    # connection.flush()
 
     while wait_for_response(connection):
         read = connection.readline()
@@ -113,9 +113,9 @@ class Sim800cSerial(MessagingDevice):
             return False
 
         self.__set_sms_mode__()
-        self.__logger__.info(self.__send_command__("\r\r\n"))
+        self.__logger__.info(self.__send_exact_command__("\r\n"))
         self.__logger__.info(self.__send_command__(f'AT+CMGS="{message_to_send.recipient}"'))
-        self.__logger__.info(self.__send_command__("\r"))
+        self.__logger__.info(self.__send_exact_command__("\r"))
         self.__logger__.info(self.__send_command__(f"{message_to_send.text}\x1a"))
 
         return True
@@ -147,6 +147,14 @@ class Sim800cSerial(MessagingDevice):
         Puts the card into SMS mode.
         """
         return self.__send_command__("AT+CMGF=1")
+
+    def __send_exact_command__(self, command: str) -> str:
+        """send a command to the modem"""
+
+        if self.__connection__ is None:
+            return ""
+
+        return get_command_response(self.__connection__, command)
 
     def __send_command__(self, command: str, add_eol: bool = True) -> str:
         """send a command to the modem"""
