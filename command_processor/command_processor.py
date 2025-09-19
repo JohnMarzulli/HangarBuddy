@@ -1,4 +1,5 @@
 import os
+import string
 import subprocess
 import sys
 
@@ -24,7 +25,8 @@ FULL_STATUS_COMMAND = "STATUS"
 HELP_COMMAND = "HELP"
 QUIT_COMMAND = "QUIT"
 LIGHTS_COMMAND = "LIGHTS"
-TEMPERATURE_COMMAND = "TEMP"
+TEMPERATURE_COMMAND = "TEMPERATURE"
+TEMPERATURE_SHORT_COMMAND = "TEMP"
 UPTIME_COMMAND = "UPTIME"
 GAS_COMMAND = "GAS"
 HEATER_COMMAND = "HEATER"
@@ -70,6 +72,47 @@ def __shutdown__():
         )
 
 
+def __is_command__(command: str, message: str) -> bool:
+    """
+    Tells us if the given command is in the given message.
+
+    Args:
+        command (str): The command we want to find the in the message
+        message (str): The message text from the user.
+
+    Returns:
+        bool: True if the command is found in the message.
+
+    >>> __is_command__('ON','ON')
+    True
+    >>> __is_command__('ON', 'Turn on')
+    True
+    >>> __is_command__('ON','On you shall turn')
+    True
+    >>> __is_command__('ON',' ON ')
+    True
+    >>> __is_command__('ON','ON on On oN')
+    True
+    >>> __is_command__('on','ON')
+    True
+    >>> __is_command__('off','ON')
+    False
+    >>> __is_command__('ON','Stone')
+    False
+    """
+
+    if command is None or not command:
+        return False
+
+    tokens = message.split(" ")
+    tokens = list(filter(lambda token: len(token) >= 1, tokens))
+    tokens = [token.lower().strip() for token in tokens]
+
+    matching_tokens = list(filter(lambda token: token == command.lower(), tokens))
+
+    return len(matching_tokens) >= 1
+
+
 # CommandProcessor class: handles incoming text commands, returns response only for valid commands and relay state changes
 class CommandProcessor:
     """
@@ -108,16 +151,18 @@ class CommandProcessor:
             return None
         msg = message.strip().upper()
         # Only process if the message matches a valid command
+        msg = msg.translate(str.maketrans({c: " " for c in string.punctuation}))
+        msg = msg.replace("  ", " ")
 
-        if self.__is_command__(SHUTDOWN_COMMAND, msg):
+        if __is_command__(SHUTDOWN_COMMAND, msg):
             self.__relay_manager__.turn_off()
             __shutdown__()
             return "System shutting down."
-        elif self.__is_command__(RESTART_COMMAND, msg):
+        elif __is_command__(RESTART_COMMAND, msg):
             self.__relay_manager__.turn_off()
             __restart__()
             return "System restarting."
-        elif self.__is_command__(HEATER_ON_COMMAND, msg):
+        elif __is_command__(HEATER_ON_COMMAND, msg):
             if not self.__gas_safety_manager__.can_turn_on_relay():
                 return "Cannot turn on heater: Gas detected!"
             response_message: str = (
@@ -127,7 +172,7 @@ class CommandProcessor:
             )
             self.__relay_manager__.turn_on()
             return response_message
-        elif self.__is_command__(HEATER_OFF_COMMAND, msg):
+        elif __is_command__(HEATER_OFF_COMMAND, msg):
             response_message: str = (
                 f"Heater turning OFF with {self.__relay_manager__.get_time_remaining()}"
                 if self.__relay_manager__.is_relay_on()
@@ -135,29 +180,23 @@ class CommandProcessor:
             )
             self.__relay_manager__.turn_off()
             return response_message
-        elif self.__is_command__("IP", msg) or self.__is_command__("ADDRESS", msg):
+        elif __is_command__("IP", msg) or __is_command__("ADDRESS", msg):
             return local_debug.get_ip_address()
-        elif self.__is_command__(UPTIME_COMMAND, msg):
+        elif __is_command__(UPTIME_COMMAND, msg):
             return self.__get_uptime_text__()
-        elif self.__is_command__(FULL_STATUS_COMMAND, msg):
+        elif __is_command__(FULL_STATUS_COMMAND, msg):
             return self.get_full_status_text()
-        elif self.__is_command__(TEMPERATURE_COMMAND, msg):
+        elif __is_command__(TEMPERATURE_COMMAND, msg) or __is_command__(TEMPERATURE_SHORT_COMMAND, msg):
             temp = self.__sensors_manager__.current_temperature_sensor_reading
             return f"Temperature: {temp.get_fahrenheit() if temp is not None else 'UNKNOWN'}"
-        elif self.__is_command__(LIGHTS_COMMAND, msg):
+        elif __is_command__(LIGHTS_COMMAND, msg):
             light = self.__sensors_manager__.current_light_sensor_reading
             light_text = "UNAVAILABLE" if light is None else light.get_light_level().name
             return f"Light: {light_text}"
-        elif self.__is_command__(HELP_COMMAND, msg):
+        elif __is_command__(HELP_COMMAND, msg):
             return self.__get_help_text__()
         else:
             return f"Command '{message}' received, unable to process it."
-
-    def __is_command__(self, command: str | None, message: str) -> bool:
-        if command is None or not command:
-            return False
-
-        return False if message is None else command.lower() in message.lower()
 
     def __get_uptime_text__(self) -> str:
         time_up = datetime.now(timezone.utc) - self.__system_start_time__
