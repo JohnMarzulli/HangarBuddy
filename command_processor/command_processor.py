@@ -10,6 +10,7 @@ if __name__ == "__main__":
 
 from datetime import datetime, timezone
 
+from communication.received_message import ReceivedMessage
 from devices.results.temperature_result import TemperatureResult
 from lib import local_debug, text_utils
 from managers.gas_safety_manager import GasSafetyManager
@@ -27,6 +28,7 @@ QUIT_COMMAND = "QUIT"
 LIGHTS_COMMAND = "LIGHTS"
 TEMPERATURE_COMMAND = "TEMPERATURE"
 TEMPERATURE_SHORT_COMMAND = "TEMP"
+HISTORY_COMMAND = "HISTORY"
 UPTIME_COMMAND = "UPTIME"
 GAS_COMMAND = "GAS"
 HEATER_COMMAND = "HEATER"
@@ -133,7 +135,8 @@ class CommandProcessor:
         self.__relay_manager__: RelayManager = relay_manager
         self.__gas_safety_manager__: GasSafetyManager = gas_safety_manager
 
-    def process(self, message: str) -> str | None:
+    def process(self, message: str, message_history: list[ReceivedMessage] = []) -> str | None:
+        # sourcery skip: default-mutable-arg
         """
         Process an incoming text message. Returns a tuple (response_text, relay_should_be_on) if a valid command,
         otherwise returns (None, None).
@@ -152,6 +155,7 @@ class CommandProcessor:
             FULL_STATUS_COMMAND: lambda: self.get_full_status_text(),
             TEMPERATURE_COMMAND: lambda: self.__get_temperature_response__(),
             TEMPERATURE_SHORT_COMMAND: lambda: self.__get_temperature_response__(),
+            HISTORY_COMMAND: lambda: self.__get_history_response__(message_history),
             LIGHTS_COMMAND: lambda: self.__get_lights_response__(),
             GAS_COMMAND: lambda: self.__get_gas_response__(),
             HELP_COMMAND: lambda: self.__get_help_text__(),
@@ -256,9 +260,9 @@ class CommandProcessor:
             return "Cannot turn on heater: Gas detected!"
 
         response_message: str = (
-            "Heater turning ON."
-            if not self.__relay_manager__.is_relay_on()
-            else f"Heater is already ON. {self.__relay_manager__.get_time_remaining()}"
+            f"Heater is already ON. {self.__relay_manager__.get_time_remaining()}"
+            if self.__relay_manager__.is_relay_on()
+            else "Heater turning ON."
         )
         self.__relay_manager__.turn_on()
 
@@ -278,6 +282,22 @@ class CommandProcessor:
         temp = self.__sensors_manager__.current_temperature_sensor_reading
 
         return f"Temperature: {temp.get_fahrenheit() if temp is not None else 'UNKNOWN'}"
+
+    def __get_history_response__(self, message_history: list[ReceivedMessage]) -> str:
+        history_text = "\tNone"
+
+        if message_history is not None and message_history:
+            history_entries = message_history[-11:]
+            history_entries.reverse()
+            # Make this this command is not included
+            history_entries = history_entries[1:]
+            history_lines = [
+                text_utils.tab_text(f"AT: {text_utils.get_formatted_time(e.received_at)}\nFROM:{e.sender}\n{e.text}")
+                for e in history_entries
+            ]
+            history_text = "\n---\n".join(history_lines)
+
+        return f"History:\n{history_text}"
 
     def __get_lights_response__(self) -> str:
         light = self.__sensors_manager__.current_light_sensor_reading

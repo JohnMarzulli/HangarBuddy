@@ -70,6 +70,7 @@ MESSAGING_DEVICE_LOGGER: SystemLevelLogger = SystemLevelLogger(
 RELAY_LOGGER: SystemLevelLogger = SystemLevelLogger(CONFIGURATION, "Relay")
 SENSORS_LOGGER: SystemLevelLogger = SystemLevelLogger(CONFIGURATION, "Sensors")
 SENSORS_MANAGER = SensorsManager(CONFIGURATION, SENSORS_LOGGER)
+MESSAGE_HISTORY: list[ReceivedMessage] = []
 
 
 def __get_messaging_device__(
@@ -188,8 +189,9 @@ def process_messages(command_processor: CommandProcessor):
 
             continue
 
+        MESSAGE_HISTORY.append(message)
         log_message_received(message)
-        response = command_processor.process(message.text)
+        response = command_processor.process(message.text, MESSAGE_HISTORY)
 
         if response is not None and len(response) > 0:
             send_message(response)
