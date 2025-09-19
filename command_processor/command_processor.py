@@ -30,6 +30,8 @@ TEMPERATURE_SHORT_COMMAND = "TEMP"
 UPTIME_COMMAND = "UPTIME"
 GAS_COMMAND = "GAS"
 HEATER_COMMAND = "HEATER"
+IP_COMMAND = "IP"
+ADDRESS_COMMAND = "ADDRESS"
 
 VALID_COMMANDS = {
     FULL_STATUS_COMMAND,
@@ -37,39 +39,12 @@ VALID_COMMANDS = {
     LIGHTS_COMMAND,
     TEMPERATURE_COMMAND,
     UPTIME_COMMAND,
+    GAS_COMMAND,
     HEATER_OFF_COMMAND,
     HEATER_ON_COMMAND,
     SHUTDOWN_COMMAND,
     RESTART_COMMAND,
 }
-
-
-def __restart__():
-    """
-    Restarts down the Pi.
-    """
-
-    if not local_debug.is_debug():
-        subprocess.Popen(
-            ["sudo shutdown -r 30"],
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
-
-
-def __shutdown__():
-    """
-    Shuts down the Pi.
-    """
-
-    if not local_debug.is_debug():
-        subprocess.Popen(
-            ["sudo shutdown -h 30"],
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
 
 
 def __is_command__(command: str, message: str) -> bool:
@@ -99,12 +74,28 @@ def __is_command__(command: str, message: str) -> bool:
     False
     >>> __is_command__('ON','Stone')
     False
+    >>> __is_command__('ON','')
+    False
+    >>> __is_command__('ON',None)
+    False
+    >>> __is_command__('','ON')
+    False
+    >>> __is_command__(None, 'ON')
+    False
     """
 
     if command is None or not command:
         return False
 
-    tokens = message.split(" ")
+    if message is None or not message:
+        return False
+
+    msg = message.strip().upper()
+    # Only process if the message matches a valid command
+    msg = msg.translate(str.maketrans({c: " " for c in string.punctuation}))
+    msg = msg.replace("  ", " ")
+
+    tokens = msg.split(" ")
     tokens = list(filter(lambda token: len(token) >= 1, tokens))
     tokens = [token.lower().strip() for token in tokens]
 
@@ -149,54 +140,27 @@ class CommandProcessor:
         """
         if not isinstance(message, str):
             return None
-        msg = message.strip().upper()
-        # Only process if the message matches a valid command
-        msg = msg.translate(str.maketrans({c: " " for c in string.punctuation}))
-        msg = msg.replace("  ", " ")
 
-        if __is_command__(SHUTDOWN_COMMAND, msg):
-            self.__relay_manager__.turn_off()
-            __shutdown__()
-            return "System shutting down."
-        elif __is_command__(RESTART_COMMAND, msg):
-            self.__relay_manager__.turn_off()
-            __restart__()
-            return "System restarting."
-        elif __is_command__(HEATER_ON_COMMAND, msg):
-            if not self.__gas_safety_manager__.can_turn_on_relay():
-                return "Cannot turn on heater: Gas detected!"
-            response_message: str = (
-                "Heater turning ON."
-                if not self.__relay_manager__.is_relay_on()
-                else f"Heater is already ON. {self.__relay_manager__.get_time_remaining()}"
-            )
-            self.__relay_manager__.turn_on()
-            return response_message
-        elif __is_command__(HEATER_OFF_COMMAND, msg):
-            response_message: str = (
-                f"Heater turning OFF with {self.__relay_manager__.get_time_remaining()}"
-                if self.__relay_manager__.is_relay_on()
-                else "Heater is already OFF."
-            )
-            self.__relay_manager__.turn_off()
-            return response_message
-        elif __is_command__("IP", msg) or __is_command__("ADDRESS", msg):
-            return local_debug.get_ip_address()
-        elif __is_command__(UPTIME_COMMAND, msg):
-            return self.__get_uptime_text__()
-        elif __is_command__(FULL_STATUS_COMMAND, msg):
-            return self.get_full_status_text()
-        elif __is_command__(TEMPERATURE_COMMAND, msg) or __is_command__(TEMPERATURE_SHORT_COMMAND, msg):
-            temp = self.__sensors_manager__.current_temperature_sensor_reading
-            return f"Temperature: {temp.get_fahrenheit() if temp is not None else 'UNKNOWN'}"
-        elif __is_command__(LIGHTS_COMMAND, msg):
-            light = self.__sensors_manager__.current_light_sensor_reading
-            light_text = "UNAVAILABLE" if light is None else light.get_light_level().name
-            return f"Light: {light_text}"
-        elif __is_command__(HELP_COMMAND, msg):
-            return self.__get_help_text__()
-        else:
-            return f"Command '{message}' received, unable to process it."
+        handlers = {
+            SHUTDOWN_COMMAND: lambda: self.__shutdown_handler__(),
+            RESTART_COMMAND: lambda: self.__restart_handler__(),
+            HEATER_ON_COMMAND: lambda: self.__heater_on_handler__(),
+            HEATER_OFF_COMMAND: lambda: self.__heater_off_handler__(),
+            IP_COMMAND: lambda: local_debug.get_ip_address(),
+            ADDRESS_COMMAND: lambda: local_debug.get_ip_address(),
+            UPTIME_COMMAND: lambda: self.__get_uptime_text__(),
+            FULL_STATUS_COMMAND: lambda: self.get_full_status_text(),
+            TEMPERATURE_COMMAND: lambda: self.__get_temperature_response__(),
+            TEMPERATURE_SHORT_COMMAND: lambda: self.__get_temperature_response__(),
+            LIGHTS_COMMAND: lambda: self.__get_lights_response__(),
+            GAS_COMMAND: lambda: self.__get_gas_response__(),
+            HELP_COMMAND: lambda: self.__get_help_text__(),
+        }
+
+        return next(
+            (handler() for cmd, handler in handlers.items() if __is_command__(cmd, message)),
+            f"Command '{message}' received, unable to process it.",
+        )
 
     def __get_uptime_text__(self) -> str:
         time_up = datetime.now(timezone.utc) - self.__system_start_time__
@@ -253,6 +217,79 @@ class CommandProcessor:
         status_message += f"Uptime: {self.__get_uptime_text__()}"
 
         return status_message
+
+    def __restart_handler__(self) -> str:
+        """
+        Restarts down the Pi.
+        """
+
+        self.__relay_manager__.turn_off()
+
+        if not local_debug.is_debug():
+            subprocess.Popen(
+                ["sudo shutdown -r 30"],
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+
+        return "System restarting."
+
+    def __shutdown_handler__(self) -> str:
+        """
+        Shuts down the Pi.
+        """
+        self.__relay_manager__.turn_off()
+
+        if not local_debug.is_debug():
+            subprocess.Popen(
+                ["sudo shutdown -h 30"],
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+
+        return "System shutting down."
+
+    def __heater_on_handler__(self) -> str:
+        if not self.__gas_safety_manager__.can_turn_on_relay():
+            return "Cannot turn on heater: Gas detected!"
+
+        response_message: str = (
+            "Heater turning ON."
+            if not self.__relay_manager__.is_relay_on()
+            else f"Heater is already ON. {self.__relay_manager__.get_time_remaining()}"
+        )
+        self.__relay_manager__.turn_on()
+
+        return response_message
+
+    def __heater_off_handler__(self) -> str:
+        response_message: str = (
+            f"Heater turning OFF with {self.__relay_manager__.get_time_remaining()}"
+            if self.__relay_manager__.is_relay_on()
+            else "Heater is already OFF."
+        )
+        self.__relay_manager__.turn_off()
+
+        return response_message
+
+    def __get_temperature_response__(self) -> str:
+        temp = self.__sensors_manager__.current_temperature_sensor_reading
+
+        return f"Temperature: {temp.get_fahrenheit() if temp is not None else 'UNKNOWN'}"
+
+    def __get_lights_response__(self) -> str:
+        light = self.__sensors_manager__.current_light_sensor_reading
+        light_text = "UNAVAILABLE" if light is None else light.get_light_level().name
+
+        return f"Light: {light_text}"
+
+    def __get_gas_response__(self) -> str:
+        gas = self.__sensors_manager__.current_gas_sensor_reading
+        gas_text = "UNAVAILABLE" if gas is None else gas.get_status_text()
+
+        return f"Gas: {gas_text}"
 
     def __add_temperature_status__(self, status_message: str) -> str:
         temp: TemperatureResult | None = self.__sensors_manager__.current_temperature_sensor_reading
@@ -350,6 +387,9 @@ if __name__ == "__main__":
 
     response = command_processor.process("LIGHTS")
     assert response.startswith("Light:"), "Should return light level."  # type: ignore
+
+    response = command_processor.process("GAS")
+    assert response.startswith("Gas:"), "Should return gas level."  # type: ignore
 
     response = command_processor.process("RESTART")
     assert response == "System restarting.", "Expected 'System restarting.'"
