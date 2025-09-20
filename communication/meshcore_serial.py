@@ -78,14 +78,30 @@ class MeshcoreSerial(MessagingDevice):
         return is_received
 
     def __get_key_by_contact_name__(self, contact_name: str) -> str:
-        return next(
-            (
-                contact.get("public_key", "")
-                for contact in self.contacts
-                if contact.get("adv_name", "").lower() == contact_name.lower()
-            ),
-            "",
-        )
+        ascii_safe_name = contact_name.strip().lower()
+
+        print(f"Searching for:{ascii_safe_name}")
+
+        for contact in self.contacts:
+            if contact is None:
+                continue
+
+            if not "public_key" in contact:
+                continue
+
+            if not "adv_name" in contact:
+                continue
+
+            print(f'Trying to match contact to {contact["adv_name"]}')
+
+            name_to_try = contact.get("adv_name", "").strip().lower()
+
+            print(f"Trying to match contact to CLEANED:{name_to_try}")
+
+            if name_to_try == ascii_safe_name:
+                return contact["adv_name"]
+
+        return ""
 
     def __get_matching_contact_by_partial_key__(self, pubkey_prefix: str) -> str:
         return next(
