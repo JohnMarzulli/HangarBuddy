@@ -5,8 +5,6 @@ import serial.tools.list_ports
 
 # Current version of Meshcore (2.0) requires firmware 1.7.4
 # Any newer version of the meshcore firmware will not work
-
-
 if __name__ == "__main__":
     import os
     import sys
@@ -77,8 +75,11 @@ class MeshcoreSerial(MessagingDevice):
 
         return is_received
 
+    def __get_ascii_only__(self, name: str) -> str:
+        return "".join(char for char in name if char.isascii())
+
     def __get_key_by_contact_name__(self, contact_name: str) -> str:
-        ascii_safe_name = contact_name.strip().lower()
+        ascii_safe_name = self.__get_ascii_only__(contact_name).strip().lower()
 
         print(f"Searching for:{ascii_safe_name}")
 
@@ -94,9 +95,10 @@ class MeshcoreSerial(MessagingDevice):
 
             print(f'Trying to match contact to {contact["adv_name"]}')
 
-            name_to_try = contact.get("adv_name", "").strip().lower()
+            name_to_try = contact.get("adv_name", "")
+            safe_comparison = self.__get_ascii_only__(name_to_try).strip().lower()
 
-            print(f"Trying to match contact to CLEANED:{name_to_try}")
+            print(f"Trying to match {ascii_safe_name} to CLEANED:{safe_comparison}")
 
             if name_to_try == ascii_safe_name:
                 return contact["adv_name"]
