@@ -100,7 +100,7 @@ class MeshcoreSerial(MessagingDevice):
 
             print(f"Trying to match {ascii_safe_name} to CLEANED:{safe_comparison}")
 
-            if name_to_try == ascii_safe_name:
+            if ascii_safe_name == safe_comparison:
                 return contact["adv_name"]
 
         return ""
