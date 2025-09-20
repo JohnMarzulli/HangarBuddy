@@ -7,7 +7,8 @@ from configuration import Configuration
 
 class SystemLevelLogger:
     def __init__(self, configuration: Configuration, system_name: str):
-        partial_file_name: str = f"{system_name.replace(" ", "")}.log"
+        trimmed_name = system_name.replace(" ", "")
+        partial_file_name: str = f"{trimmed_name}.log"
         log_dir: str = configuration.get_log_directory()
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
