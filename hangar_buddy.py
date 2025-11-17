@@ -50,7 +50,10 @@ from communication.meshcore_serial import MeshcoreSerial
 from communication.meshtastic_serial import MeshtasticSerial
 from communication.message_send_request import MessageSendRequest
 from communication.received_message import ReceivedMessage
+from communication.sim800c_serial import Sim800cSerial
 from devices.interfaces.messaging_device import MessagingDevice
+from displays.console_display import ConsoleDisplay
+from displays.display_device import DisplayDevice
 from displays.sf_1602_lcd import Sf1602Display
 from lib import local_debug
 from lib.system_level_logging import SystemLevelLogger
@@ -80,6 +83,8 @@ def __get_messaging_device__(
         return MeshtasticSerial(MESSAGING_DEVICE_LOGGER)
     elif config.device_type.lower() == "meshcore":
         return MeshcoreSerial(MESSAGING_DEVICE_LOGGER)
+    elif config.device_type.lower() == "sim800c":
+        return Sim800cSerial(MESSAGING_DEVICE_LOGGER)
 
     raise RuntimeError(f"Unknown device type: {config.device_type}")
 
@@ -207,9 +212,9 @@ def prevent_pc_from_sleeping():
         ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)
 
 
-def __get_display__() -> Sf1602Display | None:
+def __get_display__() -> DisplayDevice | None:
     if local_debug.is_debug():
-        return None
+        return ConsoleDisplay()
 
     try:
         return Sf1602Display()
@@ -218,7 +223,7 @@ def __get_display__() -> Sf1602Display | None:
 
 
 def __update_display__(
-    display: Sf1602Display | None,
+    display: DisplayDevice | None,
     command_processor: CommandProcessor,
 ):
     if display is None:
