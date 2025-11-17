@@ -51,6 +51,7 @@ from communication.meshtastic_serial import MeshtasticSerial
 from communication.message_send_request import MessageSendRequest
 from communication.received_message import ReceivedMessage
 from communication.sim800c_serial import Sim800cSerial
+from communication.test_message_device import TestMessagingDevice
 from devices.interfaces.messaging_device import MessagingDevice
 from displays.console_display import ConsoleDisplay
 from displays.display_device import DisplayDevice
@@ -85,6 +86,8 @@ def __get_messaging_device__(
         return MeshcoreSerial(MESSAGING_DEVICE_LOGGER)
     elif config.device_type.lower() == "sim800c":
         return Sim800cSerial(MESSAGING_DEVICE_LOGGER)
+    elif config.device_type.lower() == "test":
+        return TestMessagingDevice(MESSAGING_DEVICE_LOGGER)
 
     raise RuntimeError(f"Unknown device type: {config.device_type}")
 
@@ -212,14 +215,8 @@ def prevent_pc_from_sleeping():
         ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)
 
 
-def __get_display__() -> DisplayDevice | None:
-    if local_debug.is_debug():
-        return ConsoleDisplay()
-
-    try:
-        return Sf1602Display()
-    except Exception:
-        return None
+def __get_display__() -> DisplayDevice:
+    return ConsoleDisplay() if local_debug.is_debug() else Sf1602Display()
 
 
 def __update_display__(
@@ -251,13 +248,17 @@ async def __connect_messaging_device__():
 async def main():
     prevent_pc_from_sleeping()
 
-    await __connect_messaging_device__()
+    display: DisplayDevice = __get_display__()
 
-    display = __get_display__()
+    display.clear()
+    display.write(0, 0, "Starting...")
+
     heater = RelayManager(CONFIGURATION, RELAY_LOGGER, send_message)
     light_manager: LightManager = LightManager("Hangar", SENSORS_MANAGER, send_message)
     gas_safety_manager: GasSafetyManager = GasSafetyManager(SENSORS_MANAGER, heater, send_message)
     command_processor = CommandProcessor(SENSORS_MANAGER, heater, gas_safety_manager)
+
+    display.write(0, 0, "Initializing...")
 
     HANGAR_BUDDY_LOGGER.info("Starting HangarBuddy...")
     HANGAR_BUDDY_LOGGER.info(f"IP:{local_debug.get_ip_address()}")
