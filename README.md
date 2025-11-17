@@ -80,7 +80,7 @@ For instance GPIO25 is also known as physical pin 22.
 | Red        | GPIO25/22 | "+"       |
 | Black      | GND       | "-"       |
 
-#### Meshtastic Device
+#### Meshtastic & Meshcore Devices
 
 **NOTE** : Make sure the antenna is attached before powering on.
 
@@ -159,6 +159,26 @@ Modprobe two modules for the temperature sensor:
 sudo modprobe w1-gpio
 sudo modprobe w1-therm
 ```
+
+## Pairing Meshcore
+
+You will want two meshcore devices.
+
+The first will be a "Companion USB" that will attach to the Hangar Buddy.
+
+The second will probably be a "Companion Bluetooth" that will be conncted to your phone.
+
+The flasher can be obtained at [flasher.meshcore.co.uk](https://flasher.meshcore.co.uk/)
+
+Make sure both devices are running the same version number of the Meshcore firmware.
+
+You will need to pair the two devices using "adverts". Exact instructions can be found on the Meshcore site.
+
+1. Use [Meshcore App](https://meshcore.liamcottle.net/) to send an advert from the device that will be used for the Hangar Buddy. Don't forget to name the device first.
+1. Use the Mesh Core app on your phone to send back an advert.
+1. Use the Web App to send a direct message from the Hangar Buddy device to your phone paired device.
+
+If you are unable to send messages between the devices, consult the Meshcore documentation, Reddit, or others.
 
 ## Materials List
 
