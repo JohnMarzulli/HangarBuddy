@@ -137,7 +137,7 @@ i2c device. These would split the SDAI and SCLI lines.
 
 ## Additional Links And Setup Notes
 
-#### Enable analog-to-digital converter for the MQ-2 Gas Sensor
+### Enable Analog-To-Digital Converter For The MQ-2 Gas Sensor
 
 To do this, you need to enable I2C and 1-Wire using `raspi-config`
 
@@ -164,6 +164,8 @@ sudo modprobe w1-therm
 
 You will want two meshcore devices.
 
+I suggest using the following 3D printed cases: [Heltec V4 Case](https://www.printables.com/model/1460642-3d-printed-enclosure-for-heltec-v4gps)
+
 The first will be a "Companion USB" that will attach to the Hangar Buddy.
 
 The second will probably be a "Companion Bluetooth" that will be conncted to your phone.
@@ -174,8 +176,14 @@ Make sure both devices are running the same version number of the Meshcore firmw
 
 You will need to pair the two devices using "adverts". Exact instructions can be found on the Meshcore site.
 
-1. Use [Meshcore App](https://meshcore.liamcottle.net/) to send an advert from the device that will be used for the Hangar Buddy. Don't forget to name the device first.
-1. Use the Mesh Core app on your phone to send back an advert.
+1. Use [Meshcore App](https://meshcore.liamcottle.net/) to:
+    1. Name the device
+    1. Set region and bandwidth
+    1. Send an advert from the device that will be used for the Hangar Buddy.
+1. Use the Mesh Core app on your phone to:
+    1. Connect by Bluetooth
+    2. Name the device
+    3. Send back an advert.
 1. Use the Web App to send a direct message from the Hangar Buddy device to your phone paired device.
 
 If you are unable to send messages between the devices, consult the Meshcore documentation, Reddit, or others.
