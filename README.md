@@ -300,7 +300,7 @@ The R-Pi 4 and 5 both use micro-HDMI.
 1. Wait for a few minutes, then log back in using the `ssh` command
 1. `sudo apt update`
 1. `sudo apt upgrade`
-1. `lsusb` - Check to see if a "Silicon Labs CP210x UART Bridge" or "Espressif Systems heltec_wifi_lora_32 v4 (16 MB FLASH, 2 MB PSRAM)" is shown.
+1. `lsusb` - Check to see if a "Silicon Labs CP210x UART Bridge", "Espressif Systems heltec_wifi_lora_32 v4 (16 MB FLASH, 2 MB PSRAM)", or "QinHeng Electronics CH340" is shown.
 1. `python --version`. Should be at least 3.13.5
 
 ### Source Code

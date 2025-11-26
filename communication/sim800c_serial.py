@@ -45,9 +45,10 @@ def wait_for_response(connection: serial.Serial, max_wait_seconds: float = 4.0) 
 
 def get_command_response(connection: serial.Serial, command: str) -> str:
     response_lines: list[str] = []
-    print(f"COMMAND:{command}")
-    connection.write(command.encode("utf-8"))
-    # connection.flush()
+    print(f"COMMAND:\"{command}\"".replace("\r", "\\r").replace("\n", "\\n"))
+    connection.reset_input_buffer()
+    connection.write(command.encode("ascii"))
+    connection.flush()
 
     while wait_for_response(connection):
         read = connection.readline()
@@ -69,9 +70,16 @@ def get_modem_connection() -> serial.Serial | None:
 
     for port in ports:
         try:
-            connection: serial.Serial = serial.Serial(port=port, baudrate=9600, timeout=1)
-            command_response: str = get_command_response(connection, "AT E0")
-            if "ATE0" in command_response or "OK" in command_response:
+            connection: serial.Serial = serial.Serial(
+                port=port,
+                baudrate=9600,
+                bytesize=serial.EIGHTBITS,
+                parity=serial.PARITY_NONE,
+                stopbits=serial.STOPBITS_ONE,
+                timeout=1,
+            )
+            command_response: str = get_command_response(connection, "ATE0\r\n")
+            if "AT" in command_response or "800" in command_response or "OK" in command_response:
                 return connection
 
         except Exception as ex:
@@ -132,7 +140,7 @@ class Sim800cSerial(MessagingDevice):
         Close the connection to the Meshtastic device.
         """
         self.__connection__ = get_modem_connection()
-        self.device_name: str = self.__send_command__("AT I").splitlines()[1].strip()
+        self.device_name: str = self.__send_command__("ATI").splitlines()[1].strip()
         self.device_id: str = self.__send_command__("AT+CGSN").splitlines()[1].strip()
         self.__logger__.info(f"Connected to: {self.device_name}/{self.device_id}")
 
@@ -165,7 +173,7 @@ class Sim800cSerial(MessagingDevice):
         command_to_send: str = command.strip()
 
         if add_eol:
-            command_to_send += "\r\n "
+            command_to_send += "\r\n"
 
         return get_command_response(self.__connection__, command_to_send)
 
