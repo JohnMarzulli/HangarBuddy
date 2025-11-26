@@ -1,7 +1,6 @@
 meshcore
 meshtastic
 pyserial>=3.5
-lgpio
 gpiozero
 smbus
 RPi.GPIO
