@@ -83,6 +83,7 @@ For instance GPIO25 is also known as physical pin 22.
 #### Meshtastic & Meshcore Devices
 
 **NOTE** : Make sure the antenna is attached before powering on.
+**NOTE** : The Raspberry Pi 4C seems VERY picky about the USB cable used to connect a Heltec device. Try multiple cables.
 
 | Wire Color | RPi Pin | Relay Pin |
 |------------|---------|-----------|
@@ -224,6 +225,7 @@ issue
 
 - [ ] [Adafruit GSM Quadband Antenna](https://www.amazon.com/gp/product/B00N4Y2C4G/ref=oh_aui_detailpage_o08_s00?ie=UTF8&psc=1)
 - [ ] [High gain antenna](https://www.amazon.com/gp/product/B01M9F08JR/ref=oh_aui_detailpage_o00_s01?ie=UTF8&psc=1)
+- [ ] [Case for Sim800C](https://www.thingiverse.com/thing:5012982)
 
 ### For Optional Gas Sensor
 
@@ -261,19 +263,60 @@ The R-Pi 4 and 5 both use micro-HDMI.
 
 [https://www.sunfounder.com/learn/Sensor-Kit-v1-0-for-Raspberry-Pi/lesson-17-ds18b20-temperature-sensor-sensor-kit-v1-0-for-pi.html](https://www.sunfounder.com/learn/Sensor-Kit-v1-0-for-Raspberry-Pi/lesson-17-ds18b20-temperature-sensor-sensor-kit-v1-0-for-pi.html)
 
-`
-
 ## Installation
+
+### OS Image
+
+1. Use Raspberry Pi Imager
+1. Choose your device
+1. 64bit, Trixie based
+1. `hangarbuddy` as custom host name
+1. The username  `pi` with password `raspberry` are traditional, but easily guessed
+1. Use Wifi for setting up.
+1. Enable SSH to help setup and remote in. Use password protection. You do not need "Raspberry Pi Connect"
+
+### First Boot
+
+1. Update (To make sure the raspi-config tool is the latest version)
+1. Open a PowerShell or command terminal.
+1. `ssh pi@hangarbuddy`
+1. Use the password `raspberry`. Accept the fingerprint.
+1. `sudo raspi-config`
+1. System Options:
+    1. Setup wifi if not working yet
+    1. boot -> Console Text console
+    1. Autologin -> Yes
+1. Interface options:
+    1. SPI -> Enable
+    1. I2C -> Enable
+    1. Serial
+        1. Allow login: no
+        1. Allow serial: yes
+    1. TURN OFF 1 wire serial
+1. Advanced options:
+    1. Expand Filesystem
+1. "Finish"
+1. `sudo reboot now`
+1. Wait for a few minutes, then log back in using the `ssh` command
+1. `sudo apt update`
+1. `sudo apt upgrade`
+1. `lsusb` - Check to see if a "Silicon Labs CP210x UART Bridge" or "Espressif Systems heltec_wifi_lora_32 v4 (16 MB FLASH, 2 MB PSRAM)" is shown.
+1. `python --version`. Should be at least 3.13.5
+
+### Source Code
 
 1. Log in to your rasperry pi as the `pi` user.
 1. `mkdir src`
 1. `cd src`
 1. `git clone https://github.com/JohnMarzulli/HangarBuddy/`
 1. `cd HangarBuddy`
+1. `python -m venv venv`
+1. `source ./venv/bin/activate`
+1. `pip install -r requirements.txt`
 1. `sudo cp hangar_buddy.logrotate.conf /etc/logrotate.d/`
-1. `sudo chown root root /etc/logrotate.d/hangar_buddy.logrotate.conf`
+1. `sudo chown root /etc/logrotate.d/hangar_buddy.logrotate.conf`
 1. `sudo cp hangar_buddy.service /etc/systemd/system/`
-1. `sudo chown root root /etc/systemd/system/hangar_buddy.service`
+1. `sudo chown root /etc/systemd/system/hangar_buddy.service`
 1. `sudo systemctl enable hangar_buddy.service`
 1. `sudo reboot`
 
