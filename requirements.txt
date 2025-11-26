@@ -1,5 +1,7 @@
-meshcore==2.1.6
-meshtastic==2.7.1
+meshcore
+meshtastic
 pyserial>=3.5
-smbus-i2c>=1.1.2
-RPi.GPIO>=0.7.0
+lgpio
+gpiozero
+smbus
+RPi.GPIO
