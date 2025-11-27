@@ -5,3 +5,4 @@ gpiozero
 smbus
 RPi.GPIO
 adafruit_dht
+lgpio
