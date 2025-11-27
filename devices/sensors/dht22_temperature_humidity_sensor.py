@@ -1,8 +1,8 @@
 import os
 import time
+import traceback
 from dataclasses import dataclass
 from typing import Optional
-import traceback
 
 if __name__ == "__main__":
     import os
@@ -248,7 +248,7 @@ class Dh22TemperatureHumiditySensor(TemperatureSensor):
             temperature_c = float(sensor_reading.temperature_c)
             humidity = float(sensor_reading.humidity)
 
-            print(f"Sensor: {humidity}%" + ", %0.3f C" % temperature_c)
+            print(f"Sensor: {humidity}%" + ", %01f C" % temperature_c)
 
             return TemperatureResult(temperature_c)
         except DHT22Error as ex:
