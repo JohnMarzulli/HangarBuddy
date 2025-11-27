@@ -2,6 +2,7 @@ import os
 import time
 from dataclasses import dataclass
 from typing import Optional
+import traceback
 
 if __name__ == "__main__":
     import os
@@ -223,10 +224,13 @@ class Dh22TemperatureHumiditySensor(TemperatureSensor):
         if not self.enabled:
             return None
 
-        self.current_value = self.__read_sensor__()
+        value = self.__read_sensor__()
 
-        if self.current_value is None:
-            self.enabled = False
+        if value is not None:
+            self.current_value = value
+
+        # if self.current_value is None:
+        #    self.enabled = False
 
         return self.current_value
 
@@ -236,16 +240,27 @@ class Dh22TemperatureHumiditySensor(TemperatureSensor):
         id is the id of the sensor.
         """
 
+        if not self.enabled:
+            return None
+
         try:
             sensor_reading = self.__sensor__.read()
-            temperature_c = sensor_reading.temperature_c
-            humidity = sensor_reading.humidity
+            temperature_c = float(sensor_reading.temperature_c)
+            humidity = float(sensor_reading.humidity)
 
-            temperature = float(temperature_c)
-            print(f"Sensor: {humidity}%" + ", %0.3f C" % temperature)
+            print(f"Sensor: {humidity}%" + ", %0.3f C" % temperature_c)
 
-            return TemperatureResult(temperature)
-        except Exception:
+            return TemperatureResult(temperature_c)
+        except DHT22Error as ex:
+            # Expected timing/checksum issues – log and retry next update.
+            print(f"DHT22 read failed: {ex}")
+            traceback.print_exc()
+            return None
+        except Exception as ex:
+            # Unexpected fatal error – disable the sensor.
+            print(f"DHT22 fatal error: {ex}")
+            traceback.print_exc()
+            self.enabled = False
             return None
 
 
