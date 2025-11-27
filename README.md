@@ -69,7 +69,7 @@ You will also need to enable some system settings:
 
 **Note**: There are two pin numbering conventions for the Raspberry Pi: Pi numbering and board numbering.
 
-For instance GPIO25 is also known as physical pin 22.
+For instance GPIO25 is also known as physical pin 22. It is located on the edge of the PCB, in the middle of the column.
 
 [Raspberry Pi Pin Reference](https://learn.sparkfun.com/tutorials/raspberry-gpio/gpio-pinout)
 [Another Pi Pin Reference](https://forum.arduino.cc/t/raspberry-pi-gpio-pins/518283)
@@ -84,7 +84,7 @@ Physical Pins 1 and 2 are at the edge of the board with the Micro-SD Card
 |                   | TSL2591 SDA (green)  | Display SDA (green)  | Pin 3 — GPIO2 / SDA1       | Pin 4 — 5V Power           |                   |
 |                   | TSL2591 SCL (yellow) | Display SCL (yellow) | Pin 5 — GPIO3 / SCL1       | Pin 6 — GND                | Relay GND (black) |
 |                   |                      | DHT22 OUT (gray)     | Pin 7 — GPIO4              | Pin 8 — GPIO14 / UART TX   |                   |
-| MQ2 GND (black)   |                      | Display GND (black)  | Pin 9 — GND                | Pin 10 — GPIO15 / UART RX  |                   |
+|                   |                      | Display GND (black)  | Pin 9 — GND                | Pin 10 — GPIO15 / UART RX  |                   |
 |                   |                      |                      | Pin 11 — GPIO17            | Pin 12 — GPIO18            |                   |
 |                   |                      |                      | Pin 13 — GPIO27            | Pin 14 — GND               |                   |
 |                   |                      |                      | Pin 15 — GPIO22            | Pin 16 — GPIO23            |                   |
@@ -99,7 +99,7 @@ Physical Pins 1 and 2 are at the edge of the board with the Micro-SD Card
 |                   |                      |                      | Pin 33 — GPIO13            | Pin 34 — GND               |                   |
 |                   |                      |                      | Pin 35 — GPIO19            | Pin 36 — GPIO16            |                   |
 | MQ2 DO (gray)     |                      |                      | Pin 37 — GPIO26            | Pin 38 — GPIO20            |                   |
-|                   |                      |                      | Pin 39 — GND               | Pin 40 — GPIO21            |                   |
+| MQ2 GND (black)   |                      |                      | Pin 39 — GND               | Pin 40 — GPIO21            |                   |
 
 Physical pins 39 and 40 are next to the ethernet or USB housing (model dependant)
 
@@ -119,7 +119,9 @@ Physical pins 39 and 40 are next to the ethernet or USB housing (model dependant
 |------------|---------|-----------|
 | Black      | USB-A   | USB-C     |
 
-### MQ2 Gas Sensor
+### MQ-2 Gas Sensor
+
+The labels for the board are hard to read. The Digital output pin is next to the VCC pin. All three pins will be in a row.
 
 | Wire Color | RPi Pin   | MQ2 Pin |
 |------------|-----------|---------|
@@ -330,6 +332,9 @@ The R-Pi 4 and 5 both use micro-HDMI.
 1. Wait for a few minutes, then log back in using the `ssh` command
 1. `sudo apt update`
 1. `sudo apt upgrade`
+1. `sudo apt install swig`
+1. `sudo apt install python3-lgpio`
+1. `sudo apt install liblgpio-dev`
 1. `lsusb` - Check to see if a "Silicon Labs CP210x UART Bridge", "Espressif Systems heltec_wifi_lora_32 v4 (16 MB FLASH, 2 MB PSRAM)", or "QinHeng Electronics CH340" is shown.
 1. `python --version`. Should be at least 3.13.5
 
