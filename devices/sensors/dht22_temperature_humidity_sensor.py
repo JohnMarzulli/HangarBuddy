@@ -21,9 +21,6 @@ if local_debug.is_debug():
 
 import lgpio
 
-DHT_GPIO = 4
-SENSOR = DHT22(DHT_GPIO)
-
 
 @dataclass
 class DHT22Reading:
@@ -185,6 +182,10 @@ class DHT22:
             temperature_c = raw_temp / 10.0
 
         return DHT22Reading(temperature_c=temperature_c, humidity=humidity)
+
+
+DHT_GPIO = 4
+SENSOR = DHT22(DHT_GPIO)
 
 
 def __read_sensor__() -> TemperatureResult | None:
