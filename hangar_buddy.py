@@ -41,7 +41,7 @@ Main entry code for HangarBuddy
 #    python /home/pi/HangarBuddy/hangar_buddy.py &
 
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from time import sleep
 
 import configuration
@@ -81,12 +81,20 @@ def __get_messaging_device__(
     config: configuration.Configuration,
 ) -> MessagingDevice:
     if config.device_type.lower() == "meshtastic":
+        MESSAGING_DEVICE_LOGGER.info("Using Meshtastic messaging device")
+
         return MeshtasticSerial(MESSAGING_DEVICE_LOGGER)
     elif config.device_type.lower() == "meshcore":
+        MESSAGING_DEVICE_LOGGER.info("Using Meshcore messaging device")
+
         return MeshcoreSerial(MESSAGING_DEVICE_LOGGER)
     elif config.device_type.lower() == "sim800c":
+        MESSAGING_DEVICE_LOGGER.info("Using SIM800C messaging device")
+
         return Sim800cSerial(MESSAGING_DEVICE_LOGGER)
     elif config.device_type.lower() == "test":
+        MESSAGING_DEVICE_LOGGER.info("Using Loopback/Test messaging device")
+
         return TestMessagingDevice(MESSAGING_DEVICE_LOGGER)
 
     raise RuntimeError(f"Unknown device type: {config.device_type}")
@@ -149,18 +157,6 @@ def send_message(message: str) -> bool:
         HANGAR_BUDDY_LOGGER.error("ERROR trying to send message to any authorized receivers")
 
     return is_one_message_sent
-
-
-def is_radio_connected() -> bool:
-    """
-    Checks if the radio is connected.
-    """
-
-    try:
-        return MESSAGING.__is_connected__()
-    except Exception as e:
-        HANGAR_BUDDY_LOGGER.error(f"Error checking radio connection: {e}")
-        return False
 
 
 def is_for_this_node(recipient: str) -> bool:
@@ -238,11 +234,19 @@ def __update_display__(
 # TODO: Command to return hop count & route
 
 
-async def __connect_messaging_device__():
-    while not MESSAGING.__is_connected__():
-        sleep(1)
+async def __connect_messaging_device__() -> bool:
+    start_time = datetime.now()
+    end_time = start_time + timedelta(minutes=5)
+
+    while datetime.now() < end_time:
+        if MESSAGING.__is_connected__():
+            return True
+
+        sleep(5)
         HANGAR_BUDDY_LOGGER.info("Connecting to device...")
         await MESSAGING.service()
+
+    return False
 
 
 async def main():
@@ -252,6 +256,15 @@ async def main():
 
     display.clear()
     display.write(0, 0, "Starting...")
+
+    is_connected: bool = await __connect_messaging_device__()
+
+    if not is_connected:
+        HANGAR_BUDDY_LOGGER.error("Unable to connect to messaging device")
+        display.write(0, 0, "ERROR")
+        display.write(0, 1, "No Msg Device")
+
+        return
 
     heater = RelayManager(CONFIGURATION, RELAY_LOGGER, send_message)
     light_manager: LightManager = LightManager("Hangar", SENSORS_MANAGER, send_message)
