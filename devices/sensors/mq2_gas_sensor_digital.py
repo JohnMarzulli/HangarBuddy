@@ -110,7 +110,7 @@ class Mq2GasSensorDigital(GasSensor):
             self.__logger__.info(f"read_value={read_value}")
 
             return not read_value
-        except:
+        except Exception:
             self.enabled = False
             return False
 
