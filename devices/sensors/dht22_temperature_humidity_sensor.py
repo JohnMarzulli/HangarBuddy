@@ -28,6 +28,12 @@ class DHT22Reading:
     humidity: float
 
 
+class DHT22Error(Exception):
+    """Base class for DHT22 errors."""
+
+    pass
+
+
 class DHT22:
     """
     Minimal DHT22 reader using lgpio.
@@ -185,44 +191,6 @@ class DHT22:
 
 
 DHT_GPIO = 4
-SENSOR = DHT22(DHT_GPIO)
-
-
-def __read_sensor__() -> TemperatureResult | None:
-    """
-    Reads temperature from sensor and prints to stdout
-    id is the id of the sensor.
-    """
-
-    try:
-        sensor_reading = SENSOR.read()
-        temperature_c = sensor_reading.temperature_c
-        humidity = sensor_reading.humidity
-
-        temperature = float(temperature_c)
-        print(f"Sensor: {humidity}%" + ", %0.3f C" % temperature)
-
-        return TemperatureResult(temperature)
-    except Exception:
-        return None
-
-
-def __read_sensors__() -> list[TemperatureResult]:
-    """
-    Reads temperature from all sensors found in /sys/bus/w1/devices/
-    starting with "28-...
-    """
-    temperature_probe_values: list[TemperatureResult] = []
-
-    try:
-        probe_value = __read_sensor__()
-
-        if probe_value is not None:
-            temperature_probe_values.append(probe_value)
-    except Exception:
-        print("Failed to read sensor")
-
-    return temperature_probe_values
 
 
 class Dh22TemperatureHumiditySensor(TemperatureSensor):
@@ -243,6 +211,7 @@ class Dh22TemperatureHumiditySensor(TemperatureSensor):
         super().__init__(logger)
         self.enabled: bool = True
         self.current_value: TemperatureResult | None = None
+        self.__sensor__: DHT22 = DHT22(DHT_GPIO)
 
     def update(self) -> TemperatureResult | None:
         """
@@ -254,14 +223,30 @@ class Dh22TemperatureHumiditySensor(TemperatureSensor):
         if not self.enabled:
             return None
 
-        temperature_values = __read_sensors__()
-        if temperature_values is not None and len(temperature_values) > 0:
-            self.current_value = temperature_values[0]
-        else:
-            self.current_value = None
+        self.current_value = self.__read_sensor__()
+
+        if self.current_value is None:
             self.enabled = False
 
         return self.current_value
+
+    def __read_sensor__(self) -> TemperatureResult | None:
+        """
+        Reads temperature from sensor and prints to stdout
+        id is the id of the sensor.
+        """
+
+        try:
+            sensor_reading = self.__sensor__.read()
+            temperature_c = sensor_reading.temperature_c
+            humidity = sensor_reading.humidity
+
+            temperature = float(temperature_c)
+            print(f"Sensor: {humidity}%" + ", %0.3f C" % temperature)
+
+            return TemperatureResult(temperature)
+        except Exception:
+            return None
 
 
 ##############
@@ -287,5 +272,3 @@ if __name__ == "__main__":
         raise RuntimeError("Unable to get a reading from the sensor")
 
     print("Tests finished")
-
-    SENSOR.close()
