@@ -27,6 +27,7 @@ from lib.system_level_logging import SystemLevelLogger
 
 if not IS_DEBUG:
     from devices.sensors.ds18b20_temperature_sensor import Ds18b20TemperatureSensor
+    from devices.sensors.dht22_temperature_humidity_sensor import Dh22TemperatureHumiditySensor
     from devices.sensors.mq2_gas_sensor_digital import Mq2GasSensorDigital
     from devices.sensors.tsl2591_light_sensor import Tsl2591LightSensor
 
@@ -62,7 +63,7 @@ class SensorsManager:
         self.__gas_sensor__: GasSensor = SimulatedGasSensor(logger) if IS_DEBUG else Mq2GasSensorDigital(logger)
         self.__light_sensor__: LightSensor = SimulatedLightSensor(logger) if IS_DEBUG else Tsl2591LightSensor(logger)
         self.__temperature_sensor__: TemperatureSensor = (
-            SimulatedTemperatureSensor(logger) if IS_DEBUG else Ds18b20TemperatureSensor(logger)
+            SimulatedTemperatureSensor(logger) if IS_DEBUG else Dh22TemperatureHumiditySensor(logger)
         )
 
         self.__light_sensor_task__: IntermittentTask = IntermittentTask(
