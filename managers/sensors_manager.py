@@ -30,6 +30,7 @@ if not IS_DEBUG:
     from devices.sensors.dht22_temperature_humidity_sensor import Dh22TemperatureHumiditySensor
     from devices.sensors.mq2_gas_sensor_digital import Mq2GasSensorDigital
     from devices.sensors.tsl2591_light_sensor import Tsl2591LightSensor
+    from devices.sensors.tsl2561_light_sensor import Tsl2561LightSensor
 
 from devices.mocks.simulated_gas_sensor import SimulatedGasSensor
 from devices.mocks.simulated_light_sensor import SimulatedLightSensor
@@ -61,7 +62,7 @@ class SensorsManager:
         self.__logger__: SystemLevelLogger = logger
 
         self.__gas_sensor__: GasSensor = SimulatedGasSensor(logger) if IS_DEBUG else Mq2GasSensorDigital(logger)
-        self.__light_sensor__: LightSensor = SimulatedLightSensor(logger) if IS_DEBUG else Tsl2591LightSensor(logger)
+        self.__light_sensor__: LightSensor = SimulatedLightSensor(logger) if IS_DEBUG else Tsl2561LightSensor(logger)
         self.__temperature_sensor__: TemperatureSensor = (
             SimulatedTemperatureSensor(logger) if IS_DEBUG else Dh22TemperatureHumiditySensor(logger)
         )
