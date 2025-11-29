@@ -139,7 +139,7 @@ class Tsl2561LightSensor(LightSensor):
             self.__logger__.debug("Configuring TSL2561 timing and gain")
             self.__set_timing__(self.integration_time)
             self.__set_gain__(self.gain)
-            self.__disable__()  # start powered down
+            #self.__disable__()  # start powered down
             self.__logger__.info("TSL2561 light sensor initialized")
         except Exception as ex:
             self.__logger__.error(f"TSL2561: Failed to initialize: {ex}")
