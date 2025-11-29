@@ -80,7 +80,7 @@ Physical Pins 1 and 2 are at the edge of the board with the Micro-SD Card
 
 | Device Connection | Device Connection    | Device Connection    | Physical Pin / Pi Pin Name | Physical Pin / Pi Pin Name | Device Connection |
 |-------------------|----------------------|----------------------|----------------------------|----------------------------|-------------------|
-| MQ2 VCC (white)   | TSL2591 VCC (white)  |                      | Pin 1 — 3V3 Power          | Pin 2 — 5V Power           | Display VCC (red) |
+|                   | TSL2591 VCC (white)  |                      | Pin 1 — 3V3 Power          | Pin 2 — 5V Power           | Display VCC (red) |
 |                   | TSL2591 SDA (green)  | Display SDA (green)  | Pin 3 — GPIO2 / SDA1       | Pin 4 — 5V Power           |                   |
 |                   | TSL2591 SCL (yellow) | Display SCL (yellow) | Pin 5 — GPIO3 / SCL1       | Pin 6 — GND                | Relay GND (black) |
 |                   |                      | DHT22 OUT (gray)     | Pin 7 — GPIO4              | Pin 8 — GPIO14 / UART TX   |                   |
@@ -88,7 +88,7 @@ Physical Pins 1 and 2 are at the edge of the board with the Micro-SD Card
 |                   |                      |                      | Pin 11 — GPIO17            | Pin 12 — GPIO18            |                   |
 |                   |                      |                      | Pin 13 — GPIO27            | Pin 14 — GND               |                   |
 |                   |                      |                      | Pin 15 — GPIO22            | Pin 16 — GPIO23            |                   |
-|                   |                      | DHT22 VCC (white)    | Pin 17 — 3V3 Power         | Pin 18 — GPIO24            |                   |
+| MQ2 VCC (white)   |                      | DHT22 VCC (white)    | Pin 17 — 3V3 Power         | Pin 18 — GPIO24            |                   |
 |                   |                      |                      | Pin 19 — GPIO10 / SPI MOSI | Pin 20 — GND               |                   |
 |                   |                      |                      | Pin 21 — GPIO9 / SPI MISO  | Pin 22 — GPIO25            | Relay + (white)   |
 |                   |                      |                      | Pin 23 — GPIO11 / SPI SCLK | Pin 24 — GPIO8 / SPI CE0   |                   |
