@@ -27,9 +27,7 @@ FULLSPECTRUM = 0  # channel 0
 
 # --- TSL2561 constants (T package coefficients & register map) ---
 
-# Default I2C address: 0x29 if ADDR is tied to GND; 0x39 is default if ADDR is floating.
-# We keep 0x29 to match prior TSL2591-based code/wiring.
-DEFAULT_ADDR = 0x29
+DEFAULT_ADDR = 0x39
 
 # Command / control bits
 COMMAND_BIT = 0x80  # 'command' bit for normal I2C access
