@@ -5,6 +5,7 @@ This is a TSL2561 port of the earlier TSL2591-based implementation.
 """
 
 import time
+
 import smbus  # type: ignore - Only will be run on Raspberry Pi
 
 if __name__ == "__main__":
@@ -31,24 +32,12 @@ DEFAULT_ADDR = 0x39
 
 # Command / control bits
 COMMAND_BIT = 0x80  # 'command' bit for normal I2C access
-CLEAR_BIT = 0x40  # Clears pending interrupt
-WORD_BIT = 0x20  # 1 = read/write word
-BLOCK_BIT = 0x10  # 1 = block read/write
 
 CONTROL_POWERON = 0x03
-CONTROL_POWEROFF = 0x00
 
 # Register addresses (TSL2561)
 REGISTER_CONTROL = 0x00
 REGISTER_TIMING = 0x01
-REGISTER_THRESHHOLDL_LOW = 0x02
-REGISTER_THRESHHOLDL_HIGH = 0x03
-REGISTER_THRESHHOLDH_LOW = 0x04
-REGISTER_THRESHHOLDH_HIGH = 0x05
-REGISTER_INTERRUPT = 0x06
-REGISTER_ID = 0x0A
-REGISTER_CHAN0_LOW = 0x0C
-REGISTER_CHAN1_LOW = 0x0E
 
 # Integration time codes (TSL2561)
 # Real integration times are ~13.7 ms, 101 ms, 402 ms.
@@ -103,7 +92,6 @@ K7T = 0x029A
 B7T = 0x0018
 M7T = 0x0012
 
-K8T = 0x029A
 B8T = 0x0000
 M8T = 0x0000
 
@@ -139,7 +127,6 @@ class Tsl2561LightSensor(LightSensor):
             self.__logger__.debug("Configuring TSL2561 timing and gain")
             self.__set_timing__(self.integration_time)
             self.__set_gain__(self.gain)
-            self.__disable__()  # start powered down
             self.__logger__.info("TSL2561 light sensor initialized")
         except Exception as ex:
             self.__logger__.error(f"TSL2561: Failed to initialize: {ex}")
@@ -179,7 +166,6 @@ class Tsl2561LightSensor(LightSensor):
             COMMAND_BIT | REGISTER_TIMING,
             self.integration_time | self.gain,
         )
-        self.__disable__()
 
     def __set_gain__(self, gain: int) -> None:
         if not self.enabled:
@@ -198,7 +184,6 @@ class Tsl2561LightSensor(LightSensor):
             COMMAND_BIT | REGISTER_TIMING,
             self.integration_time | self.gain,
         )
-        self.__disable__()
 
     def __is_enable__(self) -> None:
         """
@@ -213,21 +198,6 @@ class Tsl2561LightSensor(LightSensor):
             COMMAND_BIT | REGISTER_CONTROL,
             CONTROL_POWERON,
         )
-
-    def __disable__(self) -> None:
-        """
-        Power down the sensor.
-        """
-        pass
-        # if not self.enabled or local_debug.is_debug():
-        #     return
-
-        # self.__logger__.debug("TSL2561: Disabling sensor (CONTROL=0x00)")
-        # self.bus.write_byte_data(
-        #     self.sensor_address,
-        #     COMMAND_BIT | REGISTER_CONTROL,
-        #     CONTROL_POWEROFF,
-        # )
 
     # --- Reading and lux computation ---
 
@@ -331,9 +301,7 @@ class Tsl2561LightSensor(LightSensor):
             b, m = B8T, M8T
 
         temp = (channel0 * b) - (channel1 * m)
-
-        if temp < 0:
-            temp = 0
+        temp = max(temp, 0)
 
         # Round and strip fractional part
         temp += 1 << (LUX_SCALE - 1)
