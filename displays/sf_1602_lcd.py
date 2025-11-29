@@ -95,6 +95,10 @@ class Sf1602Display(DisplayDevice):
         addr = 0x80 + 0x40 * pos_y + pos_x
         self.__send_command__(addr)
 
+        # Make sure that any text left on the right side is cleared
+        text_to_write = text_to_write[: 16 - pos_x]
+        text_to_write = text_to_write.ljust(16 - pos_x, " ")
+
         for char in text_to_write:
             self.__send_data__(ord(char))
 
