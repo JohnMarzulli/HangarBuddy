@@ -343,42 +343,14 @@ class Tsl2561LightSensor(LightSensor):
 
 
 if __name__ == "__main__":
-    #    from configuration import Configuration
-    #
-    #    logger = SystemLevelLogger(Configuration(), "LightSensorTest_TSL2561")
-    #    tsl = Tsl2561LightSensor(logger)  # initialize with defaults
-    #
-    #    result: LightSensorResult | None = tsl.update()
-    #    result_text: str = "ERROR" if result is None else str(result.full_spectrum)
-    #    print(f"Full={result_text}")
-    #
-    #    if result is not None:
-    #        print(f"IR={result.infrared}, Lux={result.lux}")
+    from configuration import Configuration
 
-    import time
-    import smbus  # type: ignore
+    logger = SystemLevelLogger(Configuration(), "LightSensorTest_TSL2561")
+    tsl = Tsl2561LightSensor(logger)  # initialize with defaults
 
-    BUS_NUM = 1
-    ADDRESS = 0x39  # TSL2561 at 0x39
+    result: LightSensorResult | None = tsl.update()
+    result_text: str = "ERROR" if result is None else str(result.full_spectrum)
+    print(f"Full={result_text}")
 
-    bus = smbus.SMBus(BUS_NUM)
-
-    # Power on: CONTROL (0x00) = 0x03
-    bus.write_byte_data(ADDRESS, 0x80 | 0x00, 0x03)
-
-    # Integration = 402 ms, low gain: TIMING (0x01) = 0x02
-    bus.write_byte_data(ADDRESS, 0x80 | 0x01, 0x02)
-
-    time.sleep(0.5)
-
-    # Read CH0 low/high
-    data0 = bus.read_i2c_block_data(ADDRESS, 0x80 | 0x0C, 2)  # 0x8C
-    ch0 = (data0[1] << 8) | data0[0]
-
-    # Read CH1 low/high
-    data1 = bus.read_i2c_block_data(ADDRESS, 0x80 | 0x0E, 2)  # 0x8E
-    ch1 = (data1[1] << 8) | data1[0]
-
-    print(f"Raw CH0 (full): {ch0}")
-    print(f"Raw CH1 (IR):   {ch1}")
-    print(f"Visible approx: {ch0 - ch1}")
+    if result is not None:
+        print(f"IR={result.infrared}, Lux={result.lux}")
