@@ -207,16 +207,10 @@ class Tsl2561LightSensor(LightSensor):
         Sensor is assumed to be already powered on & configured.
         """
 
-        print("__get_full_luminosity__ called")
-
         if not self.enabled or local_debug.is_debug():
             self.__logger__.warning("TSL2561: Sensor not enabled or in debug mode")
 
-            print("Not enabled, bailing")
-
             return 0, 0
-
-        print("Checking timing")
 
         # Wait for conversion based on integration time
         if self.integration_time == INTEGRATIONTIME_13MS:
@@ -225,8 +219,6 @@ class Tsl2561LightSensor(LightSensor):
             time.sleep(0.102)
         else:  # 402ms
             time.sleep(0.403)
-
-        print("Reading data blocks")
 
         # IMPORTANT: use same pattern as the simple test script
         data0 = self.bus.read_i2c_block_data(
@@ -242,8 +234,6 @@ class Tsl2561LightSensor(LightSensor):
 
         full = (data0[1] << 8) | data0[0]
         ir = (data1[1] << 8) | data1[0]
-
-        print(f"Read full={full}, ir={ir}")
 
         self.__logger__.debug(f"TSL2561 raw: CH0={full}, CH1={ir}")
 
