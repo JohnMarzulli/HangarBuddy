@@ -136,7 +136,26 @@ def log_message_received(message: ReceivedMessage):
     MESSAGE_LOGGER.info(log_message)
 
 
-def send_message(message: str) -> bool:
+def send_mesage(recipient: str, message: str) -> bool:
+    """
+    Sends an alert message.
+    """
+
+    log_message_sent(recipient, message)
+
+    # Here you can add more logic to send the alert, e.g., via email or SMS.
+    # For now, it just logs the message.
+    try:
+        MESSAGING.send(MessageSendRequest(recipient, message))
+
+        return True
+    except Exception as ex:
+        HANGAR_BUDDY_LOGGER.error(f"Error sending message to {recipient}, EX={ex}")
+
+        return False
+
+
+def send_message_to_all(message: str) -> bool:
     """
     Sends an alert message.
     """
@@ -144,14 +163,8 @@ def send_message(message: str) -> bool:
     is_one_message_sent: bool = False
 
     for recipient in CONFIGURATION.allowed_senders:
-        log_message_sent(recipient, message)
-        # Here you can add more logic to send the alert, e.g., via email or SMS.
-        # For now, it just logs the message.
-        try:
-            MESSAGING.send(MessageSendRequest(recipient, message))
-            is_one_message_sent = True
-        except Exception as ex:
-            HANGAR_BUDDY_LOGGER.error(f"Error sending message to {recipient}, EX={ex}")
+        is_sent: bool = send_mesage(recipient, message)
+        is_one_message_sent = is_one_message_sent or is_sent
 
     if not is_one_message_sent:
         HANGAR_BUDDY_LOGGER.error("ERROR trying to send message to any authorized receivers")
@@ -186,10 +199,12 @@ def process_messages(command_processor: CommandProcessor):
             continue
 
         if not is_from_known_sender(message.sender):
+            send_mesage(message.sender, "BLOCKED")
+
             known_senders_text: str = ",".join(CONFIGURATION.allowed_senders)
             unknown_sender_message: str = f"Unknown sender `{message.sender}`, known: {known_senders_text}"
 
-            send_message(unknown_sender_message)
+            send_message_to_all(unknown_sender_message)
 
             continue
 
@@ -198,7 +213,7 @@ def process_messages(command_processor: CommandProcessor):
         response = command_processor.process(message.text, MESSAGE_HISTORY)
 
         if response is not None and len(response) > 0:
-            send_message(response)
+            send_message_to_all(response)
             HANGAR_BUDDY_LOGGER.info(f"Response sent: {response}")
 
 
@@ -266,9 +281,9 @@ async def main():
 
         return
 
-    heater = RelayManager(CONFIGURATION, RELAY_LOGGER, send_message)
-    light_manager: LightManager = LightManager("Hangar", SENSORS_MANAGER, send_message)
-    gas_safety_manager: GasSafetyManager = GasSafetyManager(SENSORS_MANAGER, heater, send_message)
+    heater = RelayManager(CONFIGURATION, RELAY_LOGGER, send_message_to_all)
+    light_manager: LightManager = LightManager("Hangar", SENSORS_MANAGER, send_message_to_all)
+    gas_safety_manager: GasSafetyManager = GasSafetyManager(SENSORS_MANAGER, heater, send_message_to_all)
     command_processor = CommandProcessor(SENSORS_MANAGER, heater, gas_safety_manager)
 
     display.write(0, 0, "Initializing...")
@@ -276,8 +291,8 @@ async def main():
     HANGAR_BUDDY_LOGGER.info("Starting HangarBuddy...")
     HANGAR_BUDDY_LOGGER.info(f"IP:{local_debug.get_ip_address()}")
 
-    send_message("Starting HangarBuddy...")
-    send_message(command_processor.get_full_status_text())
+    send_message_to_all("Starting HangarBuddy...")
+    send_message_to_all(command_processor.get_full_status_text())
 
     HANGAR_BUDDY_LOGGER.info(f"Connected to {MESSAGING.device_name}/{MESSAGING.device_id}")
 
