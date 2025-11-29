@@ -139,7 +139,7 @@ class Tsl2561LightSensor(LightSensor):
             self.__logger__.debug("Configuring TSL2561 timing and gain")
             self.__set_timing__(self.integration_time)
             self.__set_gain__(self.gain)
-            #self.__disable__()  # start powered down
+            self.__disable__()  # start powered down
             self.__logger__.info("TSL2561 light sensor initialized")
         except Exception as ex:
             self.__logger__.error(f"TSL2561: Failed to initialize: {ex}")
@@ -218,15 +218,16 @@ class Tsl2561LightSensor(LightSensor):
         """
         Power down the sensor.
         """
-        if not self.enabled or local_debug.is_debug():
-            return
+        pass
+        # if not self.enabled or local_debug.is_debug():
+        #     return
 
-        self.__logger__.debug("TSL2561: Disabling sensor (CONTROL=0x00)")
-        self.bus.write_byte_data(
-            self.sensor_address,
-            COMMAND_BIT | REGISTER_CONTROL,
-            CONTROL_POWEROFF,
-        )
+        # self.__logger__.debug("TSL2561: Disabling sensor (CONTROL=0x00)")
+        # self.bus.write_byte_data(
+        #     self.sensor_address,
+        #     COMMAND_BIT | REGISTER_CONTROL,
+        #     CONTROL_POWEROFF,
+        # )
 
     # --- Reading and lux computation ---
 
