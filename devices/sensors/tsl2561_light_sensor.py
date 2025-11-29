@@ -237,6 +237,8 @@ class Tsl2561LightSensor(LightSensor):
         """
 
         if not self.enabled or local_debug.is_debug():
+            self.__logger__.warning("TSL2561: Sensor not enabled or in debug mode")
+            
             return 0, 0
 
         # Wait for conversion based on integration time
