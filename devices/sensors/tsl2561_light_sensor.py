@@ -233,29 +233,36 @@ class Tsl2561LightSensor(LightSensor):
     def __get_full_luminosity__(self) -> tuple[int, int]:
         """
         Returns (full_spectrum, infrared) raw counts.
+        Sensor is assumed to be already powered on & configured.
         """
-        self.__is_enable__()
-
-        # Wait long enough for the ADC to complete based on integration time
-        if self.integration_time == INTEGRATIONTIME_13MS:
-            time.sleep(0.014)  # ~13.7ms
-        elif self.integration_time == INTEGRATIONTIME_101MS:
-            time.sleep(0.102)  # ~101ms
-        else:
-            time.sleep(0.403)  # ~402ms
 
         if not self.enabled or local_debug.is_debug():
             return 0, 0
 
-        # Read CH0 and CH1 as words
-        # Using read_i2c_block_data to avoid endianness surprises.
-        data0 = self.bus.read_i2c_block_data(self.sensor_address, COMMAND_BIT | WORD_BIT | REGISTER_CHAN0_LOW, 2)
-        data1 = self.bus.read_i2c_block_data(self.sensor_address, COMMAND_BIT | WORD_BIT | REGISTER_CHAN1_LOW, 2)
+        # Wait for conversion based on integration time
+        if self.integration_time == INTEGRATIONTIME_13MS:
+            time.sleep(0.014)
+        elif self.integration_time == INTEGRATIONTIME_101MS:
+            time.sleep(0.102)
+        else:  # 402ms
+            time.sleep(0.403)
 
-        full = data0[1] << 8 | data0[0]
-        ir = data1[1] << 8 | data1[0]
+        # IMPORTANT: use same pattern as the simple test script
+        data0 = self.bus.read_i2c_block_data(
+            self.sensor_address,
+            0x80 | 0x0C,  # COMMAND_BIT | CH0 low
+            2,
+        )
+        data1 = self.bus.read_i2c_block_data(
+            self.sensor_address,
+            0x80 | 0x0E,  # COMMAND_BIT | CH1 low
+            2,
+        )
 
-        self.__disable__()
+        full = (data0[1] << 8) | data0[0]
+        ir = (data1[1] << 8) | data1[0]
+
+        self.__logger__.debug(f"TSL2561 raw: CH0={full}, CH1={ir}")
         return full, ir
 
     def __get_calculated_lux__(self, ch0: int, ch1: int) -> float:
