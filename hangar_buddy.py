@@ -54,7 +54,7 @@ from communication.sim800c_serial import Sim800cSerial
 from communication.test_message_device import TestMessagingDevice
 from devices.interfaces.messaging_device import MessagingDevice
 from displays.console_display import ConsoleDisplay
-from displays.display_device import DisplayDevice
+from devices.interfaces.display_device import DisplayDevice
 from displays.sf_1602_lcd import Sf1602Display
 from lib import local_debug
 from lib.system_level_logging import SystemLevelLogger
