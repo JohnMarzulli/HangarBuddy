@@ -41,7 +41,7 @@ Main entry code for HangarBuddy
 #    python /home/pi/HangarBuddy/hangar_buddy.py &
 
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from time import sleep
 
 import configuration
@@ -52,10 +52,13 @@ from communication.message_send_request import MessageSendRequest
 from communication.received_message import ReceivedMessage
 from communication.sim800c_serial import Sim800cSerial
 from communication.test_message_device import TestMessagingDevice
-from devices.interfaces.messaging_device import MessagingDevice
-from displays.console_display import ConsoleDisplay
+from devices.displays.sf_1602_lcd import Sf1602Display
 from devices.interfaces.display_device import DisplayDevice
-from displays.sf_1602_lcd import Sf1602Display
+from devices.interfaces.messaging_device import MessagingDevice
+from devices.mocks.console_display import ConsoleDisplay
+from display.display_manager import DisplayManager
+from display.display_message import DisplayMessage
+from display.priority import Priority
 from lib import local_debug
 from lib.system_level_logging import SystemLevelLogger
 from managers.gas_safety_manager import GasSafetyManager
@@ -64,6 +67,7 @@ from managers.relay_manager import RelayManager
 from managers.sensors_manager import SensorsManager
 
 CONFIGURATION = configuration.Configuration()
+DISPLAY_MANAGER: DisplayManager | None = None
 
 HANGAR_BUDDY_LOGGER: SystemLevelLogger = SystemLevelLogger(CONFIGURATION, "HangarBuddy")
 MESSAGE_LOGGER: SystemLevelLogger = SystemLevelLogger(CONFIGURATION, "Messages")
@@ -154,11 +158,20 @@ def send_mesage(recipient: str, message: str) -> bool:
 
         return False
 
-
 def send_message_to_all(message: str) -> bool:
     """
     Sends an alert message.
     """
+
+    if DISPLAY_MANAGER is not None:
+        DISPLAY_MANAGER.show(
+            DisplayMessage(
+                message,
+                priority=Priority.HIGH,
+                ttl=timedelta(seconds=10),
+                min_display_time=timedelta(seconds=1),
+            )
+        )
 
     is_one_message_sent: bool = False
 
@@ -191,7 +204,11 @@ def get_message_text(message: dict) -> str:
         return ""
 
 
-def process_messages(command_processor: CommandProcessor):
+def __get_ascii_only__(text: str) -> str:
+    return "".join(char for char in text if char.isascii())
+
+
+def process_messages(command_processor: CommandProcessor, display_manager: DisplayManager):
     messages = MESSAGING.get_incoming_messages()
 
     for message in messages:
@@ -201,12 +218,30 @@ def process_messages(command_processor: CommandProcessor):
         if not is_from_known_sender(message.sender):
             send_mesage(message.sender, "BLOCKED")
 
+            display_manager.show(
+                DisplayMessage(
+                    f"UNAUTH MSG FROM:\n{__get_ascii_only__(message.sender)}",
+                    priority=Priority.HIGH,
+                    ttl=timedelta(seconds=10),
+                    min_display_time=timedelta(seconds=1),
+                )
+            )
+
             known_senders_text: str = ",".join(CONFIGURATION.allowed_senders)
             unknown_sender_message: str = f"Unknown sender `{message.sender}`, known: {known_senders_text}"
 
             send_message_to_all(unknown_sender_message)
 
             continue
+
+        display_manager.show(
+            DisplayMessage(
+                f"{__get_ascii_only__(message.sender)}\n{__get_ascii_only__(message.text)}",
+                priority=Priority.HIGH,
+                ttl=timedelta(seconds=10),
+                min_display_time=timedelta(seconds=1),
+            )
+        )
 
         MESSAGE_HISTORY.append(message)
         log_message_received(message)
@@ -231,29 +266,30 @@ def __get_display__() -> DisplayDevice:
 
 
 def __update_display__(
-    display: DisplayDevice | None,
+    display_manager: DisplayManager,
     command_processor: CommandProcessor,
 ):
-    if display is None:
-        return
-
     status: list[str] = command_processor.get_short_status_text()
+    display_text = f"{status[0]}\n{status[1]}"
+    info_request: DisplayMessage = DisplayMessage(
+        display_text,
+        priority=Priority.LOW,
+        ttl=timedelta(seconds=5),
+        min_display_time=timedelta(seconds=0.5),
+    )
 
-    display.write(0, 0, status[0])
-    display.write(0, 1, status[1])
+    display_manager.show(info_request)
 
 
-# TODO: Make display event & message driven
-# TODO: Send messages to cycle display
 # TODO: See if there is a way to improve the accuracy of the temp sensor
 # TODO: Command to return hop count & route
 
 
 async def __connect_messaging_device__() -> bool:
-    start_time = datetime.now()
+    start_time = datetime.now(timezone.utc)
     end_time = start_time + timedelta(minutes=5)
 
-    while datetime.now() < end_time:
+    while datetime.now(timezone.utc) < end_time:
         if MESSAGING.__is_connected__():
             return True
 
@@ -267,17 +303,15 @@ async def __connect_messaging_device__() -> bool:
 async def main():
     prevent_pc_from_sleeping()
 
-    display: DisplayDevice = __get_display__()
-
-    display.clear()
-    display.write(0, 0, "Starting...")
+    display_manager: DisplayManager = DisplayManager(__get_display__())
+    DISPLAY_MANAGER = display_manager
+    display_manager.show_now("Starting...")
 
     is_connected: bool = await __connect_messaging_device__()
 
     if not is_connected:
         HANGAR_BUDDY_LOGGER.error("Unable to connect to messaging device")
-        display.write(0, 0, "ERROR")
-        display.write(0, 1, "No Msg Device")
+        display_manager.show_now("ERROR:\nNo Msg Device")
 
         return
 
@@ -286,7 +320,7 @@ async def main():
     gas_safety_manager: GasSafetyManager = GasSafetyManager(SENSORS_MANAGER, heater, send_message_to_all)
     command_processor = CommandProcessor(SENSORS_MANAGER, heater, gas_safety_manager)
 
-    display.write(0, 0, "Initializing...")
+    display_manager.show_now("Initializing...")
 
     HANGAR_BUDDY_LOGGER.info("Starting HangarBuddy...")
     HANGAR_BUDDY_LOGGER.info(f"IP:{local_debug.get_ip_address()}")
@@ -302,10 +336,11 @@ async def main():
         light_manager.update()
         gas_safety_manager.update()
         heater.update()
-        process_messages(command_processor)
-        __update_display__(display, command_processor)
+        process_messages(command_processor, display_manager)
+        __update_display__(display_manager, command_processor)
+        display_manager.update()
 
-        sleep(1)
+        sleep(0.5)
 
 
 if __name__ == "__main__":
