@@ -1,5 +1,5 @@
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class SensorSimulator:
@@ -23,7 +23,7 @@ class SensorSimulator:
         self.units_per_minute: float = units_per_minute
         self.current_value: float = random.uniform(self.min_value, self.max_value)
         self.direction: int = 1
-        self.last_update_time: datetime = datetime.now()
+        self.last_update_time: datetime = datetime.now(timezone.utc)
 
     def get_current_value(self) -> float:
         """
@@ -41,14 +41,10 @@ class SensorSimulator:
         Returns:
             float: The new "value" that was "read" by the sensor simulator.
         """
-        new_update_time: datetime = datetime.now()
-        seconds_since_last_update: float = (
-            new_update_time - self.last_update_time
-        ).total_seconds()
+        new_update_time: datetime = datetime.now(timezone.utc)
+        seconds_since_last_update: float = (new_update_time - self.last_update_time).total_seconds()
         self.last_update_time = new_update_time
-        change_amount: float = (
-            self.units_per_minute / 60.0
-        ) * seconds_since_last_update
+        change_amount: float = (self.units_per_minute / 60.0) * seconds_since_last_update
         self.current_value += change_amount * self.direction
 
         if self.current_value >= self.max_value:
