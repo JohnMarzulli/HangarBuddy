@@ -77,9 +77,9 @@ class DisplayManager:
         # Try to pop from queue
         msg: DisplayMessage | None = self.__queue__.pop_next(current_message_priority)
 
-        self.__display__.clear()
-
         if msg is not None:
             self.__display__.write_text(msg.text)
             self.__active_message__ = msg
             self.__active_message_started_at__ = now
+        else:
+            self.__display__.clear()
