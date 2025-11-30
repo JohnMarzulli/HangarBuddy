@@ -41,7 +41,7 @@ class DisplayDevice(object):
             return False
 
         if array_count >= 1:
-            self.clear()
+            #self.clear()
             self.write(0, 0, text_array[0])
 
         if array_count >= 2:
