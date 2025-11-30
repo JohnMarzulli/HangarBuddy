@@ -168,8 +168,8 @@ def send_message_to_all(message: str) -> bool:
             DisplayMessage(
                 message,
                 priority=Priority.HIGH,
-                ttl=timedelta(seconds=10),
-                min_display_time=timedelta(seconds=1),
+                ttl=timedelta(seconds=60),
+                min_display_time=timedelta(seconds=15),
             )
         )
 
@@ -222,8 +222,8 @@ def process_messages(command_processor: CommandProcessor, display_manager: Displ
                 DisplayMessage(
                     f"UNAUTH MSG FROM:\n{__get_ascii_only__(message.sender)}",
                     priority=Priority.HIGH,
-                    ttl=timedelta(seconds=10),
-                    min_display_time=timedelta(seconds=1),
+                    ttl=timedelta(seconds=60),
+                    min_display_time=timedelta(seconds=15),
                 )
             )
 
@@ -238,8 +238,8 @@ def process_messages(command_processor: CommandProcessor, display_manager: Displ
             DisplayMessage(
                 f"{__get_ascii_only__(message.sender)}\n{__get_ascii_only__(message.text)}",
                 priority=Priority.HIGH,
-                ttl=timedelta(seconds=10),
-                min_display_time=timedelta(seconds=1),
+                ttl=timedelta(seconds=60),
+                min_display_time=timedelta(seconds=15),
             )
         )
 
