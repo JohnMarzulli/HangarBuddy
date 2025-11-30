@@ -81,5 +81,3 @@ class DisplayManager:
             self.__display__.write_text(msg.text)
             self.__active_message__ = msg
             self.__active_message_started_at__ = now
-        else:
-            self.__display__.clear()
