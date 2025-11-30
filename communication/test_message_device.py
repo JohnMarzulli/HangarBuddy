@@ -25,7 +25,8 @@ class TestMessagingDevice(MessagingDevice):
         super().__init__(logger)
 
         self.contacts: list[dict] = []
-        self.__meshcore_interface__: MeshCore | None = None
+        self.device_name: str = "Test"
+        self.device_id: str = "Loopback"
 
     def __is_device_allocated__(self) -> bool:
         return True
