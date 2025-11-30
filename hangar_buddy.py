@@ -67,7 +67,8 @@ from managers.relay_manager import RelayManager
 from managers.sensors_manager import SensorsManager
 
 CONFIGURATION = configuration.Configuration()
-DISPLAY_MANAGER: DisplayManager | None = None
+
+DISPLAY_MANAGER: DisplayManager = DisplayManager(ConsoleDisplay() if local_debug.is_debug() else Sf1602Display())
 
 HANGAR_BUDDY_LOGGER: SystemLevelLogger = SystemLevelLogger(CONFIGURATION, "HangarBuddy")
 MESSAGE_LOGGER: SystemLevelLogger = SystemLevelLogger(CONFIGURATION, "Messages")
@@ -158,20 +159,20 @@ def send_mesage(recipient: str, message: str) -> bool:
 
         return False
 
+
 def send_message_to_all(message: str) -> bool:
     """
     Sends an alert message.
     """
 
-    if DISPLAY_MANAGER is not None:
-        DISPLAY_MANAGER.show(
-            DisplayMessage(
-                message,
-                priority=Priority.HIGH,
-                ttl=timedelta(seconds=60),
-                min_display_time=timedelta(seconds=15),
-            )
+    DISPLAY_MANAGER.show(
+        DisplayMessage(
+            message,
+            priority=Priority.HIGH,
+            ttl=timedelta(seconds=60),
+            min_display_time=timedelta(seconds=15),
         )
+    )
 
     is_one_message_sent: bool = False
 
@@ -261,10 +262,6 @@ def prevent_pc_from_sleeping():
         ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)
 
 
-def __get_display__() -> DisplayDevice:
-    return ConsoleDisplay() if local_debug.is_debug() else Sf1602Display()
-
-
 def __update_display__(
     display_manager: DisplayManager,
     command_processor: CommandProcessor,
@@ -303,15 +300,13 @@ async def __connect_messaging_device__() -> bool:
 async def main():
     prevent_pc_from_sleeping()
 
-    display_manager: DisplayManager = DisplayManager(__get_display__())
-    DISPLAY_MANAGER = display_manager
-    display_manager.show_now("Starting...")
+    DISPLAY_MANAGER.show_now("Starting...")
 
     is_connected: bool = await __connect_messaging_device__()
 
     if not is_connected:
         HANGAR_BUDDY_LOGGER.error("Unable to connect to messaging device")
-        display_manager.show_now("ERROR:\nNo Msg Device")
+        DISPLAY_MANAGER.show_now("ERROR:\nNo Msg Device")
 
         return
 
@@ -320,7 +315,7 @@ async def main():
     gas_safety_manager: GasSafetyManager = GasSafetyManager(SENSORS_MANAGER, heater, send_message_to_all)
     command_processor = CommandProcessor(SENSORS_MANAGER, heater, gas_safety_manager)
 
-    display_manager.show_now("Initializing...")
+    DISPLAY_MANAGER.show_now("Initializing...")
 
     HANGAR_BUDDY_LOGGER.info("Starting HangarBuddy...")
     HANGAR_BUDDY_LOGGER.info(f"IP:{local_debug.get_ip_address()}")
@@ -336,9 +331,9 @@ async def main():
         light_manager.update()
         gas_safety_manager.update()
         heater.update()
-        process_messages(command_processor, display_manager)
-        __update_display__(display_manager, command_processor)
-        display_manager.update()
+        process_messages(command_processor, DISPLAY_MANAGER)
+        __update_display__(DISPLAY_MANAGER, command_processor)
+        DISPLAY_MANAGER.update()
 
         sleep(0.5)
 
