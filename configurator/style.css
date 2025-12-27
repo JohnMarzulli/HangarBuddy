@@ -1,0 +1,622 @@
+/* CSS Static file for Express and Handlebars */
+
+body {
+    width: auto;
+    height: fit-content;
+    padding: -10%;
+    text-align: center;
+    background-color: whitesmoke;
+}
+
+body img {
+    width: fit-content;
+    padding: -20%;
+}
+
+body h2 {
+    margin-left: 10%;
+    margin-right: 10%;
+    background-color: teal;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif, verdana, tahoma;
+    text-align: center;
+    font-size: 30pt;
+}
+
+body h3 {
+    color: teal;
+    font-style: oblique;
+    font-weight: bolder;
+}
+
+body p {
+    font-family: Arial, Helvetica, sans-serif, verdana, tahoma;
+    font-size: 18pt;
+    align-content: center;
+    align-self: center;
+    background-color: whitesmoke;
+    color: black;
+    margin-left: 0%;
+    margin-right: 0%;
+}
+
+body table {
+    width: 100%;
+    height: 150%;
+    font-size: 200%;
+    align-self: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+body tr {
+    border-spacing: 10px;
+}
+
+body td {
+    vertical-align: top;
+    padding: 2%;
+}
+
+body th {
+    box-shadow: 0px;
+    background-color: gray;
+    color: white;
+    font-weight: bolder;
+}
+
+body form {
+    align-self: center;
+    align-content: center;
+}
+
+body textarea {
+    width: 100%;
+    font-size: 12pt;
+    align-self: center;
+    align-content: center;
+    font-family: "Courier New", Courier, monospace;
+}
+
+input {
+    height: 75px;
+    width: 100%;
+    font-size: 32pt;
+}
+
+input[type="submit"] {
+    size: 150%;
+    font-size: 32pt;
+    font-weight: bolder;
+    border: 1;
+    border-color: black;
+    background: none;
+    box-shadow: none;
+    border-radius: none;
+    -webkit-appearance: none;
+    background-color: white;
+    color: teal;
+}
+
+input[type="button"] {
+    size: 150%;
+    font-size: 32pt;
+    font-weight: bolder;
+    border: 1;
+    border-color: black;
+    background: none;
+    box-shadow: none;
+    border-radius: none;
+    -webkit-appearance: none;
+    background-color: white;
+    color: teal;
+}
+
+button {
+    size: 150%;
+    font-size: 32pt;
+    font-weight: bolder;
+    border: 1;
+    border-color: black;
+    background: none;
+    box-shadow: none;
+    border-radius: none;
+    -webkit-appearance: none;
+    background-color: white;
+    color: teal;
+}
+
+input[type="checkbox"] {
+    -webkit-appearance: checkbox;
+    height: 75px;
+}
+
+input[type="submit"]:hover {
+    background-color: teal;
+    color: white;
+}
+
+input[type="button"]:hover {
+    background-color: teal;
+    color: white;
+}
+
+input[type="range"]:hover {
+    height: 50px;
+}
+
+button:hover {
+    background-color: teal;
+    color: white;
+}
+
+input[type="submit"]:disabled {
+    background-color: lightgray;
+    color: whitesmoke;
+}
+
+a:link,
+a:visited {
+    font-family: Arial, Helvetica, sans-serif, verdana, tahoma;
+    font-weight: bold;
+    outline: none;
+    text-decoration: none;
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    min-width: 100%;
+    border: 0;
+    text-align: center;
+    vertical-align: center;
+    background-color: white;
+    color: teal;
+    padding: 40px, 60px;
+}
+
+body table a:hover {
+    background-color: teal;
+    color: white;
+}
+
+/* Configurator specific */
+.config-form {
+    max-width: 980px;
+    margin: 18px auto;
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+.config-section {
+    border: 1px solid #ddd;
+    background: #fff;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    text-align: left;
+}
+
+.config-section h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.05rem;
+    color: teal;
+}
+
+.config-section label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.config-section input[type="number"],
+.config-section select,
+.config-section textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    font-size: 0.95rem;
+}
+
+.config-section .error {
+    color: #a00;
+    margin-top: 6px;
+}
+
+.actions {
+    text-align: center;
+}
+
+.actions button {
+    background-color: teal;
+    color: white;
+    border-color: black;
+    padding: 10px 18px;
+    font-size: 1.5rem;
+    min-width: 220px;
+    border-radius: 6px;
+}
+
+.actions button:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    opacity: 0.9;
+    border-color: #bbbbbb;
+}
+
+/* Make action buttons centered and responsive */
+@media (max-width: 700px) {
+    .actions button {
+        width: 100%;
+        max-width: 420px;
+        box-sizing: border-box;
+    }
+}
+
+@media (min-width: 700px) {
+    .config-section label {
+        display: inline-block;
+        width: 48%;
+        vertical-align: top;
+    }
+
+    .config-section label:nth-child(odd) {
+        margin-right: 4%;
+    }
+}
+
+/* Make scrollbars noticeable for desktop browsers */
+/* WebKit (Chrome, Edge, Safari) */
+*::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+}
+
+*::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 128, 128, 0.9);
+    border-radius: 10px;
+    border: 3px solid #f0f0f0;
+    /* creates padding around thumb */
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 128, 128, 0.9) #f0f0f0;
+}
+
+/* Make form textarea scrollbars slightly larger and visible */
+.config-form textarea {
+    scrollbar-gutter: stable both-edges;
+}
+
+/* Compact inline toggles for sensors */
+.inline-toggles {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.inline-toggles label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding-right: 6px;
+}
+
+.inline-toggles span {
+    font-size: 0.95rem;
+    color: #333;
+}
+
+/* Override large global checkbox sizing inside configurator */
+.config-section input[type="checkbox"] {
+    -webkit-appearance: auto;
+    appearance: auto;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+/* Sensors list: each sensor on its own row with label and toggle */
+.sensors-list .sensor-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 4px;
+    border-bottom: 1px solid #eee;
+}
+
+.sensors-list .sensor-name {
+    /* match general label typography */
+    font: 300 16px/1.7 'Open Sans', sans-serif;
+    color: black;
+    font-weight: 300;
+}
+
+.sensors-list .sensor-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sensors-list .toggle-label {
+    font-size: 0.95rem;
+    color: #333;
+    min-width: 56px;
+    text-align: right;
+}
+
+/* Allowed senders list */
+.senders-list {
+    display: block;
+}
+
+.sender-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.sender-input {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 0.95rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    height: auto !important;
+    min-height: 34px;
+    line-height: 1.2;
+}
+
+.sender-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.sender-actions button {
+    padding: 6px 8px;
+    font-size: 0.85rem;
+}
+
+.sender-warning .sender-input {
+    border: 1px solid #e06;
+    background: #fff6f6;
+}
+
+.sender-warning {
+    background: #fff6f6;
+}
+
+.sender-confirm {
+    background: #007acc;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.sender-confirm:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Compact Add Sender button */
+.sender-add {
+    display: inline-block;
+    padding: 6px 10px;
+    font-size: 0.95rem;
+    background: white;
+    color: teal;
+    border: 1px solid teal;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.sender-add:hover {
+    background: teal;
+    color: white;
+}
+
+/* Ensure sender action Remove buttons stay compact */
+.sender-actions button {
+    background: white;
+    color: teal;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.sender-actions button:hover {
+    background: #f5f5f5;
+}
+
+/* disabled state for add button */
+.sender-add:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #fafafa;
+    color: #999;
+    border-color: #ddd;
+}
+
+
+
+
+/* The switch - the box around the slider */
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+/* Hide default HTML checkbox */
+
+.switch input {
+    display: none;
+}
+
+/* The slider */
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: gray;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: whitesmoke;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked+.slider {
+    background-color: teal;
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px teal;
+}
+
+input:checked+.slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* Rounded sliders */
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 26px;
+}
+
+/* Radio Buttons */
+
+.form-radio {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    display: inline-block;
+    position: relative;
+    background-color: gray;
+    color: black;
+    top: 10px;
+    height: 30px;
+    width: 30px;
+    border: 0;
+    border-radius: 60px;
+    margin-right: 10px;
+    outline: none;
+    padding-bottom: 10px;
+}
+
+.form-radio:hover {
+    background-color: teal;
+}
+
+.form-radio:checked {
+    background-color: teal;
+}
+
+label {
+    font: 300 16px/1.7 'Open Sans', sans-serif;
+    color: gray;
+    cursor: pointer;
+}
+
+.slidecontainer {
+    width: 100%;
+    /* Width of the outside container */
+}
+
+/* The slider itself */
+
+.rangeSlider {
+    -webkit-appearance: none;
+    width: 75%;
+    height: 26px;
+    border-radius: 4px;
+    border-color: black;
+    background: gray;
+    outline: thick;
+    outline-width: 4px;
+    outline-color: black;
+    opacity: 1.0;
+    -webkit-transition: .2s;
+    transition: .2s;
+    transition-duration: 0.2s;
+}
+
+.rangeSlider.round {
+    border-radius: 34px;
+}
+
+/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+
+.rangeSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border-color: black;
+    background: teal;
+    cursor: pointer;
+}
+
+.rangeSlider::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: teal;
+    cursor: pointer;
+}
+
+/* Style tab links */
+
+.tablink {
+    background-color: darkgray;
+    color: white;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    width: 25%;
+}
+
+.tablink:hover {
+    background-color: #777;
+}
+
+/* Style the tab content (and add height:100% for full page content) */
+
+.tabcontent {
+    display: none;
+    height: 100%;
+}
