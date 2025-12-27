@@ -69,34 +69,36 @@ Options are: 15, 30, 60, 90, 120, 150, 180
 
 ### Heater Pin
 
-This is a value set as an integer. It will refer to physical board pin.
-
 It will be chosen from a dropdown / Select element.
 
 Options are:
 
-- 11/GPIO 17
-- 13/GPIO 27
-- 15/GPIO22
-- 19/GPIO10
-- 21/GPIO9
-- 23/GPIO11
-- 29/GPIO5
-- 31/GPIO6
-- 33/GPIO13
-- 35/GPIO19
-- 37/GPIO26
-- 10/GPIO15
-- 12/GPIO18
-- 16/GPIO23
-- 18/GPIO24
-- 22/GPIO25
-- 24/GPIO8
-- 26/GPIO7
-- 32/GPIO12
-- 36/GPIO16
-- 38/GPIO20
-- 40/GPIO21
+| Physical Pin | BCM Pin |
+|--------------|---------|
+| 11           | GPIO 17 |
+| 13           | GPIO 27 |
+| 15           | GPIO22  |
+| 19           | GPIO10  |
+| 21           | GPIO9   |
+| 23           | GPIO11  |
+| 29           | GPIO5   |
+| 31           | GPIO6   |
+| 33           | GPIO13  |
+| 35           | GPIO19  |
+| 37           | GPIO26  |
+| 10           | GPIO15  |
+| 12           | GPIO18  |
+| 16           | GPIO23  |
+| 18           | GPIO24  |
+| 22           | GPIO25  |
+| 24           | GPIO8   |
+| 26           | GPIO7   |
+| 32           | GPIO12  |
+| 36           | GPIO16  |
+| 38           | GPIO20  |
+| 40           | GPIO21  |
+
+The value written to the configuration will be the physical pin number. Each selection entry needs to show both the physical and BCM pin numbers for user clarity.
 
 ### MQ2
 
@@ -144,3 +146,49 @@ When the user elects to save changes, the user should be given an overview of th
 ### Reboot
 
 This will reboot the HangarBuddy. If there are unsaved changes, it will alert the user and give the option to cancel.
+
+## Example Configuration File
+
+This is an example `HangarBuddy.config` file that will be written to.
+
+```ini
+[SETTINGS]
+#list phone numbers allowed to send text messages separated with a comma. Include the 1
+ALLOWED_SENDERS = !db2b5a40, !ba66ffe4, 👑Crown Hill, HTV4 Test Device
+
+DEVICE_TYPE = meshcore
+
+# Old message detection
+UTC_OFFSET = 8
+
+# Do not process any message that is older than
+# this number in minutes.
+OLDEST_MESSAGE_TO_PROCESS = 60
+
+#maximum time to run the heater in minutes. Whole numbers only
+MAX_HEATER_TIME = 90
+
+#where to store to logfile
+LOGFILE_DIRECTORY = ./logs/
+
+# Heater pin. Takes the value in BOARD pin numbering, NOT GPIO numbers
+HEATER_PIN = 22
+
+#set to True if you have an MQ2 gad sensor attached
+MQ2 = True
+
+# Set to true if you have a temperature probe attached.
+TEMP = True
+
+# Is the light sensor enabled?
+LIGHT_SENSOR = True
+HANGAR_DARK = 20
+HANGAR_DIM = 60
+HANGAR_LIT = 90
+
+# Enable the Display?
+DISPLAY_ENABLED = True
+
+# Set if you want to run this without sending messages
+TEST_MODE = False
+```
