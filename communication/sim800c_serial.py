@@ -1,5 +1,5 @@
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import serial
 import serial.tools.list_ports
@@ -21,7 +21,7 @@ from lib.system_level_logging import SystemLevelLogger
 
 
 def wait_for_response(connection: serial.Serial, max_wait_seconds: float = 4.0) -> bool:
-    start_time: datetime = datetime.now()
+    start_time: datetime = datetime.now(timezone.utc)
     time_to_end: datetime = start_time + timedelta(seconds=max_wait_seconds)
 
     is_time_remaining: bool = True
@@ -31,9 +31,9 @@ def wait_for_response(connection: serial.Serial, max_wait_seconds: float = 4.0) 
 
         time.sleep(0.1)
         is_input_waiting = connection.in_waiting > 0
-        is_time_remaining = datetime.now() < time_to_end
+        is_time_remaining = datetime.now(timezone.utc) < time_to_end
 
-    time_stopped: datetime = datetime.now()
+    time_stopped: datetime = datetime.now(timezone.utc)
 
     print(f"Started:{start_time}")
     print(f"Desired:{time_to_end}")

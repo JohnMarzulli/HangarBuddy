@@ -12,9 +12,9 @@ if __name__ == "__main__":
 
     # Ensure the parent directory is in sys.path so 'managers' can be imported
     # This is only needed if running the unit tests directly
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from displays.display_device import DisplayDevice
+from devices.interfaces.display_device import DisplayDevice
 
 
 class ConsoleDisplay(DisplayDevice):

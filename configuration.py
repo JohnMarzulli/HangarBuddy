@@ -61,12 +61,6 @@ class Configuration(object):
         self.max_message_age: int = self.__config_parser__.getint("SETTINGS", "OLDEST_MESSAGE_TO_PROCESS")
         self.utc_offset = self.__config_parser__.getint("SETTINGS", "UTC_OFFSET")
 
-        try:
-            self.test_mode: bool = self.__config_parser__.getboolean("SETTINGS", "TEST_MODE")
-        except:
-            self.test_mode: bool = False
-
-
 ##################
 ### UNIT TESTS ###
 ##################
