@@ -1,4 +1,11 @@
+# T-Deck Plus requires a special process to flash
+# https://www.om7tek.com/2025/how-to-flash-and-setup-meshtastic-with-ui-on-t-deck-plus/
+
+# Installing tiles
+# https://www.jeffgeerling.com/blog/2025/adding-gps-and-grid-maps-my-meshtastic-t-deck/
+
 import time
+from datetime import datetime, timezone
 
 import meshtastic
 import meshtastic.serial_interface
@@ -89,7 +96,9 @@ class MeshtasticSerial(MessagingDevice):
                 sender: str = packet["fromId"]
                 recipient: str = packet["toId"]
                 text: str = packet["decoded"]["payload"].decode("utf-8")
-                incoming_message: ReceivedMessage = ReceivedMessage(sender, recipient, text)
+                # Packets do not seem to have a timestamp
+                time_received: datetime = datetime.now(tz=timezone.utc)
+                incoming_message: ReceivedMessage = ReceivedMessage(time_received, sender, recipient, text)
                 self.__receiving_queue__.append(incoming_message)
         except KeyError as e:
             self.__logger__.error(f"Error processing packet: {e}")

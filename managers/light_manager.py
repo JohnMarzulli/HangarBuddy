@@ -1,6 +1,5 @@
-from datetime import datetime, timezone
-
 from devices.results.light_sensor_result import LightLevel
+from lib.time_correction import TIME_CORRECTION
 from managers.sensors_manager import SensorsManager
 
 
@@ -44,7 +43,7 @@ class LightManager:
 
         # Triggering state
         alert_message: str = (
-            f"LIGHTS: {datetime.now(timezone.utc)} The {self.__location_name__} is now {new_light_level.name}, was {self.__last_brightness__.name}."
+            f"LIGHTS: {TIME_CORRECTION.get_time()} The {self.__location_name__} is now {new_light_level.name}, was {self.__last_brightness__.name}."
         )
         self.__last_brightness__ = new_light_level
         self.__alert_callback__(alert_message)

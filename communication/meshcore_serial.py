@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import serial.tools.list_ports
 
 # https://github.com/meshcore-dev/meshcore_py
@@ -68,7 +70,11 @@ class MeshcoreSerial(MessagingDevice):
                     return False
 
                 sender: str = self.__get_matching_contact_by_partial_key__(public_key_prefix)
-                incoming_message: ReceivedMessage = ReceivedMessage(sender, recipient, message_text)
+                # TODO - verify time correctness
+                time_received: datetime = datetime.fromtimestamp(
+                    int(result.payload["sender_timestamp"]), tz=timezone.utc
+                )
+                incoming_message: ReceivedMessage = ReceivedMessage(time_received, sender, recipient, message_text)
                 self.__receiving_queue__.append(incoming_message)
         except Exception as e:
             self.__logger__.error(f"Error while receiving messages: {e}")
