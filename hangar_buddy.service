@@ -1,0 +1,15 @@
+# Move this file to /etc/systemd/system
+# sudo chmod 664
+# sudo systemctl enable hangar_buddy.service
+
+[Unit]
+Description=The Hangar Buddy Service
+After=multi-user.target
+
+[Service]
+ExecStart=/home/pi/src/HangarBuddy/start_hangar_buddy.sh
+Restart=always
+WorkingDirectory=/home/pi/src/HangarBuddy
+
+[Install]
+WantedBy=multi-user.target

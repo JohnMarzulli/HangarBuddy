@@ -1,0 +1,8 @@
+meshcore
+meshtastic
+pyserial>=3.5
+gpiozero
+smbus
+RPi.GPIO
+adafruit_dht
+lgpio

@@ -1,40 +1,32 @@
 # HangarBuddy
 
-This is a Python scipt that controls an AC/DC relay attached to a Raspberry Pi
-with a space heater plugged in. There is an adafruit GSM Board that receives
-text messages using a Ting SIM card connected to the Raspberry Pi. When the Pi
-receives a text messgae it will turn the AC/DC relay on or off accordingly, thus
-powering the heater on or off. The following are a list of commands that can be
-sent to the Pi that will control the heater.
+This code controls an AC/DC relay attached to a Raspberry Pi
+with a heater plugged in.
 
-In addition to the original heater control that this code performed,
-it has been extended and modified in a number of ways.
+It is designed to have a radio of some sort attached that recieves commands and sends responses or alerts.
 
-1. Allow extensibility to add more features.
-1. Gas sensor is now sent through an analog converter so the exact gas level can be known.
-1. The gas sensor has a trigger level, and a lower "all clear" level so the alert will keep firing until the issue is addressed, but not spam your phone.
-1. The gas sensor will alert you to gas **__anytime__** it is detected, not just when the heater is being operated.
-1. A light sensor has been added so you can tell if you left the lights on.
-1. A temperature sensor has been added so you know if you need to turn on the heater.
-1. A LCD was added so you can position the unit and know what the signal quality is.
-1. Enhanced the "STATUS" command to give you a full rundown of all the sensor data.
+## Features
+
+1. Extensibility
+1. Hangar environment monitoring
+1. Continuous vaporized gas monitoring and alerting
+1. Status display
+1. Rich text commands and responses
 
 ## Acknowledgements
 
-This version was based on the piWarmer by Maria DeGrazia.
+This project started as a fork of piWarmer by Maria DeGrazia.
 [https://github.com/mdegrazia/piWarmer](https://github.com/mdegrazia/piWarmer)
 
 I want to extend my many thanks to Maria for starting such an amazing project!
 
-The light sensor code is from "arenadorn" and
-[tsl2591](https://github.com/maxlklaxl/python-tsl2591/blob/master/tsl2591/read_tsl.py)
-
-The temperature, and gas sensor code is heavily based on the SunFounder sample code.
+The light sensor code is derived from Ada Fruit's samples.
+The temperature code is heavily based on the SunFounder sample code.
+The ANALOG gas sensor code is also derived from SunFounder sample code.
 
 ## Disclaimer
 
-**HangarBuddy is to be used at your own risk** This version of the code has
-been modified to increase the reliability and safety of the device, but it is an
+**HangarBuddy is to be used at your own risk.** It is an
 experimental device.
 
 ## Commands
@@ -42,11 +34,11 @@ experimental device.
 The commands are not case sensitive.
 
 | SMS Message | Action                                        |
-| ----------- | --------------------------------------------- |
+|-------------|-----------------------------------------------|
 | ON          | Turn the Relay/Heater on                      |
 | OFF         | Turn the Relay/Heater off                     |
 | STATUS      | Return status of the Relay/Heater (on or off) |
-| HELP        | Return the list of commands.         |
+| HELP        | Return the list of commands.                  |
 | SHUTDOWN    | Shutdown the Pi                               |
 
 ## Setup
@@ -55,117 +47,179 @@ You will need to modify the HangarBuddy.config file to match your installation.
 This file includes a list of phone numbers that are authorized to issue
 commands. The file also includes a phone number that any alerts will be sent to.
 
-For a complete set of installation instructions, visit
-[https://github.com/mdegrazia/piWarmer/wiki](https://github.com/mdegrazia/piWarmer/wiki).
+The basic install process (from scratch):
+
+- Image a micro-SD card using the Raspberry Pi Imager. Keep the user name as `Pi`. You may optionally setup your wifi network name and password.
+- In the Pi user directory, make a directory name `src`, navigate into it, then clone the Hangar Buddy repo
+- In `/home/user/pi/src/HangarBuddy`, you will need to run and activate a "Python Virtual Environment"
+- `python -m venv venv`
+- `source ./venv/bin/activate`
+- `pip install meshtastic`
+- IF you are using an older version of Raspberry Pi OS and NOT using a PI 5: `pip install RPi.GPIO`
+- For Pi5 & Bookworm: ``
+- `pip install smbus`
+- `pip install pyserial`
+
+You will also need to enable some system settings:
+
+- `sudo raspi-config`
+- Enable I2C, SPI, 1 Wire Serial, and the Serial interface
 
 ## Wiring
 
-**Note**: GPIO25 is physical pin 22
+**Note**: There are two pin numbering conventions for the Raspberry Pi: Pi numbering and board numbering.
+
+For instance GPIO25 is also known as physical pin 22. It is located on the edge of the PCB, in the middle of the column.
+
+[Raspberry Pi Pin Reference](https://learn.sparkfun.com/tutorials/raspberry-gpio/gpio-pinout)
+[Another Pi Pin Reference](https://forum.arduino.cc/t/raspberry-pi-gpio-pins/518283)
+
+### Full Wiring Diagram
+
+Physical Pins 1 and 2 are at the edge of the board with the Micro-SD Card
+
+| Device Connection | Device Connection    | Device Connection    | Physical Pin / Pi Pin Name | Physical Pin / Pi Pin Name | Device Connection      |
+|-------------------|----------------------|----------------------|----------------------------|----------------------------|------------------------|
+|                   | TSL2561 VCC (white)  |                      | Pin 1 — 3V3 Power          | Pin 2 — 5V Power           | Display VCC (red)      |
+|                   | TSL2561 SDA (green)  | Display SDA (green)  | Pin 3 — GPIO2 / SDA1       | Pin 4 — 5V Power           |                        |
+|                   | TSL2561 SCL (yellow) | Display SCL (yellow) | Pin 5 — GPIO3 / SCL1       | Pin 6 — GND                | Display Ground (black) |
+|                   |                      | DHT22 OUT (gray)     | Pin 7 — GPIO4              | Pin 8 — GPIO14 / UART TX   |                        |
+|                   | TSL2561 GND (black)  |                      | Pin 9 — GND                | Pin 10 — GPIO15 / UART RX  |                        |
+|                   |                      |                      | Pin 11 — GPIO17            | Pin 12 — GPIO18            |                        |
+|                   |                      |                      | Pin 13 — GPIO27            | Pin 14 — GND               |                        |
+|                   |                      |                      | Pin 15 — GPIO22            | Pin 16 — GPIO23            |                        |
+| MQ2 VCC (white)   |                      | DHT22 VCC (white)    | Pin 17 — 3V3 Power         | Pin 18 — GPIO24            |                        |
+|                   |                      |                      | Pin 19 — GPIO10 / SPI MOSI | Pin 20 — GND               | Relay GND (black)      |
+|                   |                      |                      | Pin 21 — GPIO9 / SPI MISO  | Pin 22 — GPIO25            | Relay + (blue)         |
+|                   |                      |                      | Pin 23 — GPIO11 / SPI SCLK | Pin 24 — GPIO8 / SPI CE0   |                        |
+|                   |                      | DHT22 GND (black)    | Pin 25 — GND               | Pin 26 — GPIO7 / SPI CE1   |                        |
+|                   |                      |                      | Pin 27 — ID_SD             | Pin 28 — ID_SC             |                        |
+|                   |                      |                      | Pin 29 — GPIO5             | Pin 30 — GND               |                        |
+|                   |                      |                      | Pin 31 — GPIO6             | Pin 32 — GPIO12            |                        |
+|                   |                      |                      | Pin 33 — GPIO13            | Pin 34 — GND               |                        |
+|                   |                      |                      | Pin 35 — GPIO19            | Pin 36 — GPIO16            |                        |
+| MQ2 DO (gray)     |                      |                      | Pin 37 — GPIO26            | Pin 38 — GPIO20            |                        |
+| MQ2 GND (black)   |                      |                      | Pin 39 — GND               | Pin 40 — GPIO21            |                        |
+
+Physical pins 39 and 40 are next to the ethernet or USB housing (model dependant)
 
 ### Relay
 
-* Red wire from GPIO25 to Relay "+"
-* Black wire from Relay "-" to GPIO GND
+| Wire Color | RPi Pin   | Relay Pin |
+|------------|-----------|-----------|
+| Red        | GPIO25/22 | "+"       |
+| Black      | GND       | "-"       |
 
-### Fona
+#### Meshtastic & Meshcore Devices
 
-#### Fona Serial/Modem Communication
+**NOTE** : Make sure the antenna is attached before powering on.
+**NOTE** : The Raspberry Pi 4C seems VERY picky about the USB cable used to connect a Heltec device. Try multiple cables.
 
-* TTL Black to Fona "GND"
-* TTL White to Fona "TX"
-* TTL Green to Fona "RX"
-* TTL Red to Fona "Vio"
-* USB to Pi USB
+| Wire Color | RPi Pin | Relay Pin |
+|------------|---------|-----------|
+| Black      | USB-A   | USB-C     |
 
-#### Fona Status
+### MQ-2 Gas Sensor
 
-* ORANGE Fona PS to GPIO23
-* YELLOW Fona Key to GPIO GND
-* GREEN Fona RI to GPIO24
+The labels for the board are hard to read. The Digital output pin is next to the VCC pin. All three pins will be in a row.
 
-#### Fona Power... Again
-
-* USB power into the Fona mini-USB port
-
-**Note**:GPIO23 is physical pin 16 **Note**:GPIO24 is physical pin 18
-
-### MQ2 Gas Sensor / ADC
-
-#### ADC
-
-* Red F/M: VCC to GPIO 3V3
-* Black ADC GND to GPIO GND
-* White ADC SDA to GPIO SDAI
-* Gray ADC SCL to GPIO SCLI
-* White F/F ADC AIN0 to MQ2 White
-
-#### MQ2
-
-* Pigtail Connector into reciever
-* Red to GPIO 3V3
-* Black to GPIO GND
-* Brown NOT USED
+| Wire Color | RPi Pin   | MQ2 Pin |
+|------------|-----------|---------|
+| white      | 3V        | Vcc     |
+| Black      | GND       | GND     |
+| Gray       | GP26 / 31 | DO      |
 
 ### Temp Sensor
 
-* White plug into Temp Sensor
-* Yellow to GPIO04
-* Red to +5VO
-* Black to GPIO GND
+Note that the temperature sensor probably was delivered with a pig-tail harness.
+
+| Wire Color | RPi Pin     | DS18B20 Pin |
+|------------|-------------|-------------|
+| Black      | GND         | GND         |
+| Red        | +5V         | VCC         |
+| Yellow     | GPIO 04 / 7 | IN          |
 
 ## Light Sensor
 
 **NOTE**: If you have the IO hat installed on the Pi, then you
 can use the duplicate SDA/SLC connectors on the set screw
-side __AND__ the connector pin side.
+side **AND** the connector pin side.
 
-* VCC (Red) to GPIO 3.3V
-* GND (Black) to GPIO Ground
-* SDA (White) to GPIO SDA
-* SLC (Gray) to GPIO SLC
+| Wire Color | RPi Pin | TSL2591 Pin |
+|------------|---------|-------------|
+| Red        | +3VC    | VCC         |
+| Black      | GND     | GND         |
+| White      | SDA/03  | SDA         |
+| Gray       | SLC/05  | SLC         |
 
 ### Status Display
 
 #### Additional Work
 
 You may need to make to "Y" pig tails to support the additional
-i2c device.
+i2c device. These would split the SDAI and SCLI lines.
 
-While the Raspberry Pi can support a number of i2c devices, and
-all of the devices used are at different offsets, even with the
-IO hat, there are only connectors for two devices.
+**NOTE**: If you do not intend on using both the light sensor AND the display, then you will not not to make pigtails.
 
-If you intend on using ALL THREE i2c devices (Gas Sensor, Light Sensor, and LCD)
-then a splitter for the SDAI and SCLI lines will need to be made.
-
-If you intend to use two or fewer, then no work needs to be done, and
-any free SDA/SCL pins may be used.
-
-* Red wire from LCD VCC to GPIO 5V
-* Black wire from LCD GND to GPIO GND
-* White wire from LCD SDA to GPIO SDA
-* Gray wire from LCD SCL to GPIO SCL
+| Wire Color | RPi Pin          | SF1602 Pin |
+|------------|------------------|------------|
+| Red        | +5V              | VCC        |
+| Black      | GND              | GND        |
+| White      | SDA/GPIO2/Phys 3 | SDA        |
+| Gray       | SCL/GPIO3/Phys 5 | SCL        |
 
 ## Additional Links And Setup Notes
 
-#### Enable analog-to-digital converter for the MQ-2 Gas Sensor
+### Enable Analog-To-Digital Converter For The MQ-2 Gas Sensor
 
 To do this, you need to enable I2C and 1-Wire using `raspi-config`
+
 ```bash
 sudo raspi-config
 ```
-* Select Option 5 `Interfacing Options`
-* Select Option `P5 I2C` and enable
-* Select Option `P7 1-Wire` and enable
-* Save changes, exit `raspi-config` and reboot your Raspberry Pi
+
+- Select Option 5 `Interfacing Options`
+
+- Select Option `P5 I2C` and enable
+- Select Option `P7 1-Wire` and enable
+- Save changes, exit `raspi-config` and reboot your Raspberry Pi
 
 #### Enable the temperature sensor
 
 Modprobe two modules for the temperature sensor:
+
 ```bash
 sudo modprobe w1-gpio
 sudo modprobe w1-therm
 ```
+
+## Pairing Meshcore
+
+You will want two meshcore devices.
+
+I suggest using the following 3D printed cases: [Heltec V4 Case](https://www.printables.com/model/1460642-3d-printed-enclosure-for-heltec-v4gps)
+
+The first will be a "Companion USB" that will attach to the Hangar Buddy.
+
+The second will probably be a "Companion Bluetooth" that will be conncted to your phone.
+
+The flasher can be obtained at [flasher.meshcore.co.uk](https://flasher.meshcore.co.uk/)
+
+Make sure both devices are running the same version number of the Meshcore firmware.
+
+You will need to pair the two devices using "adverts". Exact instructions can be found on the Meshcore site.
+
+1. Use [Meshcore App](https://meshcore.liamcottle.net/) to:
+    1. Name the device
+    1. Set region and bandwidth
+    1. Send an advert from the device that will be used for the Hangar Buddy.
+1. Use the Mesh Core app on your phone to:
+    1. Connect by Bluetooth
+    2. Name the device
+    3. Send back an advert.
+1. Use the Web App to send a direct message from the Hangar Buddy device to your phone paired device.
+
+If you are unable to send messages between the devices, consult the Meshcore documentation, Reddit, or others.
 
 ## Materials List
 
@@ -185,14 +239,14 @@ The LiPo battery is absolutely required and used directly by the GSM board.
 A MicroUSB to USB adapter is required for the modem to connect into the Pi
 Zero's ****only**** USB port.
 
-* [ ] [Raspberry Pi W, case, and IO pins](https://www.amazon.com/Raspberry-Starter-Power-Supply-Premium/dp/B0748MBFTS/ref=sr_1_3?s=electronics&ie=UTF8&qid=1512070820&sr=1-3&keywords=raspberry+pi+zero+pins)
-* [ ] [Adafruit GSM board, SMA edition](https://www.amazon.com/gp/product/B011P07916/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1)
-* [ ] [Adafruit 1S Lipo W/ JST connector](https://www.amazon.com/Battery-Packs-Lithium-Polymer-1200mAh/dp/B00J2QET64/ref=sr_1_5?ie=UTF8&qid=1512070675&sr=8-5&keywords=adafruit+lipo)
-* [ ] [MicroUSB to USB adapter](https://www.amazon.com/Ksmile%C2%AE-Female-Adapter-SamSung-tablets/dp/B01C6032G0/ref=sr_1_1?dd=tLyVcVfk00xcTUme6zjHhQ%2C%2C&ddc_refnmnt=pfod&ie=UTF8&qid=1512071097&sr=8-1&keywords=micro+usb+adapter&refinements=p_97%3A11292772011)
-* [ ] [USB to TTL/Serial adapter](https://www.amazon.com/gp/product/B00QT7LQ88/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
-* [ ] [Ting GSM Sim Card](https://www.amazon.com/gp/product/B013LKL5IQ/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1)
-* [ ] [Iot Power Relay](https://www.amazon.com/gp/product/B00WV7GMA2/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1)
-* [ ] [Experimentation board with wires](https://www.amazon.com/gp/product/B01LYN4J3B/ref=oh_aui_detailpage_o08_s00?ie=UTF8&psc=1)
+- [ ] [Raspberry Pi W, case, and IO pins](https://www.amazon.com/Raspberry-Starter-Power-Supply-Premium/dp/B0748MBFTS/ref=sr_1_3?s=electronics&ie=UTF8&qid=1512070820&sr=1-3&keywords=raspberry+pi+zero+pins)
+- [ ] [Adafruit GSM board, SMA edition](https://www.amazon.com/gp/product/B011P07916/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1)
+- [ ] [Adafruit 1S Lipo W/ JST connector](https://www.amazon.com/Battery-Packs-Lithium-Polymer-1200mAh/dp/B00J2QET64/ref=sr_1_5?ie=UTF8&qid=1512070675&sr=8-5&keywords=adafruit+lipo)
+- [ ] [MicroUSB to USB adapter](https://www.amazon.com/Ksmile%C2%AE-Female-Adapter-SamSung-tablets/dp/B01C6032G0/ref=sr_1_1?dd=tLyVcVfk00xcTUme6zjHhQ%2C%2C&ddc_refnmnt=pfod&ie=UTF8&qid=1512071097&sr=8-1&keywords=micro+usb+adapter&refinements=p_97%3A11292772011)
+- [ ] [USB to TTL/Serial adapter](https://www.amazon.com/gp/product/B00QT7LQ88/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
+- [ ] [Ting GSM Sim Card](https://www.amazon.com/gp/product/B013LKL5IQ/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1)
+- [ ] [Iot Power Relay](https://www.amazon.com/gp/product/B00WV7GMA2/ref=oh_aui_detailpage_o01_s01?ie=UTF8&psc=1)
+- [ ] [Experimentation board with wires](https://www.amazon.com/gp/product/B01LYN4J3B/ref=oh_aui_detailpage_o08_s00?ie=UTF8&psc=1)
 
 #### Antenna
 
@@ -201,39 +255,34 @@ antenna that will work if the device is near a window or your hangar has good
 reception. The 7dbi (high gain) antenna option should be used if reception is an
 issue
 
-* [ ] [Adafruit GSM Quadband Antenna](https://www.amazon.com/gp/product/B00N4Y2C4G/ref=oh_aui_detailpage_o08_s00?ie=UTF8&psc=1)
-* [ ] [High gain antenna](https://www.amazon.com/gp/product/B01M9F08JR/ref=oh_aui_detailpage_o00_s01?ie=UTF8&psc=1)
+- [ ] [Adafruit GSM Quadband Antenna](https://www.amazon.com/gp/product/B00N4Y2C4G/ref=oh_aui_detailpage_o08_s00?ie=UTF8&psc=1)
+- [ ] [High gain antenna](https://www.amazon.com/gp/product/B01M9F08JR/ref=oh_aui_detailpage_o00_s01?ie=UTF8&psc=1)
+- [ ] [Case for Sim800C](https://www.thingiverse.com/thing:5012982)
 
 ### For Optional Gas Sensor
 
-* [ ] [Additional wires for breadboard](https://www.amazon.com/gp/product/B072L1XMJR/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1)
-* [ ] [SunFounder MQ-2 sensor](https://www.amazon.com/gp/product/B013G8A76E/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
-* [ ] [SunFounder Analog To Digital Converter](https://www.amazon.com/gp/product/B072J2VCMH/ref=oh_aui_detailpage_o05_s01?ie=UTF8&psc=1)
+- [ ] [Additional wires for breadboard](https://www.amazon.com/gp/product/B072L1XMJR/ref=oh_aui_detailpage_o05_s00?ie=UTF8&psc=1)
+- [ ] [SunFounder MQ-2 sensor](https://www.amazon.com/gp/product/B013G8A76E/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
+- [ ] [SunFounder Analog To Digital Converter](https://www.amazon.com/gp/product/B072J2VCMH/ref=oh_aui_detailpage_o05_s01?ie=UTF8&psc=1)
 
 ### For Optional Temperature Sensor
 
-* [ ] [SunFounder Temperature Sensor](https://www.amazon.com/gp/product/B013GB27HS/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
+- [ ] [SunFounder Temperature Sensor](https://www.amazon.com/gp/product/B013GB27HS/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
 
 ### For Optional Light Sensor
 
-* [ ] [Adafruit Light Sensor](https://www.amazon.com/gp/product/B00XW2OFWW/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
+- [ ] [Adafruit Light Sensor](https://www.amazon.com/gp/product/B00XW2OFWW/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1)
 
 ### For Optional Status Display
 
-* [ ] [SunFounder 1602 LCD](https://www.amazon.com/gp/product/B01E6N19YC/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
+- [ ] [SunFounder 1602 LCD](https://www.amazon.com/gp/product/B01E6N19YC/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1)
 
 ### Adapters
 
-The Raspberry Pi zero uses a mini HDMI port for display. If you do not have an
-adapter, you will need one. This is not required in the installation once the
-device is "deployed". The USB hub makes coding and debugging on the PI possible
-as it allows a keyboard, mouse, and the Fona modem to be connected
-simultanously. When the HangarBuddy is "deployed" only the Fona will be plugged
-into the USB port.
+Depending on the version of Raspberry Pi you are using, you may need an adapter. While not required, it is helpful for setup and trouble shooting to have a monitor.
 
-* [ ] [MiniHDMI to HDMI adapter](https://www.amazon.com/Adapter-VCE-Converter-Camcorder-Devices/dp/B01HYURR04/ref=sr_1_8?s=electronics&ie=UTF8&qid=1512070954&sr=1-8&keywords=mini+hdmi+adapter)
-* [ ] [USB Hub](https://www.amazon.com/gp/product/B00XMD7KPU/ref=oh_aui_detailpage_o02_s00?ie=UTF8&psc=1)
-* [ ] [Pi-EzConnect](https://www.amazon.com/Alchemy-Power-Inc-Pi-Zero-EzConnect-connector/dp/B071NT7QLC/ref=sr_1_3)
+The Raspberry Pi zero has a mini HDMI port.
+The R-Pi 4 and 5 both use micro-HDMI.
 
 ## Device Reference
 
@@ -246,24 +295,66 @@ into the USB port.
 
 [https://www.sunfounder.com/learn/Sensor-Kit-v1-0-for-Raspberry-Pi/lesson-17-ds18b20-temperature-sensor-sensor-kit-v1-0-for-pi.html](https://www.sunfounder.com/learn/Sensor-Kit-v1-0-for-Raspberry-Pi/lesson-17-ds18b20-temperature-sensor-sensor-kit-v1-0-for-pi.html)
 
-### Adafruit Fona
-
-[https://learn.adafruit.com/adafruit-fona-808-cellular-plus-gps-breakout?view=all](https://learn.adafruit.com/adafruit-fona-808-cellular-plus-gps-breakout?view=all)
-[https://learn.adafruit.com/adafruit-fona-mini-gsm-gprs-cellular-phone-module?view=all](https://learn.adafruit.com/adafruit-fona-mini-gsm-gprs-cellular-phone-module?view=all)
-[https://learn.adafruit.com/adafruit-fona-mini-gsm-gprs-cellular-phone-module/handy-commands](https://learn.adafruit.com/adafruit-fona-mini-gsm-gprs-cellular-phone-module/handy-commands)
-[https://cdn-learn.adafruit.com/downloads/pdf/adafruit-fona-mini-gsm-gprs-cellular-phone-module.pdf](https://cdn-learn.adafruit.com/downloads/pdf/adafruit-fona-mini-gsm-gprs-cellular-phone-module.pdf)
-
 ## Installation
+
+### OS Image
+
+1. Use Raspberry Pi Imager
+1. Choose your device
+1. 64bit, Trixie based
+1. `hangarbuddy` as custom host name
+1. The username  `pi` with password `raspberry` are traditional, but easily guessed
+1. Use Wifi for setting up.
+1. Enable SSH to help setup and remote in. Use password protection. You do not need "Raspberry Pi Connect"
+
+### First Boot
+
+1. Update (To make sure the raspi-config tool is the latest version)
+1. Open a PowerShell or command terminal.
+1. `ssh pi@hangarbuddy`
+1. Use the password `raspberry`. Accept the fingerprint.
+1. `sudo raspi-config`
+1. System Options:
+    1. Setup wifi if not working yet
+    1. boot -> Console Text console
+    1. Autologin -> Yes
+1. Interface options:
+    1. SPI -> Enable
+    1. I2C -> Enable
+    1. Serial
+        1. Allow login: no
+        1. Allow serial: yes
+    1. TURN OFF 1 wire serial
+1. Advanced options:
+    1. Expand Filesystem
+1. "Finish"
+1. `sudo reboot now`
+1. Wait for a few minutes, then log back in using the `ssh` command
+1. `sudo apt update`
+1. `sudo apt upgrade`
+1. `sudo apt install swig`
+1. `sudo apt install python3-lgpio`
+1. `sudo apt install liblgpio-dev`
+1. `lsusb` - Check to see if a "Silicon Labs CP210x UART Bridge", "Espressif Systems heltec_wifi_lora_32 v4 (16 MB FLASH, 2 MB PSRAM)", or "QinHeng Electronics CH340" is shown.
+1. `python --version`. Should be at least 3.13.5
+
+### Source Code
+
 1. Log in to your rasperry pi as the `pi` user.
 1. `mkdir src`
 1. `cd src`
-1. `git clone https://github.com/JohnMarzulli/piWarmer/`
-1. `cd piWarmer`
-1. `sudo cp piWarmer.logrotate.conf /etc/logrotate.d/`
-1. `sudo chown root root /etc/logrotate.d/piWarmer.logrotate.conf`
-1. `sudo cp piWarmer.service /etc/systemd/system/`
-1. `sudo chown root root /etc/systemd/system/piWarmer.service`
-1. `sudo systemctl enable piWarmer.service`
+1. `git clone https://github.com/JohnMarzulli/HangarBuddy/`
+1. `cd HangarBuddy`
+1. `python -m venv venv`
+1. `source ./venv/bin/activate`
+1. `pip install -r requirements.txt`
+1. `sudo cp hangar_buddy.logrotate.conf /etc/logrotate.d/`
+1. `sudo chown root /etc/logrotate.d/hangar_buddy.logrotate.conf`
+1. `sudo cp hangar_buddy.service /etc/systemd/system/`
+1. `sudo chown root /etc/systemd/system/hangar_buddy.service`
+1. `sudo systemctl enable hangar_buddy.service`
 1. `sudo reboot`
 
-Once you reboot, the piWarmer service should be started automatically.  You can view any startup errors for the service in `/var/log/syslog`.
+Once you reboot, the hangar_buddy service should be started automatically.  You can view any startup errors for the service in `/var/log/syslog`.
+
+Running a Python file as a service: <https://gist.github.com/emxsys/a507f3cad928e66f6410e7ac28e2990f>

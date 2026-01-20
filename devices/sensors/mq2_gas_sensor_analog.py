@@ -1,0 +1,127 @@
+"""Module to help with the gas sensor."""
+
+import time
+
+# Only will be run on Raspberry Pi
+import smbus  # type: ignore
+
+if __name__ == "__main__":
+    import sys
+    import os
+
+    # Ensure the parent directory is in sys.path so 'managers' can be imported
+    # This is only needed if running the unit tests directly
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+from devices.interfaces.gas_sensor import (
+    DEFAULT_ALL_CLEAR_THRESHOLD,
+    DEFAULT_TRIGGER_THRESHOLD,
+    GasSensor,
+)
+from devices.results.gas_sensor_result import GasSensorResult
+
+DEFAULT_IC2_BUS = 1
+DEFAULT_IC2_ADDRESS = 0x48
+DEVICE_REG_MODW1 = 0x00
+DEFAULT_CHANNEL_READ_OFFSET = 0x40
+DEFAULT_DEVICE_CHANNEL = 0
+
+
+class Mq2GasSensorAnalog(GasSensor):
+    """
+    Class to help with the gas sensor.
+
+    This is for an analog MQ2, which needs to go through
+    extra hardware to get the actual sensor reading.
+    """
+
+    def __init__(
+        self,
+        sensor_trigger_threshold=DEFAULT_TRIGGER_THRESHOLD,
+        sensor_all_clear_threshold=DEFAULT_ALL_CLEAR_THRESHOLD,
+    ):
+        """
+        Attempt to connect to the sensor. Initial the thresholds.
+
+        Args:
+            sensor_trigger_threshold (int, optional): If a reading is equal, or greater than, this value then gas is detected . Defaults to DEFAULT_TRIGGER_THRESHOLD.
+            sensor_all_clear_threshold (int, optional): If gas is detected, then the value must be equal or less than this value for the alert to clear. Defaults to DEFAULT_ALL_CLEAR_THRESHOLD.
+        """
+        super().__init__(sensor_trigger_threshold, sensor_all_clear_threshold)
+
+        print("Starting init")
+
+        try:
+            self.ic2_bus = smbus.SMBus(DEFAULT_IC2_BUS)
+            self.enabled = True
+        except:
+            self.enabled = False
+
+        self.is_gas_detected = False
+        self.sensor_trigger_threshold = sensor_trigger_threshold
+        self.__sensor_all_clear_threshold__ = sensor_all_clear_threshold
+        self.current_value = DEFAULT_ALL_CLEAR_THRESHOLD
+
+    def __read__(self, read_offset=DEFAULT_CHANNEL_READ_OFFSET):
+        """
+        Read from the ic2 device.
+        """
+
+        if not self.enabled:
+            return None
+
+        try:
+            self.ic2_bus.write_byte(DEFAULT_IC2_ADDRESS, read_offset)
+
+            # Needs a "dummy read" for the conversion to happen
+            # The write back needs to compress the range of values
+            # from 0-255 to 125 to 255.
+            # This makes the LED light up
+            self.ic2_bus.read_byte(DEFAULT_IC2_ADDRESS)
+
+            raw_value = self.ic2_bus.read_byte(DEFAULT_IC2_ADDRESS)
+            converted_value = raw_value * (255.0 - 125.0) / 255.0 + 125.0
+            print(f"RAW={str(raw_value)}, CONV={str(converted_value)}")
+
+            self.ic2_bus.write_byte_data(
+                DEFAULT_IC2_ADDRESS, 0x40, int(converted_value)
+            )
+
+            return raw_value
+        except:
+            self.enabled = False
+            return None
+
+    def update(self):
+        """
+        Attempts to look for gas.
+        """
+
+        self.current_value = self.__read__(DEFAULT_CHANNEL_READ_OFFSET)
+
+        if self.current_value is None or not self.enabled:
+            return GasSensorResult(
+                False, "UNK", self.get_trigger_threshold_with_units()
+            )
+
+        self.__update_gas_detection__()
+
+        return GasSensorResult(
+            self.is_gas_detected,
+            self.get_current_measurement_with_units(),
+            self.get_trigger_threshold_with_units(),
+        )
+
+
+if __name__ == "__main__":
+
+    print("Attempting to connect to MQ2 gas sensor")
+    SENSOR = GasSensor()
+    print("Connected" if SENSOR.enabled else "ERROR")
+
+    while SENSOR.enabled:
+        IS_GAS_DETECTED = SENSOR.update()
+        print(
+            f"LVL:{str(IS_GAS_DETECTED.current_value)}, {str(IS_GAS_DETECTED.is_gas_detected)}"
+        )
+        time.sleep(0.2)
