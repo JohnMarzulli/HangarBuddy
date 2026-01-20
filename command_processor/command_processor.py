@@ -3,6 +3,8 @@ import string
 import subprocess
 import sys
 
+from lib.time_correction import TIME_CORRECTION
+
 if __name__ == "__main__":
     # Ensure the parent directory is in sys.path so 'managers' can be imported
     # This is only needed if running the unit tests directly
@@ -209,7 +211,7 @@ class CommandProcessor:
         # Example: return a summary of sensor states
         is_relay_on: bool = self.__relay_manager__.is_relay_on()
 
-        time = datetime.now(timezone.utc)
+        time = TIME_CORRECTION.get_time()
         time_text: str = f"{time:%Y-%m-%d %H:%M:%S}UTC"
 
         status_message: str = "-= Status =-\n"

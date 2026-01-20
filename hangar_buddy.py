@@ -61,6 +61,7 @@ from display.display_message import DisplayMessage
 from display.priority import Priority
 from lib import local_debug
 from lib.system_level_logging import SystemLevelLogger
+from lib.time_correction import TIME_CORRECTION
 from managers.gas_safety_manager import GasSafetyManager
 from managers.light_manager import LightManager
 from managers.relay_manager import RelayManager
@@ -109,7 +110,7 @@ MESSAGING: MessagingDevice = __get_messaging_device__(CONFIGURATION)
 
 
 def __get_time_text__() -> str:
-    time = datetime.now(timezone.utc)
+    time = TIME_CORRECTION.get_time()
     return f"{time:%Y-%m-%d %H:%M:%S}UTC"
 
 
@@ -283,6 +284,9 @@ def __update_display__(
 
 
 async def __connect_messaging_device__() -> bool:
+    # This is intentionally not using the time correction system
+    # since it is only used for relative timekeeping
+    # and not anything user facing
     start_time = datetime.now(timezone.utc)
     end_time = start_time + timedelta(minutes=5)
 

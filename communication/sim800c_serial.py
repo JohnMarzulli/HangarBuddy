@@ -21,6 +21,7 @@ from lib.system_level_logging import SystemLevelLogger
 
 
 def wait_for_response(connection: serial.Serial, max_wait_seconds: float = 4.0) -> bool:
+    # Relative time only. Not user facing.
     start_time: datetime = datetime.now(timezone.utc)
     time_to_end: datetime = start_time + timedelta(seconds=max_wait_seconds)
 
@@ -45,7 +46,7 @@ def wait_for_response(connection: serial.Serial, max_wait_seconds: float = 4.0) 
 
 def get_command_response(connection: serial.Serial, command: str) -> str:
     response_lines: list[str] = []
-    print(f"COMMAND:\"{command}\"".replace("\r", "\\r").replace("\n", "\\n"))
+    print(f'COMMAND:"{command}"'.replace("\r", "\\r").replace("\n", "\\n"))
     connection.reset_input_buffer()
     connection.write(command.encode("ascii"))
     connection.flush()
@@ -111,7 +112,9 @@ class Sim800cSerial(MessagingDevice):
 
         for message in messages:
             # TODO - split up message bodies
-            incoming_message: ReceivedMessage = ReceivedMessage(message, message, message)
+            # TODO - Get actual sender/recipient info
+            # TODO - Get actual time received from message
+            incoming_message: ReceivedMessage = ReceivedMessage(datetime.now(timezone.utc), message, message, message)
             self.__receiving_queue__.append(incoming_message)
 
         return len(messages) > 0
